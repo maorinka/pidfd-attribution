@@ -1,0 +1,91 @@
+"""Codex real kernel capture test of owned synthetic ASCII objects at guard pages."""
+from pathlib import Path
+import subprocess,hashlib,json,shutil
+R=__import__('settings').ROOT;E=R/'evidence/string-controls';G=Path('/var/tmp/pidfd-standalone-strings');E.mkdir(parents=True,exist_ok=True);G.mkdir(exist_ok=True)
+bpf=r'''#include "vmlinux.h"
+#include <bpf/bpf_helpers.h>
+#include <bpf/bpf_tracing.h>
+extern int iosec_native_capture(unsigned long long state,void *out,unsigned int out__sz,void *bytes,unsigned int bytes__sz) __ksym;
+struct ctl {unsigned long long pid,address,calls;int result;unsigned char output[3224];unsigned char scratch[4096];};
+struct {__uint(type,BPF_MAP_TYPE_ARRAY);__uint(max_entries,1);__type(key,unsigned int);__type(value,struct ctl);} control SEC(".maps");
+SEC("fentry.s/IOSEC_SYS_WRITE_PLACEHOLDER") int BPF_PROG(probe,const struct pt_regs *regs){unsigned int z=0;struct ctl *c=bpf_map_lookup_elem(&control,&z);if(!c||c->pid!=(bpf_get_current_pid_tgid()>>32))return 0;c->result=iosec_native_capture(c->address,c->output,3224,c->scratch,4096);c->calls++;return 0;}
+char LICENSE[] SEC("license")="GPL";
+'''
+loader=r'''#define _GNU_SOURCE
+#include <bpf/bpf.h>
+#include <bpf/libbpf.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+struct ctl {uint64_t pid,address,calls;int result;unsigned char output[3224];unsigned char scratch[4096];};
+struct frame {char file[128],function[64];int line,bytecode;};
+struct event {uint64_t pid;unsigned int count,flags;struct frame frames[16];uint64_t birth;};
+_Static_assert(sizeof(struct event)==3224,"ABI");
+static void put64(void *p,int off,uint64_t x){memcpy((char*)p+off,&x,8);}
+static void put32(void *p,int off,uint32_t x){memcpy((char*)p+off,&x,4);}
+static unsigned char *str_obj(int length,int nul,int state,void **region){long page=sysconf(_SC_PAGESIZE);unsigned char *p=mmap(0,page*3,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);if(p==MAP_FAILED)exit(7);if(mprotect(p+page*2,page,PROT_NONE))exit(8);unsigned char *s=p+page*2-(40+length+1);memset(s,0,40+length+1);put64(s,16,length);put32(s,32,state);memset(s+40,'a',length);if(nul>=0&&nul<length)s[40+nul]=0;*region=p;return s;}
+
+static uint64_t pte(void *p){int f=open("/proc/self/pagemap",O_RDONLY);uint64_t v=0;long page=sysconf(_SC_PAGESIZE);if(f<0||pread(f,&v,8,((uintptr_t)p/page)*8)!=8)exit(20);close(f);return v>>63;}
+static unsigned char *cold_split(const void *data,int n,int split,void **region){
+ long page=sysconf(_SC_PAGESIZE);int f=memfd_create("iosec-partial-copy",MFD_CLOEXEC);if(f<0||ftruncate(f,2*page))exit(21);
+ unsigned char *p=mmap(0,2*page,PROT_READ|PROT_WRITE,MAP_SHARED,f,0);close(f);if(p==MAP_FAILED)exit(22);
+ unsigned char *at=p+page-split;memcpy(at,data,n);if(madvise(p+page,page,MADV_DONTNEED))exit(23);
+ if(pte(p)!=1||pte(p+page)!=0){exit(24);}
+ *region=p;return at;
+}
+
+int main(void){struct bpf_object *o=bpf_object__open_file("strings.bpf.o",NULL);if(libbpf_get_error(o)||bpf_object__load(o))return 1;struct bpf_link *l=bpf_program__attach(bpf_object__next_program(o,NULL));if(libbpf_get_error(l))return 2;int fd=bpf_object__find_map_fd_by_name(o,"control"),sink=open("/dev/null",O_WRONLY);unsigned int z=0;
+int lengths[]={0,1,3,7,62,63,64,126,127,128,512};int tests=0;
+for(int side=0;side<2;side++)for(int k=0;k<11;k++)for(int embedded=0;embedded<2;embedded++){
+ int len=lengths[k],cut=embedded&&len?len/2:-1;void *regions[2];unsigned char *file=str_obj(side==0?len:3,side==0?cut:-1,96,&regions[0]);unsigned char *name=str_obj(side==1?len:3,side==1?cut:-1,96,&regions[1]);
+ unsigned char state[80]={0},frame[64]={0},code[144]={0},table[34]={0};put64(state,72,(uint64_t)frame);put64(frame,0,(uint64_t)code);put64(frame,56,(uint64_t)code+208);put64(code,8,11213488);put32(code,68,123);put64(code,112,(uint64_t)file);put64(code,120,(uint64_t)name);put64(code,136,(uint64_t)table);put64(table,16,2);table[32]=128;table[33]=0;
+ struct ctl c={.pid=getpid(),.address=(uint64_t)state,.result=-999};memset(c.output,0x5a,3224);if(bpf_map_update_elem(fd,&z,&c,BPF_ANY)||write(sink,"x",1)!=1||bpf_map_lookup_elem(fd,&z,&c))return 3;
+ struct event *e=(void*)c.output;struct frame expected={.line=123,.bytecode=0};int flen=side==0?len:3,nlen=side==1?len:3;if(cut>=0){if(side==0)flen=cut;else nlen=cut;}memset(expected.file,'a',flen<127?flen:127);memset(expected.function,'a',nlen<63?nlen:63);unsigned int flags=flen>=127||nlen>=63?16:0;
+ if(c.calls!=1||c.result||e->count!=1||e->flags!=flags||memcmp(&e->frames[0],&expected,200)||!e->birth||(e->pid>>32)!=(uint64_t)getpid()) {fprintf(stderr,"FAIL side=%d len=%d cut=%d count=%u flags=%u expected=%u\n",side,len,cut,e->count,e->flags,flags);return 4;}
+ for(int i=1;i<16;i++){struct frame zero={0};if(memcmp(&e->frames[i],&zero,200))return 5;}for(int i=0;i<2;i++)munmap(regions[i],sysconf(_SC_PAGESIZE)*3);tests++;
+}
+for(int mode=0;mode<11;mode++){
+ void *regions[2];unsigned char *file=str_obj(3,-1,96,&regions[0]);unsigned char *name=str_obj(3,-1,96,&regions[1]);unsigned char state[80]={0},frame[64]={0},code[144]={0},table[34]={0};put64(state,72,(uint64_t)frame);put64(frame,0,(uint64_t)code);put64(frame,56,(uint64_t)code+208);put64(code,8,11213488);put32(code,68,123);put64(code,112,(uint64_t)file);put64(code,120,(uint64_t)name);put64(code,136,(uint64_t)table);put64(table,16,2);table[32]=128;table[33]=0;unsigned int expected=65;unsigned char *bad_state=state;
+ switch(mode){case 0:put64(file,16,UINT64_MAX);break;case 1:put64(file,16,1048577);break;case 2:put32(file,32,0);expected=66;break;case 3:file[43]='a';break;case 4:put64(code,112,UINT64_MAX-8);break;case 5:put64(file,16,512);break;case 6:put64(code,8,0);expected=64;break;case 7:put64(code,112,0);break;case 8:put64(frame,0,(uint64_t)regions[0]+2*sysconf(_SC_PAGESIZE)-8);break;case 9:put64(code,136,(uint64_t)regions[0]+2*sysconf(_SC_PAGESIZE)-16);break;case 10:bad_state=(unsigned char*)regions[0]+2*sysconf(_SC_PAGESIZE)-72;break;}
+ struct ctl c={.pid=getpid(),.address=(uint64_t)bad_state,.result=-999};if(bpf_map_update_elem(fd,&z,&c,BPF_ANY)||write(sink,"x",1)!=1||bpf_map_lookup_elem(fd,&z,&c))return 9;struct event *e=(void*)c.output;if(c.calls!=1||c.result||e->count||e->flags!=expected){fprintf(stderr,"MALFORMED_FAIL mode=%d count=%u flags=%u expected=%u\n",mode,e->count,e->flags,expected);return 10;}for(int i=0;i<2;i++)munmap(regions[i],sysconf(_SC_PAGESIZE)*3);
+ }
+
+for(int mode=0;mode<17;mode++){
+ unsigned char state[80]={0},frame[64]={0},code[144]={0},table[40]={0},file[169]={0},name[48]={0};
+ put64(file,16,mode==3?128:(mode==7?7:30));put32(file,32,96);memset(file+40,'a',mode==3?128:(mode==7?7:30));
+ put64(name,16,mode==16?7:3);put32(name,32,96);memset(name+40,'a',mode==16?7:3);
+ put64(code,8,11213488);put32(code,68,123);put64(code,112,(uint64_t)file);put64(code,120,(uint64_t)name);put64(code,136,(uint64_t)table);put64(table,16,2);table[32]=128;
+ void *region=0;unsigned char *codeptr=code,*frameptr=frame,*stateptr=state;
+ if(mode==1||mode==5)codeptr=cold_split(code,144,mode==5?12:72,&region);
+ if(mode==6||mode==8){if(mode==8)put64(table,16,8);unsigned char *tableptr=cold_split(table,mode==8?40:34,mode==8?36:20,&region);put64(code,136,(uint64_t)tableptr);}
+ if(mode==2||mode==3||mode==7){unsigned char *fileptr=cold_split(file,mode==3?169:(mode==7?48:71),mode==3?104:(mode==7?44:24),&region);put64(code,112,(uint64_t)fileptr);}
+ if(mode==16){unsigned char *nameptr=cold_split(name,48,44,&region);put64(code,120,(uint64_t)nameptr);}
+ put64(frame,0,(uint64_t)codeptr);put64(frame,56,(uint64_t)codeptr+208);
+ if(mode==0)frameptr=cold_split(frame,64,32,&region);
+ put64(state,72,(uint64_t)frameptr);
+ if(mode==4|| (mode>=9&&mode<=15))stateptr=cold_split(state,80,mode==4?76:72+mode-8,&region);
+ struct ctl c={.pid=getpid(),.address=(uint64_t)stateptr,.result=-999};
+ if(bpf_map_update_elem(fd,&z,&c,BPF_ANY)||write(sink,"x",1)!=1||bpf_map_lookup_elem(fd,&z,&c))return 25;
+ struct event *e=(void*)c.output;struct frame expected={.line=123,.bytecode=0};memset(expected.file,'a',mode==3?127:(mode==7?7:30));memset(expected.function,'a',mode==16?7:3);
+ if(c.calls!=1||c.result||e->count!=1||e->flags!=(mode==3?16:0)||memcmp(&e->frames[0],&expected,200))return 26;
+ if(pte((unsigned char*)region+sysconf(_SC_PAGESIZE))!=1)return 27;
+ printf("PARTIAL_COLD_CASE mode=%d before=0 after=1 flags=%u\n",mode,e->flags);
+ munmap(region,2*sysconf(_SC_PAGESIZE));
+}
+ printf("STRING_GUARD_CASES %d MALFORMED_CASES 11\n",tests);close(sink);bpf_link__destroy(l);bpf_object__close(o);return 0;}
+'''
+bpf=bpf.replace('IOSEC_SYS_WRITE_PLACEHOLDER', '__x64_sys_write' if __import__('settings').ARCH == 'x86' else '__arm64_sys_write')
+config=(__import__('settings').PREPARED/'config.h').read_text()
+import re
+address=re.search(r'^#define CODE_TYPE_ADDRESS (\d+)$', config, re.M)[1]
+loader=loader.replace('11213488', address)
+(G/'strings.bpf.c').write_text(bpf);(G/'loader.c').write_text(loader);shutil.copy2(R/'evidence/build/vmlinux.h',G/'vmlinux.h')
+for i,cmd in enumerate([['clang','-O2','-g','-target','bpf','-D__TARGET_ARCH_' + __import__('settings').ARCH,'-I.','-c','strings.bpf.c','-o','strings.bpf.o'],['gcc','-O2','-Wall','-Werror','loader.c','-lbpf','-lelf','-lz','-o','loader'],['./loader']]):
+ p=subprocess.run(cmd,cwd=G,capture_output=True,text=True,timeout=120);(E/f'step-{i}.log').write_text(p.stdout+p.stderr);assert p.returncode==0,p.stderr[-2000:];print(p.stdout,end='')
+for n in ['strings.bpf.c','strings.bpf.o','loader.c','loader','vmlinux.h']:shutil.copy2(G/n,E/n)
+report=dict(passed=True,real_kernel_capture=True,owned_synthetic_metadata=True,guard_page_cases=44, malformed_cases=11, partial_cold_cases=17, checks=['Exact200byte frame including zero tails','Short/exact-limit/over-limit filename and function','Embedded NUL and empty strings','Both string objects end immediately before PROT_NONE page','All15unused frames zero','Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65','Exactly8B file/function payloads and linetable bytes recover across cold page','Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames','Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in'],module_sha256=hashlib.sha256((R/'evidence/build/iosec_native.ko').read_bytes()).hexdigest(),artifacts={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in E.iterdir() if p.is_file() and p.name!='verification.json'},full_goal_complete=False)
+(E/'verification.json').write_text(json.dumps(report,indent=2)+'\n')

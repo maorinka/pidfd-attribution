@@ -1,0 +1,56 @@
+{
+  "origin": "Reviewed pidfd_collector_path_muse implementation",
+  "collector_optimization_author": "Actual Muse CLI (Meta Muse Spark)",
+  "historical_authors": [
+    "Muse09/Muse129 architecture",
+    "Codex130 original pidfd reader",
+    "Codex compact entry-history snapshots",
+    "Muse native capture/encoder and collector contributions"
+  ],
+  "packaged_and_validated_by": "Codex",
+  "production_files": [
+    {
+      "file": "reader.bpf.c",
+      "original": "experiments/pidfd_collector_path_muse/reader.bpf.c",
+      "sha256": "bbd8f194ec94ddee0931d6c4c337f5a641c542b89e1bab4230c53b604c5f37a3",
+      "byte_identical": false,
+      "port_sha256": "27b5003d26ae687e1f5749de1b9d04ca5732a13b78304b6c2a2f9820e042cb20"
+    },
+    {
+      "file": "loader.c",
+      "original": "experiments/pidfd_collector_path_muse/loader.c",
+      "sha256": "6d9c27e49a0dd9c866ba0a970de467278eb5b961d32e8ad59d6a7a230689570c",
+      "byte_identical": true
+    },
+    {
+      "file": "direct_ring.h",
+      "original": "experiments/pidfd_collector_path_muse/direct_ring.h",
+      "sha256": "e29070dbe94f79517a490374656266c427bc7a2d9ed9a19035be62324639f3e5",
+      "byte_identical": true
+    },
+    {
+      "file": "module/Makefile",
+      "original": "experiments/pidfd_collector_path_muse/module/Makefile",
+      "sha256": "ecca2288986e50ec7bdbb6b72ab9842d7cef28d0016416d8a074fa560b073f47",
+      "byte_identical": true
+    },
+    {
+      "file": "module/config.h",
+      "original": "experiments/pidfd_collector_path_muse/module/config.h",
+      "sha256": "87e391d43f6bcd55a39c9edba9e25cd83a1fe7522703c9787f1f23a85b2c46f6",
+      "byte_identical": true
+    },
+    {
+      "file": "module/iosec_native.c",
+      "original": "experiments/pidfd_collector_path_muse/module/iosec_native.c",
+      "sha256": "ce3dfe1bfa433a437d013d2e9ed4722d301cb0afb3a9a95e6a770b7efb235122",
+      "byte_identical": true
+    }
+  ],
+  "historical_cpu_pct_one_core_median": 0.3131730425134857,
+  "historical_cpu_source": "evidence/pidfd-collector-path-muse/verification.json",
+  "historical_measurement_is_new_copy_measurement": false,
+  "counts_as_new_solution": false,
+  "standalone_port": "Codex: repository-local paths, generated configuration, native x86_64/arm64 syscall adapter, target setup and validation",
+  "collector_semantics_preserved": true
+}

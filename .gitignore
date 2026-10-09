@@ -1,0 +1,14 @@
+__pycache__/
+.DS_Store
+._*
+*.pyc
+/generated/
+/evidence/
+/evidence-runs/
+*.o
+*.ko
+*.mod
+*.mod.c
+*.cmd
+Module.symvers
+modules.order

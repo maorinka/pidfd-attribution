@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "scope": "Locally generated pinned inputs; bounded fixtures and steady-state CPU screen",
+  "production_files_unchanged_during_validation": true,
+  "counts_as_new_solution": false,
+  "cpu": {
+    "added_cpu_pct_one_core_median": 0.23420224342344317,
+    "added_cpu_pct_four_vcpu_median": 0.05855056085586079,
+    "one_core_pair_range": [
+      0.15811312147676726,
+      0.27406747771192586
+    ],
+    "all_five_pairs_below_target_one_core": false,
+    "four_vcpu_pair_range": [
+      0.039528280369191815,
+      0.06851686942798146
+    ],
+    "all_five_pairs_below_target_four_vcpu": false
+  },
+  "independently_recomputed_one_core_pairs": [
+    0.221472463118729,
+    0.15811312147676726,
+    0.23420224342344317,
+    0.24842419436061,
+    0.27406747771192586
+  ],
+  "module_removed": true,
+  "remaining_bpf_program_names": [
+    "lima_ticker",
+    "sd_devices",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_devices",
+    "sd_devices",
+    "sd_devices",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_devices",
+    "sysctl_monitor",
+    "sd_devices"
+  ],
+  "evidence": "/var/tmp/pidfd-port-arm64/evidence",
+  "production_sha256": {
+    "reader.bpf.c": "27b5003d26ae687e1f5749de1b9d04ca5732a13b78304b6c2a2f9820e042cb20",
+    "loader.c": "6d9c27e49a0dd9c866ba0a970de467278eb5b961d32e8ad59d6a7a230689570c",
+    "direct_ring.h": "e29070dbe94f79517a490374656266c427bc7a2d9ed9a19035be62324639f3e5",
+    "module/Makefile": "ecca2288986e50ec7bdbb6b72ab9842d7cef28d0016416d8a074fa560b073f47",
+    "module/config.h": "87e391d43f6bcd55a39c9edba9e25cd83a1fe7522703c9787f1f23a85b2c46f6",
+    "module/iosec_native.c": "ce3dfe1bfa433a437d013d2e9ed4722d301cb0afb3a9a95e6a770b7efb235122"
+  },
+  "driver_sha256": {
+    "validate_guest.py": "f7258d4a2e88f98fd8c589439239a02e3f8ba9c3d9efae9f95d30e0809064597",
+    "prepare_guest.py": "7f6ab977750af8945e87b4d08adba0e27170e9f9de2bf0e210b343a068b1051d",
+    "fixture_guest.py": "bad7840427a21112ffe67519dfd729d5761e2fad66d450f206a082c3d98c34be",
+    "strings_collector_path_guest.py": "b82f53d4e33ca63cf953c0d9f3831000ecd01b0f88bb5203ccf4b831cfb9a93b",
+    "build_collector_path_guest.py": "4cfdfcdebc74d75d5ea3749b37777be358c07b09bdb92c9403c37edfde8df2c7",
+    "run_collector_path_guest.py": "59da9bf4931408a91b82aafbb03a9063f5d90ee31a048e2f603cac4f5467fe8b",
+    "history_guest.py": "9b9efb012037d512d3ac7a020ff0db98c8d1ce6da816fffc5c3121d400ad1882",
+    "collector_path_scope_guest.py": "13d862dc70233ab9d03f06ab1c2435c10046349734e9c05a96865342b82f43c8",
+    "measure_collector_path_guest.py": "f4323ab81c10e096826f81c3eba7f57fd1264c10cb473b0c2bea0799d133ec0c",
+    "verify_deep_collector_path_guest.py": "3d2eaf9d6ecad00c7ea80f79df817941e355261ed166f17570f09d3958d4a3b0",
+    "held_collector_path_guest.py": "4fb0a9d1d1db662d50121287050c00bebbf43ea68d24cc051d802ec11e76934e",
+    "doctor_guest.py": "8e4409ff11472bff1e74e7d42fdb3a99b0905c6ed42ac1c5902383bfc36ea9ae",
+    "settings.py": "2519f9ae53c15760b104f96e608d5f8a4da356c430f1f2efaf61d59f0943d2ae",
+    "oracle_collector_path_guest.py": "0bbdea6c6b93960dd53cb03d79f3ef12e34630c4d1d91663cf71fba05e732891"
+  },
+  "completed_at": "2026-10-09T00:07:41.468554+00:00",
+  "validation_environment": "Ubuntu 26.04.1 arm64; standalone checkout at /var/tmp/pidfd-port-arm64; generated offsets/BTF",
+  "notes": [
+    "fixture_guest.py subsequently adds a default PIDFD_RESULT; this helper was not exercised by this full validation",
+    "macOS archive metadata sidecars were removed after validation; executable production sources were unchanged"
+  ]
+}

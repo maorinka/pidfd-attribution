@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "fixture": "fixtures/prerequisites/workload.py",
+  "default_result_path_works": true,
+  "writes": 3,
+  "module_removed": true,
+  "binary_sha256": "a522c25f2b998563b1fd76f9407258c2fa81c7a7c41163c209d4f89816b93b00",
+  "notes": "Scoped fixture runner executed on the Intel Ubuntu guest using the tested collector/module; output allocation safely fell back on the 9p evidence filesystem"
+}

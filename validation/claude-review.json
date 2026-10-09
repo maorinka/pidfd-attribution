@@ -1,0 +1,24 @@
+{
+  "reviewer": "Installed actual Claude Code CLI",
+  "mode": "read-only; no code edits or runtime tests",
+  "chrome_integration_enabled": true,
+  "chrome_used": false,
+  "raw_review_sha256": "cc16b7f18ed7a5c1faa0e8cf78a2d828ff51b0c39ddb8a21dadfdb87202022aa",
+  "confirmed": [
+    "x86 syscall wrapper names and pt_regs di/si argument mapping",
+    "TS_COMPAT gating and x32 number exclusion",
+    "non-PIE and dynamic PyCode_Type address preparation"
+  ],
+  "changes_after_review": [
+    "Check UNICODE_LENGTH with compiled matching CPython headers",
+    "Reject free-threaded/debug interpreter builds",
+    "Check gen-btf.sh availability",
+    "Keep clang diagnostic output",
+    "Add IA32 int80 pidfd_getfd negative control"
+  ],
+  "limits": [
+    "Kernel attach success alone does not prove a non-inlined call is observed; functional identity/lifetime fixtures remain required",
+    "Physical Intel costs must be measured separately from ARM or QEMU results",
+    "Concurrent system BPF activity can invalidate the conservative cleanup audit"
+  ]
+}

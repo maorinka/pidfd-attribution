@@ -1,0 +1,71 @@
+{
+  "passed": true,
+  "kernel": "7.0.0-34-generic",
+  "regression_records": 515,
+  "attached_hooks": 35,
+  "deep": [
+    {
+      "depth": 4,
+      "actual_frames": 10,
+      "captured_frames": 10,
+      "complete": true,
+      "flags": 0,
+      "verified_writes": 3,
+      "verified_actor_stacks": 23,
+      "log_sha256": "f6dff69c9b1843a87fb4e9633b53c20bb83498870ebad89d8de18b1f3daf4dbc"
+    },
+    {
+      "depth": 10,
+      "actual_frames": 16,
+      "captured_frames": 16,
+      "complete": true,
+      "flags": 0,
+      "verified_writes": 3,
+      "verified_actor_stacks": 23,
+      "log_sha256": "62a10f6b09cde48773af08d9f3113527e455d4cf5bdaa102bf6fd28110476178"
+    },
+    {
+      "depth": 11,
+      "actual_frames": 17,
+      "captured_frames": 16,
+      "complete": false,
+      "flags": 32,
+      "verified_writes": 3,
+      "verified_actor_stacks": 23,
+      "log_sha256": "22307fd5f825ee94ee6b5746a3e67411ab2f303614930a5b5cd8c4bfb620eb8e"
+    }
+  ],
+  "held_GIL": [
+    {
+      "profile": "serial",
+      "complete_writes": 3
+    },
+    {
+      "profile": "threads",
+      "complete_writes": 13
+    }
+  ],
+  "bytecode_oracle": {
+    "records": 999,
+    "stacks": 2937,
+    "frames": 16035
+  },
+  "cpu": {
+    "added_cpu_pct_one_core_median": 0.1824705778010218,
+    "added_cpu_pct_four_vcpu_median": 0.04561764445025545,
+    "one_core_pair_range": [
+      0.13201175899275458,
+      0.21592961310373363
+    ],
+    "all_five_pairs_below_target_one_core": false,
+    "four_vcpu_pair_range": [
+      0.033002939748188645,
+      0.053982403275933406
+    ],
+    "all_five_pairs_below_target_four_vcpu": false
+  },
+  "module_removed": true,
+  "production_files_byte_identical": true,
+  "counts_as_new_solution": false,
+  "scope": "Historical arm64 run of the original packaged pipeline; not an x86 portability test"
+}
