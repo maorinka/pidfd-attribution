@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "rotations": 5,
+  "retained_segments": 3,
+  "input_records": 38400,
+  "decoded_retained_records": 19712,
+  "record_boundaries_preserved": true,
+  "no_preallocated_zero_tail": true,
+  "failed_write_does_not_release_ring": true,
+  "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1"
+}

@@ -1,0 +1,39 @@
+[Unit]
+Description=IO.Security module-free endpoint attribution sensor
+After=local-fs.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/usr/bin/python3 /opt/iosec-endpoint/service.py run --config /etc/iosec-endpoint.json
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=180
+TimeoutStopSec=30
+WatchdogSec=30
+User=root
+Group=root
+UMask=0077
+StateDirectory=iosec-endpoint
+StateDirectoryMode=0700
+WorkingDirectory=/opt/iosec-endpoint/build
+NoNewPrivileges=true
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_BPF CAP_PERFMON CAP_SYS_RESOURCE CAP_DAC_READ_SEARCH
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/iosec-endpoint
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=true
+RestrictRealtime=true
+LimitNOFILE=256
+MemoryMax=512M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

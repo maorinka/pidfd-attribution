@@ -20,6 +20,8 @@ This is a bounded experimental pipeline, not an endpoint-wide EDR service.
 
 A separate [module-free backend](module-free/README.md) uses upstream BPF helpers and retains the compact collector. Its documentation describes tested integrity-lockdown conditions and remaining fleet-policy limits.
 
+A separate [continuous endpoint attribution service](endpoint-service/README.md) adds systemd supervision, endpoint-wide process admission, configurable collection, health reporting, and bounded logs. It is an attribution sensor with documented I/O coverage limits, rather than a complete EDR product.
+
 ## Compatibility
 
 | Ubuntu | Default Python adapter | Kernel requirement |

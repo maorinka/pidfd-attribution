@@ -1,0 +1,21 @@
+{
+  "backend": "continuous-module-free-endpoint-attribution",
+  "base_commit": "9146989db87e024417fb4052554e9aa434a422c9",
+  "base_directory": "module-free",
+  "upstream_helpers_only": true,
+  "third_party_kernel_modules": false,
+  "wire_version": 2,
+  "credits": [
+    "Muse09/Muse129 architecture and collector contributions",
+    "Codex130 original pidfd reader",
+    "Codex compact entry-history snapshots and module-free backend"
+  ],
+  "changes": [
+    "Endpoint-wide admission with excluded collector and configurable cgroup/path policy",
+    "Optional Python source capture; identity-only default",
+    "Continuous bounded mapped-ring consumption, segmented retention, health and systemd supervision",
+    "Per-event monotonic timestamp and emitter identity in wire v2",
+    "Avoid subject allowlist lifetime dependence and per-install full-map label counting",
+    "Skip untracked writes before allocating per-thread state; retire aborted syscall state on exit/exec"
+  ]
+}

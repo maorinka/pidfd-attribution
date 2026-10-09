@@ -1,0 +1,379 @@
+{
+  "passed": true,
+  "recorded_at": "2026-10-09T14:34:04.359914+00:00",
+  "environment": {
+    "ubuntu": "24.04",
+    "architecture": "x86_64",
+    "virtualization": "QEMU on Apple Silicon",
+    "physical_intel": false,
+    "firmware_secure_boot_tested": false
+  },
+  "integration": {
+    "passed": true,
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "base": "/var/tmp/pidfd-service-test-xlmmjefx",
+    "baseline_bpf_ids": [
+      2,
+      18,
+      599,
+      600,
+      601,
+      602,
+      603,
+      604,
+      605,
+      606,
+      607,
+      608,
+      609,
+      610,
+      611
+    ],
+    "lockdown": "none [integrity] confidentiality",
+    "modules_disabled": "1",
+    "no_cap_sys_module": true,
+    "identity": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2186,
+        "session": "f657bca9715d45913f8b494f931dba00",
+        "boot_id": "01710709-3fa7-4c93-a071-cb3e6fdcb30f",
+        "start_monotonic_ns": 1513847520455,
+        "updated_monotonic_ns": 1518880749102,
+        "updated_realtime_ns": 1791556093049405837,
+        "attachments": 29,
+        "capture_python": false,
+        "records": 18,
+        "session_bytes": 4032,
+        "active_segment": "events-01791556088016194327-f657bca9715d45913f8b494f931dba00-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19352,
+        "restart_resets_history": true
+      },
+      "independent_existing_process_writes": 5,
+      "pidfd_writes": 3,
+      "duplicate_rejected": true
+    },
+    "source": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2195,
+        "session": "41b803bdf64f467824e26d20d7bea6c1",
+        "boot_id": "01710709-3fa7-4c93-a071-cb3e6fdcb30f",
+        "start_monotonic_ns": 1519086453533,
+        "updated_monotonic_ns": 1528161624210,
+        "updated_realtime_ns": 1791556102330282927,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 50,
+        "session_bytes": 118600,
+        "active_segment": "events-01791556093255130338-41b803bdf64f467824e26d20d7bea6c1-0000000005.bin",
+        "segments_created": 6,
+        "segments_deleted": 3,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19196,
+        "restart_resets_history": true
+      },
+      "serial_writes": 3,
+      "threaded_writes": 13,
+      "oracle_frames": 279,
+      "leader_first_exit_writes": 5,
+      "rotation_keeps_session": true,
+      "bounded_segments": true
+    },
+    "restart": {
+      "new_session": true,
+      "crash_cleanup": true,
+      "subsequent_writes": 3
+    },
+    "global": {
+      "empty_prefix": true,
+      "pidfd_writes": 3
+    },
+    "capacity": {
+      "explicit_history_gap": true,
+      "state_errors": 22
+    },
+    "ring_pressure": {
+      "explicit_history_gap": true,
+      "ring_drops": 13845
+    },
+    "cgroup": {
+      "exact_id": 4464,
+      "matching_writes": 3,
+      "excluded_records": 0
+    },
+    "final_bpf_ids": [
+      2,
+      18,
+      599,
+      600,
+      601,
+      602,
+      603,
+      604,
+      605,
+      606,
+      607,
+      608,
+      609,
+      610,
+      611
+    ],
+    "modules_unchanged": true,
+    "cleanup_ok": true,
+    "sources": {
+      "reader.bpf.c": "15bfe9855a666b8a5708c645ddd6db37219709f6354bfedfec360972ee3834dc",
+      "collector.c": "d3011e497840761879db5c3a1749c2dd77301c3cc0c4bdc0fb0abdbc9daa3c1a",
+      "direct_ring.h": "99336a97d5ea1428479cf1fb36331bfcdb0f516a1a1996c8e8e14ab0559bccd9",
+      "protocol.h": "f1cbc2a8afe0205ed943d35af5698d6436f0e1a8fc6409ca052c598529da02ba",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f"
+    }
+  },
+  "systemd": {
+    "passed": true,
+    "base": "/var/tmp/pidfd-systemd-test-jhzqi54n",
+    "installation_bpf_ids": [
+      2,
+      18,
+      586,
+      587,
+      588,
+      589,
+      590,
+      591,
+      592,
+      593,
+      594,
+      595,
+      596,
+      597,
+      598
+    ],
+    "source_writes": 3,
+    "attachments": 35,
+    "effective_capabilities": "0xc001200004",
+    "cap_sys_module": false,
+    "watchdog_notification": true,
+    "reload_rotates": true,
+    "automatic_restart": true,
+    "old_session": "2fa5c97d4f7144f93e7b749017444f81",
+    "new_session": "d60e8b22183d1619337b7ab64504973c",
+    "active_health": {
+      "schema_version": 1,
+      "state": "running",
+      "pid": 2159,
+      "session": "d60e8b22183d1619337b7ab64504973c",
+      "boot_id": "01710709-3fa7-4c93-a071-cb3e6fdcb30f",
+      "start_monotonic_ns": 1404997150369,
+      "updated_monotonic_ns": 1408895566224,
+      "updated_realtime_ns": 1791555983373045078,
+      "attachments": 35,
+      "capture_python": true,
+      "records": 0,
+      "session_bytes": 0,
+      "active_segment": "events-01791555979474627222-d60e8b22183d1619337b7ab64504973c-0000000000.bin",
+      "segments_created": 1,
+      "segments_deleted": 0,
+      "ring_drops": 0,
+      "state_errors": 0,
+      "cleanup_fallback": 0,
+      "history_gaps": false,
+      "errno": 0,
+      "reservation_state": 1,
+      "reservation_errno": 0,
+      "max_rss_kib": 26888,
+      "restart_resets_history": true
+    },
+    "final_health": {
+      "schema_version": 1,
+      "state": "stopped",
+      "pid": 2159,
+      "session": "d60e8b22183d1619337b7ab64504973c",
+      "boot_id": "01710709-3fa7-4c93-a071-cb3e6fdcb30f",
+      "start_monotonic_ns": 1404997150369,
+      "updated_monotonic_ns": 1411783246859,
+      "updated_realtime_ns": 1791555986260725713,
+      "attachments": 35,
+      "capture_python": true,
+      "records": 0,
+      "session_bytes": 0,
+      "active_segment": "events-01791555979474627222-d60e8b22183d1619337b7ab64504973c-0000000000.bin",
+      "segments_created": 1,
+      "segments_deleted": 0,
+      "ring_drops": 0,
+      "state_errors": 0,
+      "cleanup_fallback": 0,
+      "history_gaps": false,
+      "errno": 0,
+      "reservation_state": 1,
+      "reservation_errno": 0,
+      "max_rss_kib": 26888,
+      "restart_resets_history": true
+    },
+    "final_bpf_ids": [
+      2,
+      18,
+      599,
+      600,
+      601,
+      602,
+      603,
+      604,
+      605,
+      606,
+      607,
+      608,
+      609,
+      610,
+      611
+    ],
+    "baseline_bpf_ids": [
+      2,
+      18,
+      599,
+      600,
+      601,
+      602,
+      603,
+      604,
+      605,
+      606,
+      607,
+      608,
+      609,
+      610,
+      611
+    ],
+    "cleanup_ok": true
+  },
+  "build": {
+    "schema_version": 1,
+    "upstream_only": true,
+    "pins": {
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "python_binary": "/usr/bin/python3.12",
+      "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+      "python_version": "(3, 12, 3)",
+      "offsets": {
+        "TSTATE_FRAME": 56,
+        "CFRAME_FRAME": 0,
+        "TSTATE_FRAME_INDIRECT": 1,
+        "FRAME_CODE": 0,
+        "FRAME_INSTR": 56,
+        "FRAME_PREVIOUS": 8,
+        "FRAME_OWNER": 70,
+        "CODE_FILENAME": 112,
+        "CODE_NAME": 120,
+        "CODE_FIRSTLINE": 68,
+        "CODE_LINETABLE": 136,
+        "CODE_BYTECODE": 192,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 40,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 12,
+        "CODE_TYPE_ADDRESS": 10670688,
+        "PYTHON_TEXT_ADDRESS": 4325376,
+        "IOSEC_COMPAT_MASK": 2
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 79611,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 739,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 12
+            },
+            {
+              "name": "pathname",
+              "type_id": 4751
+            },
+            {
+              "name": "op",
+              "type_id": 20581
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 30648,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 601,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 601
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 20606
+            }
+          ]
+        }
+      },
+      "target_inputs": {
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754"
+      },
+      "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+    },
+    "sources": {
+      "reader.bpf.c": "15bfe9855a666b8a5708c645ddd6db37219709f6354bfedfec360972ee3834dc",
+      "collector.c": "d3011e497840761879db5c3a1749c2dd77301c3cc0c4bdc0fb0abdbc9daa3c1a",
+      "direct_ring.h": "99336a97d5ea1428479cf1fb36331bfcdb0f516a1a1996c8e8e14ab0559bccd9",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+      "protocol.h": "f1cbc2a8afe0205ed943d35af5698d6436f0e1a8fc6409ca052c598529da02ba"
+    },
+    "artifacts": {
+      "collector": "8aff580079de6a67f27ac6f8af6e511a610918bb1936fc9d16ccaf9bc2636e78",
+      "reader.bpf.o": "0bf26e012e5f02c3384f2a5f01291be9ae0c846a6bc45edcf209ad5dec18c34b"
+    }
+  },
+  "frontend_sha256": {
+    "service.py": "2ae7fd3dbe3c71c182a80a98eff5734c785c3ccedcd42a02da7712f3872d45b0",
+    "wire.py": "b152da8eec146527747fbd45efeed79cab92204693e44a550d35663c297c6ee1",
+    "prepare_guest.py": "0881e9a395a04fed94ce441c7d4026bc7cdb26bbe42cf3729ef5cf8369035962",
+    "iosec-endpoint.service": "ba1a982375e710c55d23b81f33ae1d9f1bc4d89b0b2466142e2a3aeacac93faa"
+  },
+  "offline_tests": {
+    "passed": true,
+    "tests": 6,
+    "frame_count_permutations": 98
+  },
+  "limits": [
+    "No physical hardware overhead or sustained fleet workload claim",
+    "No exhaustive I/O/descriptor coverage claim",
+    "Only Ubuntu24 x86_64 daemon validated"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "state_dir": "/var/lib/iosec-endpoint",
+  "capture_python": false,
+  "path_prefix": "",
+  "cgroup_id": 0,
+  "segment_bytes": 16777216,
+  "max_segments": 8,
+  "poll_ms": 20,
+  "health_ms": 1000,
+  "sync_ms": 1000,
+  "state_entries": 1024
+}
