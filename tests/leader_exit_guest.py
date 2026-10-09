@@ -12,8 +12,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from shared.validation_lock import validation_lock
-from shared.collector_records import events
+from shared.python.validation_lock import validation_lock
+from shared.python.collector_records import events
 
 validation_fd = validation_lock()
 parser = argparse.ArgumentParser()

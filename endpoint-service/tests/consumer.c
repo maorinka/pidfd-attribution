@@ -1,6 +1,6 @@
 /* Drive the real mapped-ring parser with committed/discarded/busy records. */
 #define main collector_main
-#include "../collector.c"
+#include "../core/collector.c"
 #undef main
 #include <assert.h>
 

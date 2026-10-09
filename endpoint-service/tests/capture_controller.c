@@ -1,4 +1,4 @@
-#include "../capture_controller.h"
+#include "../core/capture_controller.h"
 #include <assert.h>
 #include <stdio.h>
 

@@ -5,4 +5,4 @@ if [[ "$(uname -s)" != Linux ]]; then
   echo 'Run this sensor inside Ubuntu Linux.' >&2
   exit 1
 fi
-exec /usr/bin/python3 "$directory/service.py" "$@"
+exec /usr/bin/python3 "$directory/python/service.py" "$@"

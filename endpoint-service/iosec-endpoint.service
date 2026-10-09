@@ -7,7 +7,7 @@ StartLimitBurst=5
 [Service]
 Type=notify
 NotifyAccess=main
-ExecStart=/usr/bin/python3 /opt/iosec-endpoint/service.py run --config /etc/iosec-endpoint.json
+ExecStart=/usr/bin/python3 /opt/iosec-endpoint/python/service.py run --config /etc/iosec-endpoint.json
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=10

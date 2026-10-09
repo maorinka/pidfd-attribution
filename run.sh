@@ -17,7 +17,7 @@ if [[ ! -x "$interpreter" ]]; then
   exit 1
 fi
 if [[ $EUID -eq 0 ]]; then
-  exec "$interpreter" "$directory/validate_guest.py" "$@"
+  exec "$interpreter" "$directory/python/validate_guest.py" "$@"
 else
   preserve=()
   while IFS= read -r name; do
@@ -26,7 +26,7 @@ else
   if (( ${#preserve[@]} )); then
     printf -v preserve_list '%s,' "${preserve[@]}"
     preserve_list="${preserve_list%,}"
-    exec sudo --preserve-env="$preserve_list" "$interpreter" "$directory/validate_guest.py" "$@"
+    exec sudo --preserve-env="$preserve_list" "$interpreter" "$directory/python/validate_guest.py" "$@"
   fi
-  exec sudo "$interpreter" "$directory/validate_guest.py" "$@"
+  exec sudo "$interpreter" "$directory/python/validate_guest.py" "$@"
 fi

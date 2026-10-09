@@ -1,1 +1,1 @@
-../../../shared/regression_verifier.py
+../../../shared/python/regression_verifier.py

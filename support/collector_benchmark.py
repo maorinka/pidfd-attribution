@@ -1,1 +1,0 @@
-../shared/collector_benchmark.py

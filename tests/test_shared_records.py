@@ -11,8 +11,8 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from shared.collector_records import Frame, WireHeader, WorkloadVerifier, events
-from shared.fixture_transform import held_gil_workload
+from shared.python.collector_records import Frame, WireHeader, WorkloadVerifier, events
+from shared.python.fixture_transform import held_gil_workload
 import ast
 import re
 
@@ -24,6 +24,7 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 sys.argv = []
+sys.path.insert(0, str(Path.cwd() / "python"))
 with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read')), \
      patch.object(Path, 'mkdir', side_effect=AssertionError('mkdir')), \
      patch('subprocess.Popen', side_effect=AssertionError('process start')):
@@ -37,7 +38,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
     def test_support_file_direct_execution_is_inert(self):
         for backend in (ROOT, ROOT / "module-free"):
             result = subprocess.run(
-                [sys.executable, str(backend / "support/run_guest_base.py")],
+                [sys.executable, str(backend / "python/support/run_guest_base.py")],
                 capture_output=True,
                 text=True,
             )
@@ -102,7 +103,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
 
     def test_stage_names_match_the_endpoint_wire_decoder(self):
         specification = importlib.util.spec_from_file_location(
-            "endpoint_wire", ROOT / "endpoint-service/wire.py"
+            "endpoint_wire", ROOT / "endpoint-service/python/wire.py"
         )
         wire = importlib.util.module_from_spec(specification)
         specification.loader.exec_module(wire)
@@ -110,25 +111,25 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
             int(value): name.lower()
             for name, value in re.findall(
                 r"IOSEC_STAGE_([A-Z_]+) = ([0-9]+)",
-                (ROOT / "shared/source_protocol.h").read_text(),
+                (ROOT / "shared/core/source_protocol.h").read_text(),
             )
         }
         self.assertEqual(names, wire.STAGES)
 
     def test_fixture_collectors_and_rings_share_one_implementation(self):
-        for relative in ("loader.c", "direct_ring.h"):
+        for relative in ("core/loader.c", "core/direct_ring.h"):
             paths = [backend / relative for backend in (ROOT, ROOT / "module-free")]
             self.assertTrue(all(path.is_symlink() for path in paths))
             self.assertEqual(paths[0].resolve(), paths[1].resolve())
 
     def test_shared_primitives_are_symlinked_in_all_backends(self):
         for relative in (
-            "arch.h",
-            "source_protocol.h",
-            "bpf_task_helpers.h",
-            "python_binding.bpf.h",
-            "support/offsets.c",
-            "support/python_layout.py",
+            "core/arch.h",
+            "core/source_protocol.h",
+            "core/bpf_task_helpers.h",
+            "core/python_binding.bpf.h",
+            "core/support/offsets.c",
+            "python/support/python_layout.py",
             "install-ubuntu.sh",
         ):
             paths = [

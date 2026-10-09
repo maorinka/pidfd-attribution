@@ -18,7 +18,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "python"))
 from service import configuration, collector_command
 
 
@@ -228,7 +228,7 @@ def main():
             passed=True,
             summary=summary,
             sources={
-                name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+                name: hashlib.sha256((ROOT / "core" / name).read_bytes()).hexdigest()
                 for name in ("reader.bpf.c", "collector.c", "direct_ring.h")
             },
         )

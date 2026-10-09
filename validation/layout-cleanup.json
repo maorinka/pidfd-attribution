@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "16c3e671904b7af04eb93730e8890c8f756cc39d",
+  "layout": {
+    "backend_native": "core/",
+    "backend_python": "python/",
+    "shared_native": "shared/core/",
+    "shared_python": "shared/python/",
+    "moved_files": 96,
+    "shared_symlinks": 47,
+    "unchanged_moved_native_files": 17,
+    "c_test_changes": "Only relative include paths in three endpoint test files",
+    "entrypoints": "Top-level run.sh and install-ubuntu.sh retained"
+  },
+  "host": {
+    "python": "3.14.6",
+    "offline_tests": 21,
+    "formatting": true,
+    "shell_syntax": true
+  },
+  "ubuntu24": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3",
+    "offline_tests": 21,
+    "builds": [
+      "native",
+      "module-free",
+      "endpoint-service"
+    ],
+    "fixture_backends": {
+      "native": {
+        "status": "correctness-checks-passed; CPU not measured by this script",
+        "cleanup_ok": true,
+        "deep_status": "passed"
+      },
+      "module-free": {
+        "status": "correctness-checks-passed; CPU not measured by this script",
+        "cleanup_ok": true,
+        "deep_status": "passed"
+      }
+    },
+    "endpoint": {
+      "passed": true,
+      "cleanup_ok": true,
+      "modules_unchanged": true,
+      "oracle_frames": 279,
+      "adaptive_capture": {
+        "degraded_identity_writes": 3,
+        "recovered_source_writes": 3,
+        "history_gap_preserved": true
+      },
+      "task_birth_guard": {
+        "positive_before": true,
+        "mismatch_unknown": true,
+        "reseeded_after": true
+      }
+    },
+    "storage": {
+      "passed": true,
+      "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+      "rotations": 5,
+      "retained_segments": 3,
+      "input_records": 38400,
+      "decoded_retained_records": 1024,
+      "record_boundaries_preserved": true,
+      "no_preallocated_zero_tail": true,
+      "failed_write_does_not_release_ring": true,
+      "admin_modified_segments_preserved": true,
+      "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+      "bounded_consumer_backlog_retry": true,
+      "busy_record_no_spin": true
+    },
+    "systemd": {
+      "passed": true,
+      "cleanup_ok": true,
+      "attachments": 35,
+      "watchdog_notification": true,
+      "reload_rotates": true,
+      "automatic_restart": true,
+      "hardening": {
+        "SystemCallArchitectures": "native",
+        "RestrictNamespaces": "yes",
+        "RestrictSUIDSGID": "yes",
+        "PrivateDevices": "yes",
+        "ProtectProc": "invisible"
+      }
+    },
+    "previous_installation_restored": true
+  },
+  "first_attempt": "endpoint-service/validation/layout-background-drift.json",
+  "cpu_measurement": "Not repeated for this layout-only change"
+}

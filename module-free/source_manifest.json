@@ -1,25 +1,25 @@
 {
   "production_files": [
     {
-      "file": "reader.bpf.c"
+      "file": "core/reader.bpf.c"
     },
     {
-      "file": "loader.c"
+      "file": "core/loader.c"
     },
     {
-      "file": "direct_ring.h"
+      "file": "core/direct_ring.h"
     },
     {
-      "file": "arch.h"
+      "file": "core/arch.h"
     },
     {
-      "file": "source_protocol.h"
+      "file": "core/source_protocol.h"
     },
     {
-      "file": "bpf_task_helpers.h"
+      "file": "core/bpf_task_helpers.h"
     },
     {
-      "file": "python_binding.bpf.h"
+      "file": "core/python_binding.bpf.h"
     }
   ]
 }

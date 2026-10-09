@@ -19,10 +19,10 @@ import types
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT.parent))
-from shared.validation_lock import validation_lock
+from shared.python.validation_lock import validation_lock
 
 validation_fd = validation_lock()
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "python"))
 from service import configuration, collector_command, validate_cgroup
 from wire import records
 
@@ -142,7 +142,7 @@ def demo(name, profile="serial", writes=3):
         PIDFD_PROFILE=profile,
     )
     subprocess.run(
-        [sys.executable, str(ROOT / "demo.py")], env=env, check=True, timeout=60
+        [sys.executable, str(ROOT / "python/demo.py")], env=env, check=True, timeout=60
     )
     return json.loads(result.read_text())
 
@@ -591,7 +591,7 @@ try:
         result["final_bpf_ids"] == baseline_programs and result["modules_unchanged"]
     )
     result["sources"] = {
-        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        name: hashlib.sha256((ROOT / "core" / name).read_bytes()).hexdigest()
         for name in (
             "reader.bpf.c",
             "collector.c",

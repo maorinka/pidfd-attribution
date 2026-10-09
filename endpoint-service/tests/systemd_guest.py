@@ -15,10 +15,10 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT.parent))
-from shared.validation_lock import validation_lock
+from shared.python.validation_lock import validation_lock
 
 validation_fd = validation_lock()
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "python"))
 from service import configuration
 from wire import records
 
@@ -88,7 +88,7 @@ try:
     subprocess.run(
         [
             sys.executable,
-            str(ROOT / "service.py"),
+            str(ROOT / "python/service.py"),
             "install",
             "--config",
             str(config_path),
@@ -136,7 +136,7 @@ try:
         PIDFD_WRITES="3",
     )
     subprocess.run(
-        [sys.executable, str(ROOT / "demo.py")], env=env, check=True, timeout=60
+        [sys.executable, str(ROOT / "python/demo.py")], env=env, check=True, timeout=60
     )
     application = json.loads(result_path.read_text())
     time.sleep(0.3)
@@ -166,7 +166,7 @@ try:
         >= 1
     )
     subprocess.run(
-        [sys.executable, "/opt/iosec-endpoint/service.py", "status"], check=True
+        [sys.executable, "/opt/iosec-endpoint/python/service.py", "status"], check=True
     )
     assert (
         run(

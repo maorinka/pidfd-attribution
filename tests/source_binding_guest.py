@@ -18,14 +18,14 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from shared.validation_lock import validation_lock
+from shared.python.validation_lock import validation_lock
 
 validation_fd = validation_lock()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--backend", choices=("root", "module-free"), default="module-free")
 args = parser.parse_args()
 backend = ROOT if args.backend == "root" else ROOT / "module-free"
-sys.path.insert(0, str(backend))
+sys.path.insert(0, str(backend / "python"))
 from settings import BPF_INCLUDES, BPF_LIBS, PYTHON, PYTHON_CONFIG
 from support.collector_records import events, stack
 
@@ -35,7 +35,7 @@ base.chmod(0o700)
 for source in (backend / "evidence/build").iterdir():
     if source.is_file():
         shutil.copy2(source, base / source.name)
-shutil.copy2(backend / "loader.c", base / "loader.c")
+shutil.copy2(backend / "core/loader.c", base / "loader.c")
 shutil.copy2(ROOT / "tests/source_binding_fixture.py", base / "fixture.py")
 temporary = base / "binding_temporary.py"
 temporary.write_text("pass\n")
@@ -83,8 +83,8 @@ report = dict(
             Path(__file__),
             ROOT / "tests/source_binding.c",
             ROOT / "tests/source_binding_fixture.py",
-            backend / "loader.c",
-            backend / "reader.bpf.c",
+            backend / "core/loader.c",
+            backend / "core/reader.bpf.c",
         )
     },
     limitations="Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
@@ -161,7 +161,7 @@ try:
         subprocess.run(
             [
                 str(PYTHON),
-                str(backend / "support/bytecode_oracle_guest.py"),
+                str(backend / "python/support/bytecode_oracle_guest.py"),
                 str(expanded),
             ],
             check=True,

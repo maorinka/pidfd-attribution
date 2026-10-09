@@ -1,0 +1,80 @@
+{
+  "passed": false,
+  "kernel": "6.8.0-142-generic",
+  "architecture": "x86_64",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "failure_reason": "Exact BPF program ID audit timed out during birth-mismatch sensor cleanup",
+  "baseline_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    33,
+    34,
+    35,
+    36,
+    37
+  ],
+  "missing_bpf_ids": [],
+  "new_bpf_programs": [
+    {
+      "id": 1168,
+      "type": "cgroup_device",
+      "name": "sd_devices",
+      "tag": "1420dcceaa1a31ba",
+      "gpl_compatible": true,
+      "run_time_ns": 511983,
+      "run_cnt": 11,
+      "loaded_at": 1791576505,
+      "uid": 0,
+      "orphaned": false,
+      "bytes_xlated": 1616,
+      "jited": true,
+      "bytes_jited": 986,
+      "bytes_memlock": 4096
+    }
+  ],
+  "final_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    33,
+    34,
+    35,
+    36,
+    37,
+    1168
+  ],
+  "completed_checks": {
+    "independent_identity_writes": 5,
+    "source_serial_writes": 3,
+    "source_threaded_writes": 13,
+    "oracle_frames": 279,
+    "leader_first_exit_writes": 5,
+    "restart": {
+      "new_session": true,
+      "crash_cleanup": true,
+      "subsequent_writes": 3
+    },
+    "global": {
+      "empty_prefix": true,
+      "pidfd_writes": 3
+    },
+    "capacity": {
+      "explicit_history_gap": true,
+      "state_errors": 22
+    }
+  },
+  "result": "The exact-ID audit failed because one unrelated systemd cgroup_device program appeared. No baseline IDs disappeared. The complete integration rerun passed."
+}

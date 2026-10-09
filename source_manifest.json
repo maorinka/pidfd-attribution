@@ -1,31 +1,31 @@
 {
   "production_files": [
     {
-      "file": "reader.bpf.c"
+      "file": "core/reader.bpf.c"
     },
     {
-      "file": "loader.c"
+      "file": "core/loader.c"
     },
     {
-      "file": "direct_ring.h"
+      "file": "core/direct_ring.h"
     },
     {
-      "file": "module/Makefile"
+      "file": "core/module/Makefile"
     },
     {
-      "file": "module/config.h"
+      "file": "core/module/config.h"
     },
     {
-      "file": "module/iosec_native.c"
+      "file": "core/module/iosec_native.c"
     },
     {
-      "file": "source_protocol.h"
+      "file": "core/source_protocol.h"
     },
     {
-      "file": "bpf_task_helpers.h"
+      "file": "core/bpf_task_helpers.h"
     },
     {
-      "file": "python_binding.bpf.h"
+      "file": "core/python_binding.bpf.h"
     }
   ]
 }

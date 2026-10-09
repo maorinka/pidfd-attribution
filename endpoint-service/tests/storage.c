@@ -1,7 +1,7 @@
 /* Exercise the production writev commit/rotation path without BPF privileges.
  * The fake ring holds bytes exactly like a committed mapped record batch. */
 #define main collector_main
-#include "../collector.c"
+#include "../core/collector.c"
 #undef main
 #include <assert.h>
 

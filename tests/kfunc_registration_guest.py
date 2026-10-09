@@ -10,7 +10,7 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "python"))
 from settings import ARCH, BPF_INCLUDES, BPF_LIBS, PREPARED
 
 assert sys.platform == "linux" and os.geteuid() == 0
