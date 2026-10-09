@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import stat
@@ -100,6 +101,48 @@ def collector_command(config, build_dir=None):
     if config["capture_python"]:
         result.append("--capture-python")
     return result
+
+
+def validate_cgroup(
+    config, mountinfo=Path("/proc/self/mountinfo"), membership=Path("/proc/self/cgroup")
+):
+    """Resolve an exact ID in the visible unified hierarchy, even when empty.
+
+    This validates configuration, not current membership or event coverage.
+    Namespace-hidden groups fail explicitly rather than silently excluding all.
+    """
+    target = config["cgroup_id"]
+    if not target:
+        return dict(enabled=False)
+    if not any(line.startswith("0::") for line in membership.read_text().splitlines()):
+        raise ValueError("cgroup_id filtering requires the unified cgroup v2 hierarchy")
+    roots = []
+    for line in mountinfo.read_text().splitlines():
+        fields = line.split()
+        separator = fields.index("-")
+        if fields[separator + 1] == "cgroup2":
+            # mountinfo escapes spaces, tabs, newlines and backslashes in paths.
+            roots.append(
+                Path(re.sub(r"\\([0-7]{3})", lambda m: chr(int(m[1], 8)), fields[4]))
+            )
+    visited = 0
+
+    def failed(error):
+        raise error
+
+    for root in roots:
+        for directory, _, _ in os.walk(root, followlinks=False, onerror=failed):
+            visited += 1
+            if visited > 65536:
+                raise ValueError("cgroup hierarchy exceeds preflight scan bound")
+            try:
+                if Path(directory).stat().st_ino == target:
+                    return dict(enabled=True, id=target, path=directory, hierarchy="v2")
+            except FileNotFoundError:
+                continue  # A concurrent group removal is not a match.
+    raise ValueError(
+        "Configured cgroup_id is not visible in the cgroup v2 hierarchy: " + str(target)
+    )
 
 
 def linux_root():
@@ -218,6 +261,7 @@ def verify_build(config):
 
 def run(config):
     linux_root()
+    validate_cgroup(config)
     # Runtime needs permissions and matching artifacts, not build tools/headers.
     lockdown = Path("/sys/kernel/security/lockdown")
     if lockdown.exists() and "[confidentiality]" in lockdown.read_text():
@@ -241,6 +285,7 @@ def run(config):
 def install(config_path):
     linux_root()
     config = configuration(config_path)
+    validate_cgroup(config)
     verify_build(config)
     # Validate all policy-dependent installation choices before changing /opt.
     if config["state_dir"] != DEFAULTS["state_dir"]:
@@ -355,6 +400,16 @@ def status(config):
     return 0 if health["healthy"] else 1
 
 
+SEGMENT_NAME = re.compile(r"events-[0-9]{20}-([0-9a-f]{32})-[0-9]{10}\.bin\Z")
+
+
+def segment_session(name):
+    match = SEGMENT_NAME.fullmatch(name)
+    if match is None:
+        raise ValueError("Invalid segment name: " + name)
+    return match[1]
+
+
 def events(config, follow=False, writes_only=False):
     directory = Path(config["state_dir"])
     offsets = {}
@@ -369,13 +424,20 @@ def events(config, follow=False, writes_only=False):
         for path in paths:
             name = str(path)
             try:
+                try:
+                    session = segment_session(path.name)
+                except ValueError as error:
+                    if name not in warned:
+                        print(str(error), file=sys.stderr)
+                        warned.add(name)
+                    continue
                 with path.open("rb") as stream:
                     for offset, event in records(
                         stream, offsets.get(name, 0), tolerate_tail=True
                     ):
                         offsets[name] = offset
                         # Filename carries session even after health is replaced.
-                        event["session"] = path.name.split("-")[2]
+                        event["session"] = session
                         event["segment"] = path.name
                         if not writes_only or event["stage"] == 9:
                             print(json.dumps(event, separators=(",", ":")), flush=True)
@@ -401,7 +463,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     for command in ("doctor", "build", "install", "run", "status", "events"):
         child = sub.add_parser(command)
-        if command in ("install", "run", "status", "events"):
+        if command in ("doctor", "install", "run", "status", "events"):
             child.add_argument("--config", default=None)
         if command == "events":
             child.add_argument("--follow", action="store_true")
@@ -416,7 +478,7 @@ def main():
     if args.command == "doctor":
         from doctor_guest import doctor
 
-        return doctor()
+        return doctor(configuration(args.config))
     if args.command == "build":
         build()
     elif args.command == "install":

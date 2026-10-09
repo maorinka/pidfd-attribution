@@ -67,6 +67,16 @@ def health():
         return {}
 
 
+def running_health(previous_session=None):
+    value = health()
+    return (
+        value
+        if value.get("state") == "running"
+        and (previous_session is None or value.get("session") != previous_session)
+        else None
+    )
+
+
 installation_ids = ids()
 initial_ids, initial_modules = installation_ids, modules()
 installed = False
@@ -92,7 +102,7 @@ try:
     report["installation_bpf_ids"] = installation_ids
     subprocess.run(["systemctl", "start", "iosec-endpoint"], check=True, timeout=180)
     assert run("systemctl", "is-active", "iosec-endpoint") == "active"
-    current = wait(lambda: health() if health().get("state") == "running" else None)
+    current = wait(running_health)
     pid = int(run("systemctl", "show", "iosec-endpoint", "-p", "MainPID", "--value"))
     assert pid == current["pid"]
     cap = int(
@@ -145,14 +155,7 @@ try:
         ["systemctl", "kill", "--kill-who=main", "--signal=SIGKILL", "iosec-endpoint"],
         check=True,
     )
-    restarted = wait(
-        lambda: (
-            health()
-            if health().get("state") == "running"
-            and health().get("session") != old_session
-            else None
-        )
-    )
+    restarted = wait(lambda: running_health(old_session))
     assert restarted["pid"] != pid
     assert (
         int(run("systemctl", "show", "iosec-endpoint", "-p", "NRestarts", "--value"))

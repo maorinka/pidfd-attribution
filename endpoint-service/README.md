@@ -51,7 +51,7 @@ sudoedit /etc/iosec-endpoint.json
 sudo systemctl restart iosec-endpoint
 ```
 
-Source capture attaches to the single stock interpreter used to build this sensor, usually `/usr/bin/python3.12` on Ubuntu 24.04. Other executables remain visible through kernel identities, with unknown source. A long-running interpreter frame active before attachment may remain unknown until a new observed evaluation entry. Frames are bounded to 16 per actor, with explicit truncation/error flags. `source_complete` does not attest source authorship.
+Source capture attaches to the single stock interpreter used to build this sensor, usually `/usr/bin/python3.12` on Ubuntu 24.04. Other executables remain visible through kernel identities, with unknown source. A long-running interpreter frame active before attachment may remain unknown until a new observed evaluation entry. Frames are bounded to 16 per actor, with explicit truncation/error flags. `source_complete` does not attest source authorship. Controlled state-retirement tests on the underlying module-free pipeline retained kernel attribution but lost all writer source coverage after the swaps, including with normal return callbacks; see [`../module-free/validation/source-binding-ubuntu24.json`](../module-free/validation/source-binding-ubuntu24.json). That test is not a general missed-callback bound or an endpoint-wide source test.
 
 ## Collection and storage policy
 
@@ -71,7 +71,7 @@ Source capture attaches to the single stock interpreter used to build this senso
 
 `path_prefix` matches the caller's raw open pathname, **not** a canonical resolved path or a security boundary. Relative paths and aliases can miss a nonempty prefix. Acquisition events still report missing opener history, including targets outside that prefix. The filter is useful for limiting collection during testing; leave it empty for endpoint-wide opener observation.
 
-`cgroup_id` is an exact match, not a subtree filter. Cross-boundary targets can have unknown opener history. Host PID identities are retained; container name/namespace enrichment is not implemented.
+`cgroup_id` is an exact match, not a subtree filter. `doctor --config FILE`, installation, and service startup validate nonzero IDs against the visible cgroup v2 hierarchy. Unknown IDs, unavailable hierarchies, and namespace-hidden groups fail explicitly; a valid empty group passes. The scan is bounded to 65,536 directories. This is a startup configuration check, not a guarantee that a group will remain present or contain work. IDs must be rechecked after groups are recreated. Cross-boundary targets can have unknown opener history. Host PID identities are retained; container name/namespace enrichment is not implemented.
 
 The default retention policy limits newly generated logs to eight 16 MiB segments. When reducing segment size, older larger segments remain until count-based retention prunes them. A filesystem quota is appropriate if an absolute disk limit must also cover preexisting files. Oldest segments are deliberately discarded and `segments_deleted` records retention activity. Export/acknowledgment before pruning is not implemented.
 
@@ -97,6 +97,8 @@ sudo systemctl stop iosec-endpoint
 
 Retained files whose owner, mode, link count, or type has changed are preserved and logged as `RETENTION_SKIP`. The `retention_skipped` health counter counts these encounters, including repeated encounters with the same file. These unmanaged files are outside the managed segment quota; an administrator must manage their space. Failures writing the active output still fail the sensor.
 
+The events reader accepts only the collector's exact segment-name grammar (20 decimal timestamp digits, 32 lowercase session hex digits, 10 decimal sequence digits). Malformed names are reported and skipped before opening; valid records continue to decode.
+
 `health.json` is replaced atomically. It reports state, session/boot identity, attachments, event/byte counts, retention activity, ring drops, state errors, cleanup fallback, and allocation fallback. `status` exits unsuccessfully for stale/stopped/failed health or reported history gaps. Healthy means the collector is recently reporting with no detected collection loss; it does not assert complete EDR coverage or complete Python metadata. RSS describes the userspace collector, not total BPF/kernel memory.
 
 Each drain pass processes at most 1,024 records. If committed backlog remains, the collector checks health, rotation, and signals, then immediately drains again; it sleeps only when caught up or the next producer record is busy.
@@ -116,6 +118,8 @@ Earlier results are retained in `validation/ubuntu24-x86_64.json` and `validatio
 - Explicit tracking-capacity loss and ring-pressure loss.
 - The actual systemd unit: source attribution, watchdog notifications, reload, automatic crash restart, and exact post-install BPF-ID restoration after stop.
 - The production storage path: 38,400 input records, five segments, retention to three segments, byte/record bounds, and failed-write ownership preservation.
+
+The follow-up checks are retained in [`admission-preflight-ubuntu24.json`](validation/admission-preflight-ubuntu24.json). They include actual current/empty cgroup resolution, unknown-ID refusal, runtime/systemd behavior, and an oracle that matches the transfer chain and file generation rather than inode alone. The first retry exposed reuse of the fixture inode for its result JSON; that [oracle failure is retained](validation/inode-reuse-oracle-first-attempt.json).
 
 The first systemd audit used a baseline from before installation; `daemon-reload` replaced systemd's own cgroup BPF IDs. That failed audit is retained in `validation/systemd-installation-drift.json`. The passing runtime audit takes its baseline after installation, before starting the sensor.
 

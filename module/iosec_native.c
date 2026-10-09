@@ -744,7 +744,7 @@ BTF_ID_FLAGS(func, iosec_map_zero, 0)
 BTF_ID_FLAGS(func, iosec_emit_pack, 0)
 BTF_ID_FLAGS(func, iosec_write_snapshot, 0)
 BTF_KFUNCS_END(iosec_native_functions)
-/* Tests-only SCHED_CLS set containing ONLY the three non-sleepable helpers.
+/* Tests-only SCHED_CLS set containing ONLY the four non-sleepable helpers.
  * Lets exact emitter/kernel capability test_run controls exercise
  * iosec_map_copy/iosec_map_zero/iosec_emit_pack without exposing the
  * sleepable user-copy helpers outside TRACING. Single SCHED_CLS set and
@@ -779,6 +779,12 @@ static const struct btf_kfunc_id_set iosec_legacy_set = {
     .set = &iosec_mapcopy_functions,
     .filter = iosec_legacy_filter,
 };
+static bool enable_test_kfuncs;
+module_param(enable_test_kfuncs, bool, 0400);
+MODULE_PARM_DESC(
+    enable_test_kfuncs,
+    "Expose non-sleepable helpers to SCHED_CLS test programs (default false)");
+
 static int __init iosec_native_init(void) {
   int ret = register_btf_kfunc_id_set(BPF_PROG_TYPE_TRACING, &iosec_native_set);
   if (ret)
@@ -786,9 +792,12 @@ static int __init iosec_native_init(void) {
   /* Tests-only SCHED_CLS registration for exact test_run controls.
    * Owner THIS_MODULE holds the normal module refcount; ordinary rmmod
    * unregisters all sets. No forced removal or security override. */
-  ret = register_btf_kfunc_id_set(BPF_PROG_TYPE_SCHED_CLS, &iosec_mapcopy_set);
-  if (ret)
-    return ret;
+  if (enable_test_kfuncs) {
+    ret =
+        register_btf_kfunc_id_set(BPF_PROG_TYPE_SCHED_CLS, &iosec_mapcopy_set);
+    if (ret)
+      return ret;
+  }
   return register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &iosec_legacy_set);
 }
 static void __exit iosec_native_exit(void) {}

@@ -1,5 +1,5 @@
 import io
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 import json
 from pathlib import Path
 import struct
@@ -8,7 +8,15 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from service import configuration, collector_command, status, validate_health
+from service import (
+    configuration,
+    collector_command,
+    status,
+    validate_health,
+    events,
+    segment_session,
+    validate_cgroup,
+)
 from wire import HEADER, FRAME, decode, records
 
 
@@ -79,6 +87,61 @@ class ConfigurationTests(unittest.TestCase):
         command = collector_command(config)
         self.assertIn("--capture-python", command)
         self.assertEqual(command[command.index("--path-prefix") + 1], "/var/tmp/test-")
+
+
+class AdmissionTests(unittest.TestCase):
+    def test_exact_empty_cgroup_and_unsupported_or_unknown_ids(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            hierarchy = root / "groups"
+            hierarchy.mkdir()
+            empty = hierarchy / "empty"
+            empty.mkdir()
+            mounts = root / "mountinfo"
+            mounts.write_text(f"1 0 0:1 / {hierarchy} rw - cgroup2 cgroup rw\n")
+            membership = root / "cgroup"
+            membership.write_text("0::/\n")
+            config = dict(cgroup_id=empty.stat().st_ino)
+            result = validate_cgroup(config, mounts, membership)
+            self.assertEqual(result["path"], str(empty))
+            self.assertEqual(result["hierarchy"], "v2")
+            with self.assertRaisesRegex(ValueError, "not visible"):
+                validate_cgroup(dict(cgroup_id=2**64 - 1), mounts, membership)
+            membership.write_text("1:cpu:/\n")
+            with self.assertRaisesRegex(ValueError, "cgroup v2"):
+                validate_cgroup(config, mounts, membership)
+            self.assertFalse(
+                validate_cgroup(dict(cgroup_id=0), mounts, membership)["enabled"]
+            )
+
+
+class SegmentTests(unittest.TestCase):
+    def test_names_match_collector_grammar(self):
+        session = "0123456789abcdef" * 2
+        valid = f"events-{'0'*20}-{session}-{'0'*10}.bin"
+        self.assertEqual(segment_session(valid), session)
+        for name in (
+            "events-.bin",
+            "events-1.bin",
+            valid.upper(),
+            valid + "\n",
+            valid.replace(session, "g" * 32),
+            valid.replace("0" * 20, "0" * 19, 1),
+        ):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                segment_session(name)
+
+    def test_malformed_names_are_skipped_before_open_and_valid_records_continue(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "events-bad.bin").mkdir()
+            session = "a" * 32
+            (root / f"events-{'0'*20}-{session}-{'0'*10}.bin").write_bytes(record())
+            output, warnings = io.StringIO(), io.StringIO()
+            with redirect_stdout(output), redirect_stderr(warnings):
+                events(dict(state_dir=directory))
+            self.assertEqual(json.loads(output.getvalue())["session"], session)
+            self.assertIn("Invalid segment name", warnings.getvalue())
 
 
 class WireTests(unittest.TestCase):

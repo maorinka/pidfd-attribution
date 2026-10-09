@@ -18,7 +18,7 @@ import types
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from service import configuration, collector_command
+from service import configuration, collector_command, validate_cgroup
 from wire import records
 
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-service-test-", dir="/var/tmp"))
@@ -147,9 +147,23 @@ def verify_writes(state, application, source=False):
     writes = [
         e
         for e in events
-        if e["stage"] == 9 and e["inode"] == application["inode"] and e["accepted"]
+        if e["stage"] == 9
+        and e["inode"] == application["inode"]
+        and e["accepted"]
+        and e["emitter"]["pid"] == application["pid"]
+        and e["target_pid"] == application["target"]
+        and e["actors"]["acquirer"]["pid"] == application["pid"]
     ]
     assert len(writes) == application["writes"], (len(writes), application)
+    assert (
+        len(
+            {
+                (e["file_identity"], e["generation"], e["target_birth_ns"])
+                for e in writes
+            }
+        )
+        == 1
+    )
     assert all(e["result"] == e["inner_result"] == 1 for e in writes)
     assert all(
         e["actors"]["opener"]["pid"]
@@ -391,6 +405,22 @@ try:
         if line.startswith("0::")
     )
     cgroup_id = (Path("/sys/fs/cgroup") / cgroup_path.lstrip("/")).stat().st_ino
+    assert validate_cgroup(dict(cgroup_id=cgroup_id))["id"] == cgroup_id
+    try:
+        validate_cgroup(dict(cgroup_id=2**64 - 1))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Unknown cgroup ID passed preflight")
+    empty_group = Path("/sys/fs/cgroup") / ("pidfd-empty-test-" + str(os.getpid()))
+    empty_group.mkdir()
+    try:
+        assert not (empty_group / "cgroup.procs").read_text().strip()
+        resolved = validate_cgroup(dict(cgroup_id=empty_group.stat().st_ino))
+        assert resolved["path"] == str(empty_group)
+    finally:
+        empty_group.rmdir()
+
     process, state, _ = start_sensor("cgroup-match", cgroup_id=cgroup_id)
     application = demo("cgroup-demo")
     time.sleep(0.3)
@@ -402,7 +432,11 @@ try:
     stop(process, state)
     assert not read_events(state)
     result["cgroup"] = dict(
-        exact_id=cgroup_id, matching_writes=application["writes"], excluded_records=0
+        exact_id=cgroup_id,
+        matching_writes=application["writes"],
+        excluded_records=0,
+        unknown_id_rejected=True,
+        empty_group_accepted=True,
     )
     result["final_bpf_ids"] = programs()
     result["modules_unchanged"] = modules() == baseline_modules

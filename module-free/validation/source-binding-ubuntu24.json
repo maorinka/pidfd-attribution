@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "backend": "module-free",
+  "kernel": "6.8.0-142-generic",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "trials": [
+    {
+      "mode": "normal",
+      "return_probe_attached": true,
+      "source_positive_control": true,
+      "empty_maps_verified": 19,
+      "zero_diagnostics": true,
+      "post_retirement_complete_writes": 0,
+      "post_retirement_incomplete_writes": 64,
+      "source_flags": [
+        0,
+        64
+      ],
+      "kernel_accepted_writes": 65,
+      "complete_source_writes": 1,
+      "incomplete_source_writes": 64,
+      "incorrect_complete_bindings": 0,
+      "reused_addresses": 52,
+      "oracle": {
+        "status": "passed",
+        "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "records": 73,
+        "stacks": 145,
+        "frames": 435,
+        "source_sha256": {
+          "/var/tmp/pidfd-binding-n_dq2sdt/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+        },
+        "input_sha256": {
+          "records.bin": "11fe220f1a7dcad4060077a242ad4f098005de946fea494ee65a86b8ec4a93d2"
+        },
+        "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+      },
+      "raw_sha256": "8d92f206b5fa06ce09d593b11923403ca244a3cf4c7df4df983973e31ccda6fb"
+    },
+    {
+      "mode": "missing-returns",
+      "return_probe_attached": false,
+      "source_positive_control": true,
+      "empty_maps_verified": 19,
+      "zero_diagnostics": true,
+      "post_retirement_complete_writes": 0,
+      "post_retirement_incomplete_writes": 64,
+      "source_flags": [
+        0,
+        64
+      ],
+      "kernel_accepted_writes": 65,
+      "complete_source_writes": 1,
+      "incomplete_source_writes": 64,
+      "incorrect_complete_bindings": 0,
+      "reused_addresses": 56,
+      "oracle": {
+        "status": "passed",
+        "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "records": 73,
+        "stacks": 145,
+        "frames": 435,
+        "source_sha256": {
+          "/var/tmp/pidfd-binding-n_dq2sdt/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+        },
+        "input_sha256": {
+          "records.bin": "277b9dba31555339f970282e925c1a314571f73b5753c5bc5e2001d9cd526fdf"
+        },
+        "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+      },
+      "raw_sha256": "512689959ff3093679a2490aeabd6457e6c1d65e4b5a77e7d9cc4e5550afba83"
+    }
+  ],
+  "bpf_object_sha256": "2302b78cdd384e46c1d1871a03ac2b790f4049099ff3d0eb5765090616230ed6",
+  "source_sha256": {
+    "tests/source_binding_guest.py": "267d051f680e635d2e63212cea014574524acf012c82255e8efa5ec6a6caee5c",
+    "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+    "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+    "module-free/loader.c": "dbcebfec8447adbfbc47ad57aedfceed0e411a8c4e9f63e8bc1d578491797c65",
+    "module-free/reader.bpf.c": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509"
+  },
+  "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+  "cleanup_ok": true,
+  "base": "/var/tmp/pidfd-binding-n_dq2sdt",
+  "invocation": "setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module python3 tests/source_binding_guest.py --backend module-free",
+  "test_policy": "integrity lockdown, modules_disabled=1"
+}

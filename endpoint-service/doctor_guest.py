@@ -5,11 +5,19 @@ import json, os, re, shutil, subprocess
 from settings import ARCH, PYTHON, PYTHON_CONFIG
 
 
-def doctor():
+def doctor(config=None):
     checks = []
 
     def check(name, passed, detail):
         checks.append(dict(check=name, passed=bool(passed), detail=detail))
+
+    from service import configuration, validate_cgroup
+
+    try:
+        resolved = validate_cgroup(configuration() if config is None else config)
+        check("cgroup admission", True, resolved)
+    except (OSError, ValueError) as error:
+        check("cgroup admission", False, str(error))
 
     check("architecture", ARCH in ("x86", "arm64"), os.uname().machine)
     status = Path("/proc/self/status").read_text()

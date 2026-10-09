@@ -94,6 +94,8 @@ A [manual CI workflow](../.github/workflows/module-free.yml) is supplied for ded
 
 Design references: [upstream BPF ring-buffer semantics](https://docs.kernel.org/bpf/ringbuf.html) and [Linux 6.8 tracing helpers](https://github.com/torvalds/linux/blob/v6.8/kernel/trace/bpf_trace.c).
 
+Controlled same-thread state retirement/address reuse and omitted-return-probe tests are retained in [`source-binding-ubuntu24.json`](validation/source-binding-ubuntu24.json). Each trial captures a correct source-positive control, then marks all 64 post-retirement writer stacks unknown despite accepting their kernel identities. The normal-return trial also loses source coverage. These results do not establish a general missed-callback error rate or prove correctness of arbitrary mutable interpreter metadata.
+
 ## Remaining limitations
 
 Python metadata remains mutable and unattested. Selected internal kernel hooks and interpreter layouts may change. Leader-first exit while sibling threads survive is a known tracking limitation. Arbitrary shared-table races, exhaustive abrupt exits, ARM compatibility processes, and x32 coverage remain unproven. This backend removes third-party modules; it does not establish production readiness.

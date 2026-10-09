@@ -1,0 +1,23 @@
+{
+  "passed": false,
+  "kernel": "6.8.0-142-generic",
+  "module_sha256": "cbb93565bf9892d5681413150a09557bc178bd0f9ee836bb4e644c6d640590fe",
+  "trials": [
+    {
+      "enabled": false,
+      "parameter": "N",
+      "exit_code": 1,
+      "stdout": "LOAD_RESULT -13\n",
+      "stderr": "libbpf: prog 'test_registration': BPF program load failed: Permission denied\nlibbpf: prog 'test_registration': -- BEGIN PROG LOAD LOG --\narg#0 reference type('UNKNOWN ') size cannot be determined: -22\n0: R1=ctx() R10=fp0\n; SEC(\"tc\") int test_registration(void *ctx) {\n0: (b7) r6 = 0                        ; R6_w=0\n; __u32 key = 0;\n1: (63) *(u32 *)(r10 -4) = r6         ; R6_w=0 R10=fp0 fp-8=0000????\n2: (bf) r2 = r10                      ; R2_w=fp0 R10=fp0\n3: (07) r2 += -4                      ; R2_w=fp-4\n; void *value = bpf_map_lookup_elem(&buffer, &key);\n4: (18) r1 = 0xff1be637077d1800       ; R1_w=map_ptr(map=buffer,ks=4,vs=16)\n6: (85) call bpf_map_lookup_elem#1    ; R0_w=map_value_or_null(id=1,map=buffer,ks=4,vs=16)\n; return value ? iosec_map_zero(value, 16) : 0;\n7: (15) if r0 == 0x0 goto pc+4        ; R0_w=map_value(map=buffer,ks=4,vs=16)\n; return value ? iosec_map_zero(value, 16) : 0;\n8: (bf) r1 = r0                       ; R0_w=map_value(map=buffer,ks=4,vs=16) R1_w=map_value(map=buffer,ks=4,vs=16)\n9: (b7) r2 = 16                       ; R2_w=16\n10: (85) call iosec_map_zero#140294\ncalling kernel function iosec_map_zero is not allowed\nprocessed 10 insns (limit 1000000) max_states_per_insn 0 total_states 0 peak_states 0 mark_read 0\n-- END PROG LOAD LOG --\nlibbpf: prog 'test_registration': failed to load: -13\nlibbpf: failed to load object '/var/tmp/pidfd-kfunc-scope-gune4nu4/probe.bpf.o'\n"
+    },
+    {
+      "enabled": true,
+      "parameter": "Y",
+      "exit_code": 0,
+      "stdout": "LOAD_RESULT 0\n",
+      "stderr": ""
+    }
+  ],
+  "cleanup_ok": false,
+  "failure_analysis": "Default-denied and opt-in-allowed assertions passed, but immediate rmmod raced deferred BPF release. Retry waits up to ten seconds for refcount zero without forced removal."
+}

@@ -154,6 +154,11 @@ int main(int argc, char **argv) {
   int count = 0, failures = 0;
   struct bpf_program *p;
   bpf_object__for_each_program(p, obj) {
+#ifdef IOSEC_TEST_MISSED_RETURNS
+    /* Fault injection only in a separately compiled test binary. */
+    if (!strcmp(bpf_program__name(p), "eval_return"))
+      continue;
+#endif
     if ((size_t)count >= sizeof(links) / sizeof(links[0])) {
       fprintf(stderr, "Too many BPF programs for the attachment array\n");
       for (int i = 0; i < count; i++)

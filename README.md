@@ -118,6 +118,10 @@ Validation includes an alternating raw/monitored CPU screen. It counts added app
 
 ## Remaining limitations
 
+The module's tracing helpers are available to other authorized BPF loaders while it is loaded; they are not authenticated per collector. The bounded non-sleepable legacy set is filtered to tracepoint/raw-tracepoint programs because the production pipeline needs it. `SCHED_CLS` registration is disabled by default; isolated registration tests can opt in with `insmod iosec_native.ko enable_test_kfuncs=1`. This load-time parameter is read-only afterward. See [`kfunc-scope-ubuntu24.json`](validation/kfunc-scope-ubuntu24.json) for the actual default-denied/opt-in-allowed test and default-mode pipeline checks. Prefer the module-free backend for fleet deployment.
+
+A controlled callback-loss/thread-state-lifetime test is retained in [`source-binding-ubuntu24.json`](validation/source-binding-ubuntu24.json). With and without the return probe, its source-positive control captured the expected frame, while all 64 writes after state retirement were accepted by kernel identity with writer source flagged unknown. State addresses were actually reused. This is a measured source-coverage limitation even with normal callbacks, not a statistical bound or proof against arbitrary missed callbacks. `accepted` validates the observed kernel operation/history; `complete` requires captured source sections but does not authenticate them.
+
 This implementation still requires an out-of-tree native module for fault-capable Python reads and bounded native memory helpers. A module-free collector would need its own correctness and performance validation; substituting nofault reads would lose cold-page guarantees.
 
 Leader-first exit while sibling threads survive remains a known tracking limitation. Arbitrary shared-table races, exhaustive abrupt-exit coverage, ARM compatibility processes, and x32 coverage remain unproven. Internal kernel hooks and Python layouts can still change; CO-RE field relocation does not make renamed functions or changed signatures interchangeable.

@@ -1,0 +1,11 @@
+{
+  "passed": false,
+  "backend": "root",
+  "kernel": "6.8.0-142-generic",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "trials": [],
+  "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+  "cleanup_ok": true,
+  "base": "/var/tmp/pidfd-binding-ovhbnpiu",
+  "failure_analysis": "Initial test incorrectly required complete writer source after state swaps. Observed 64 kernel-accepted writes, all with writer source flag 64 (unknown), zero complete writer stacks. Revised test adds a source-positive control and records the coverage limitation."
+}
