@@ -280,5 +280,18 @@
     "Filename order seeds above legacy prefixes; legacy sessions retain their previous relative ordering. Temporary extra segments before a successful event commit/prune are allowed.",
     "Fault controls exercise syscall failures and interrupted counter publication, not physical power-loss or filesystem crash durability.",
     "No claim of reduced BPF overhead, scoped uprobes, or production endpoint EDR readiness."
-  ]
+  ],
+  "source_commit": "b9473febddc8cd232ed633620f1ec09baf217fdf",
+  "hosted_ci": {
+    "source_commit": "b9473febddc8cd232ed633620f1ec09baf217fdf",
+    "url": "https://github.com/maorinka/pidfd-attribution/actions/runs/38004142082",
+    "conclusion": "success",
+    "jobs": [
+      "check (3.10)",
+      "check (3.12)",
+      "check (3.14)",
+      "storage"
+    ]
+  },
+  "validation_vm_original_state_restored": "stopped"
 }

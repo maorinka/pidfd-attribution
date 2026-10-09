@@ -513,7 +513,7 @@
         {
           "batch": 2,
           "evidence": "validation/review-batch2.json",
-          "detail": "Hosted storage entrypoint now compiles gated fault library and real collector recovery controls, and decodes retained events/journals to reject duplicate retry output. Linux run passed; hosted result recorded after push."
+          "detail": "Hosted storage entrypoint now compiles gated fault library and real collector recovery controls, and decodes retained events/journals to reject duplicate retry output. Linux run passed; hosted result recorded after push. Hosted Python3.10/3.12/3.14 jobs and real storage fault job passed on the pushed source commit."
         }
       ]
     },
@@ -903,9 +903,11 @@
     },
     {
       "batch": 2,
-      "status": "validated-awaiting-push",
+      "status": "pushed-and-validated",
       "evidence": "validation/review-batch2.json",
-      "remaining": "Probe cost, coverage, saturation and backend consolidation remain open; no CPU qualification."
+      "remaining": "Probe cost, coverage, saturation and backend consolidation remain open; no CPU qualification.",
+      "source_commit": "b9473febddc8cd232ed633620f1ec09baf217fdf",
+      "hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38004142082"
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."
