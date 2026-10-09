@@ -1,14 +1,43 @@
-# Pidfd attribution with Muse's collector optimization
+# Pidfd attribution for Python
 
-A standalone Linux research pipeline that records **opener → pidfd acquirer → live writer** Python stacks and binds them to kernel file and descriptor-table identities, task birth identities, and slot generations. The collector preserves Muse's optimization: a direct mapped ring, batched `writev` output (up to 128 buffers), 1 MiB output preallocation, and one final CPU snapshot after the last drain.
+When a process acquires another process's file descriptor through `pidfd_getfd`, the writer's stack alone does not explain where the file came from. This research pipeline records **opener → acquirer → writer**, with Python filenames, functions, source lines, and bytecode offsets. It binds that history to the observed kernel file, descriptor table, task birth identity, and slot generation.
 
-This repository includes a native **Intel/AMD x86_64 adapter** and the original **arm64 adapter**. Source capture, lifetime handling, the wire format, batching, and collection cadence are shared. It is a bounded experimental pipeline, not an endpoint-wide EDR service.
+The threat model is descriptor transfer and reuse in controlled Python workloads. `accepted=1` requires a successful operation with the expected identity binding; `complete=1` additionally requires the relevant captured source sections. Python metadata is mutable and unattested. An attacker controlling the interpreter can alter it; these records do not prove source authorship or byte authorship. Kernel pointers can be reused, so generation and lifetime checks matter.
 
-## Quick start on Intel Ubuntu
+Illustrative output from the text collector:
 
-Use **Ubuntu 26.04.1 LTS**, with its distribution kernel, stock CPython 3.14, matching kernel headers, and kernel BTF. Ubuntu lists this release in its [official release notes](https://documentation.ubuntu.com/release-notes/26.04/1/).
+```text
+PIDFD_SOURCE stage=9 ... result=1 accepted=1 complete=1
+ACTOR role=opener ... flags=0
+FRAME 0 .../fixture.py:15 open_leaf bytecode=...
+ACTOR role=acquirer ... flags=0
+FRAME 0 .../fixture.py:22 getfd bytecode=...
+ACTOR role=live ... flags=0
+FRAME 0 .../fixture.py:31 write_leaf bytecode=...
+```
 
-```sh
+This is a bounded experimental pipeline, not an endpoint-wide EDR service.
+
+## Compatibility
+
+| Ubuntu | Default Python adapter | Kernel requirement |
+|---|---|---|
+| 22.04 LTS | Stock CPython 3.10 | **6.8 HWE**; the original 5.15 kernel is unsupported |
+| 24.04 LTS | Stock CPython 3.12 | 6.8 distribution kernel |
+| 26.04 LTS | Stock CPython 3.14 | 7.0 distribution kernel used in the original validation |
+
+Native 64-bit x86_64 and arm64 have architecture adapters. Interpreter field offsets, ELF symbol addresses, kernel BTF, and selected hook signatures are generated on the target computer. Both EXEC and PIE interpreters are handled; PIE type-address relocation uses the current process's `mm.start_code` and the interpreter's executable ELF load segment. Shared-library interpreter builds, free-threaded/debug builds, and unsupported layouts fail preparation.
+
+Python 3.11 and 3.13 also have layout adapters, but they are not release targets of the installer and must not be treated as tested configurations without a local validation run. Kernel 6.12 is a planned matrix target, not an existing test result. A version number alone does not guarantee compatibility: module loading, BTF, hook signatures, toolchain support, and BPF verifier acceptance are checked too.
+
+The current sources passed full functional validation on Ubuntu 22.04 / Python 3.10.12 / kernel 6.8.0-138 on arm64, and Ubuntu 24.04 / Python 3.12.3 / kernel 6.8.0-142 on emulated x86_64. A further full run passed on Ubuntu 26.04 / Python 3.14.4 / kernel 7.0.0-34 on emulated x86_64. All three runs observed all 951 monitored workload writes; their independent oracles checked 999 records and 16,035 frames. Reports: [`ubuntu22-hwe-arm64.json`](validation/ubuntu22-hwe-arm64.json) [`ubuntu24-x86_64.json`](validation/ubuntu24-x86_64.json), and [`ubuntu26-x86_64-current.json`](validation/ubuntu26-x86_64-current.json). Ubuntu 22.04 x86_64 has an adapter but has not been validated in this matrix.
+
+## Install and see it working
+
+Authenticate to GitHub first because this repository is private:
+
+```bash
+gh auth login
 gh repo clone maorinka/pidfd-attribution
 cd pidfd-attribution
 sudo ./install-ubuntu.sh
@@ -16,50 +45,69 @@ sudo ./run.sh doctor
 sudo ./run.sh validate
 ```
 
-Because the repository is private, authenticate GitHub on that computer first (`gh auth login`), or use an SSH key with access to this repository.
+On an Ubuntu 22.04 computer or VM that you control, install its HWE kernel and reboot into it **before** running the installer:
 
-`install-ubuntu.sh` installs build tools, libbpf/libelf development packages, CPython headers, bpftool, pahole, and headers for the **running** kernel. `doctor` checks the environment without loading the module. `validate` generates the interpreter offsets, code-type address, compatibility mask, and BTF header from that machine, builds the native module/BPF/collector, runs the tests, and unloads the module.
-
-The interpreter must be **non-PIE stock CPython 3.14 with the supported layout**. Preparation checks that layout instead of assuming addresses from another computer. A different layout, missing hooks, unsupported BTF/module facilities, or lockdown causes an explicit failure. Secure Boot/lockdown may prevent loading this unsigned research module; the scripts do not change boot settings or kernel security policy. Linux kfuncs and sleepable hooks are described in the [kernel documentation](https://docs.kernel.org/bpf/kfuncs.html).
-
-## Build and run a fixture
-
-```sh
-sudo ./run.sh build
-sudo ./run.sh run --fixture "$PWD/fixtures/history_fixture.py"
+```bash
+sudo apt-get update
+sudo apt-get install linux-generic-hwe-22.04
+sudo reboot
 ```
 
-`run` builds and checks the pipeline, then launches the supplied Python fixture as the monitored child. Its descendants are tracked. The original owned-file filter is preserved: **only paths beginning `/var/tmp/iosec-`** establish opener history. Keep the checkout itself outside that prefix. This avoids attributing Python's own import reads as fixture files.
+After reconnecting, check `uname -r`: it must report 6.8 or newer. The installer does not replace or reboot the running kernel. On 22.04 it builds a checksum-pinned libbpf 1.3 static library under `.deps/`, because the distribution's older development package lacks required APIs. It does not replace the system libbpf library.
 
-The concurrent-close fixture demonstrates a `pidfd_getfd` transfer and a blocked write while the acquired descriptor closes. All three actor histories should survive that overlap.
+Inspect the result and the actual text stacks:
 
-A repeated-write example:
+```bash
+python3 -m json.tool evidence/verification.json
+less evidence/regression/evidence/pidfd-source-direct.log
+```
 
-```sh
-sudo env PIDFD_PROFILE=serial PIDFD_WRITES=150 PIDFD_RATE=50 \
+Look for `"passed": true`, `"module_removed": true`, and records with `accepted=1 complete=1`. In `less`, search for `/complete=1`. Negative controls deliberately include incomplete or rejected records.
+
+A hosted playground still needs permission to load the helper module and the required BPF programs. Ubuntu 24.04 support does not guarantee that a provider permits these operations. Secure Boot/kernel lockdown can prevent the unsigned research module from loading. The current runner requires lockdown `[none]`; signing alone does not change this preflight policy. The scripts do not change boot policy, sign the module, or bypass lockdown.
+
+## Run your own bounded fixture
+
+```bash
+sudo env PIDFD_PROFILE=serial PIDFD_WRITES=3 PIDFD_RATE=1 \
   ./run.sh run --fixture "$PWD/fixtures/prerequisites/workload.py"
+cat evidence/fixture.log
+python3 -m json.tool evidence/fixture-result.json
 ```
 
-Fixture stdout is saved in `evidence/fixture.log`; compact binary records are saved in `evidence/fixture.bin`. Workload application results use `evidence/fixture-result.json` unless `PIDFD_RESULT` is supplied. The wire decoder is the `events()` function in `measure_collector_path_guest.py`; binary records contain a 176-byte header followed by populated 200-byte source frames.
+The supplied fixture opens a file in a child, acquires its descriptor, lets the opener exit, and writes through the acquired descriptor. `run` first runs the core correctness checks, then launches the requested fixture and tracks its descendants until it exits. Runtime builds and output use protected root-owned staging directories under `/var/tmp/pidfd-standalone*`.
 
-## Validation and output
+**Fixture scope:** only paths starting `/var/tmp/iosec-` establish opener history. Keep the checkout outside that prefix. This filter isolates fixture files from Python import reads; it is not yet a configurable fleet collection policy. Stacks are bounded to 16 frames, with explicit truncation and error flags.
 
-The full validation checks all 35 hooks; direct, negative, native, lifetime, and capacity controls; the 16-frame boundary; writes retaining the GIL; 72 guarded/cold/malformed metadata cases; and history retained through a concurrent close. It then runs a worker-thread control plus five alternating raw/monitored pairs at 50 writes/second. An independent offline stock-CPython oracle checks captured bytecode offsets against `co_positions()`.
+For history surviving a concurrent descriptor close:
 
-On Intel, an additional negative control issues IA32 `pidfd_getfd` calls through `int $0x80` from a watched 64-bit process. They must create no native acquisition records or disturb a successful native transfer/write. Run validation on a quiet machine: a concurrent change in the system's BPF program set fails the final audit rather than silently accepting an ambiguous cleanup result.
+```bash
+sudo ./run.sh run --fixture "$PWD/fixtures/history_fixture.py"
+cat evidence/fixture.log
+```
 
-Generated machine-specific files go in `generated/`. Logs, built artifacts, raw event streams, source-position checks, CPU samples, and the final `verification.json` go in `evidence/`. Previous attempts move to `evidence-runs/`. These directories are ignored by Git. Runtime build/output scratch uses `/var/tmp/pidfd-standalone*`, with a lock preventing concurrent runs. Existing BPF program IDs are recorded before module loading and must remain unchanged after cleanup.
+`WRITE_HISTORY_CONTROL` should report `"closed_while_blocked": true`. Custom fixture records use the compact binary collector and are stored in `evidence/fixture.bin`; the decoder is `events()` in `measure_collector_path_guest.py`. The text stacks above come from the regression fixture.
 
-`validation/` contains retained test reports for this repository and a historical arm64 reference. These reports describe the stated machines and workloads; run `validate` on your own computer before relying on its output.
+## What validation establishes
 
-The Intel port passed full functional validation on Ubuntu 26.04.1, kernel `7.0.0-34-generic`, and stock CPython 3.14.4 under QEMU: all 35 hooks, 515 regression records, nine depth-boundary writes, 16 held-GIL writes, all 72 synthetic metadata cases, retained concurrent-close history, and the IA32 negative control. All 951 monitored workload writes were observed; the independent oracle checked 999 records and 16,035 frames. Cleanup removed the module and restored the initial BPF program set. See `validation/intel-qemu.json` for hashes and machine configuration, and `validation/claude-review.json` for the actual Claude CLI's read-only review.
+Validation checks all required hooks; successful and failed transfers/writes; descriptor reuse; native callers with unknown source; exec and table lifetimes; capacity controls; the 16-frame boundary; held-GIL writes; malformed and cold metadata; and retained history through concurrent close. An offline oracle recompiles fixture sources using the same interpreter and checks exact captured offsets with `co_positions()` on Python 3.11+ or `co_lines()` on Python 3.10.
 
-The CPU screen counts added application plus collector CPU over the monitored application's wall time. Setup/shutdown and unaccounted kernel/deferred work are outside that figure. Full child-process CPU is retained separately. It is not a complete system overhead benchmark or a statistical ranking.
+Numeric descriptor reuse is controlled. Actual kernel file-pointer reuse is allocator-dependent and is recorded as an observed coverage field, rather than assumed on every computer. Intel has an IA32 `int $0x80` negative control: compatibility calls must produce no native acquisition records or interfere with a subsequent native transfer/write.
 
-Intel and ARM costs are not interchangeable: x86 uretprobe returns take a syscall path on recent kernels. Any retained QEMU Intel results demonstrate functionality under emulation and must not be used as a physical Intel performance benchmark.
+The final audit requires the helper to be unloaded and the exact initial set of BPF program IDs to be restored. Run on a quiet test machine; unrelated changes to that set fail the audit. An Ubuntu 26.04 attempt failed when the firmware-update daemon added a BPF program; that [failure is retained](validation/ubuntu26-background-drift.json). The passing retry paused scheduled jobs in the disposable test VM and [restored them afterward](validation/ubuntu26-timer-control.json); the audit was not relaxed. Generated inputs go in `generated/`, results in `evidence/`, and previous attempts in `evidence-runs/`; these are ignored by Git.
 
-## Attribution and limits
+`validation/` holds retained runtime reports with their machine configurations and source hashes. Historical reports describe earlier commits, not automatically the current source. `reviews/` holds advisory code reviews; these are not runtime validation. Credits and original hashes are in `provenance.json`.
 
-Muse09/Muse129 supplied the architecture and pidfd design; Codex130 supplied the original reader; later Codex and actual Muse CLI contributions added the entry histories, native capture/encoder, and collector optimizations. Codex packaged the standalone runner and Intel adapter. `provenance.json` retains original hashes and credits. The collector's production C files are preserved; only the BPF architecture adapter changes its native syscall dispatch.
+The optional [GitHub Actions workflow](.github/workflows/compatibility.yml) runs the three distribution targets on dedicated self-hosted test VMs. It is manually dispatched and requires runners with the listed labels and passwordless sudo. No hosted-runner compatibility or successful CI matrix run is claimed. Use disposable VMs; this workflow loads a native kernel module.
 
-Stacks contain at most 16 frames; truncation and unknown/error conditions are explicit. `accepted` requires the corresponding successful kernel operation and identity binding; `complete` additionally requires the relevant source sections. Captured Python metadata is mutable and unattested. These tests do not prove arbitrary shared-table races, exhaustive kernel CPU accounting, source authorship, general interpreter portability, or production readiness.
+## Collector and performance
+
+The collector keeps the mapped ring buffer, batched `writev` output of up to 128 buffers, 1 MiB output preallocation, and one final CPU snapshot after draining. Its wire format retains the three actor histories.
+
+Validation includes an alternating raw/monitored CPU screen. It counts added application and collector CPU over the monitored application's wall time; setup/shutdown and unaccounted kernel/deferred work are outside that figure. QEMU results establish functionality under emulation, **not physical Intel performance**. No physical Intel benchmark is currently claimed.
+
+## Remaining limitations
+
+This implementation still requires an out-of-tree native module for fault-capable Python reads and bounded native memory helpers. A module-free collector would need its own correctness and performance validation; substituting nofault reads would lose cold-page guarantees.
+
+Leader-first exit while sibling threads survive remains a known tracking limitation. Arbitrary shared-table races, exhaustive abrupt-exit coverage, ARM compatibility processes, and x32 coverage remain unproven. Internal kernel hooks and Python layouts can still change; CO-RE field relocation does not make renamed functions or changed signatures interchangeable.

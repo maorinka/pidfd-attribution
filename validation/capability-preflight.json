@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "scope": "Doctor capability checks with root and with CAP_SYS_MODULE removed; no collection or module loading performed by the checks",
+  "cases": [
+    {
+      "module_capability_dropped": false,
+      "checks": [
+        {
+          "check": "CAP_SYS_MODULE",
+          "passed": true,
+          "detail": "The playground/VM must permit loading a native module; root alone may not provide this capability"
+        },
+        {
+          "check": "BPF/perf capabilities",
+          "passed": true,
+          "detail": "Requires CAP_SYS_ADMIN or both CAP_BPF and CAP_PERFMON"
+        }
+      ]
+    },
+    {
+      "module_capability_dropped": true,
+      "checks": [
+        {
+          "check": "CAP_SYS_MODULE",
+          "passed": false,
+          "detail": "The playground/VM must permit loading a native module; root alone may not provide this capability"
+        },
+        {
+          "check": "BPF/perf capabilities",
+          "passed": true,
+          "detail": "Requires CAP_SYS_ADMIN or both CAP_BPF and CAP_PERFMON"
+        }
+      ]
+    }
+  ]
+}

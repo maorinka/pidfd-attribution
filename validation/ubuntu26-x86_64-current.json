@@ -1,0 +1,501 @@
+{
+  "scope": "Bounded functional compatibility validation; no physical Intel performance claim",
+  "machine": {
+    "virtualization": "Lima QEMU x86_64 on Apple Silicon",
+    "cpu_count": 4,
+    "available_cpus": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "pins": {
+    "kernel": "7.0.0-34-generic",
+    "architecture": "x86_64",
+    "python_binary": "/usr/bin/python3.14",
+    "python_sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+    "kernel_btf_sha256": "16205476ae9b6d621e056249052a5789d7f22c6a8c27bf291eb787f3bda5090e",
+    "python_version": "(3, 14, 4)",
+    "offsets": {
+      "TSTATE_FRAME": 72,
+      "TSTATE_FRAME_INDIRECT": 0,
+      "CFRAME_FRAME": 0,
+      "FRAME_CODE": 0,
+      "FRAME_INSTR": 56,
+      "FRAME_PREVIOUS": 8,
+      "FRAME_OWNER": 74,
+      "CODE_FILENAME": 112,
+      "CODE_NAME": 120,
+      "CODE_FIRSTLINE": 68,
+      "CODE_LINETABLE": 136,
+      "CODE_BYTECODE": 208,
+      "BYTES_SIZE": 16,
+      "BYTES_DATA": 32,
+      "UNICODE_STATE": 32,
+      "UNICODE_LENGTH": 16,
+      "ASCII_DATA": 40,
+      "OBJECT_TYPE": 8,
+      "PYTHON_MINOR": 14,
+      "CODE_TYPE_ADDRESS": 11107936,
+      "PYTHON_TEXT_ADDRESS": 4333568,
+      "IOSEC_COMPAT_MASK": 2
+    },
+    "kernel_hooks": {
+      "do_file_open": {
+        "id": 62773,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 363,
+        "vlen": 3,
+        "params": [
+          {
+            "name": "dfd",
+            "type_id": 124652
+          },
+          {
+            "name": "pathname",
+            "type_id": 980
+          },
+          {
+            "name": "op",
+            "type_id": 15337
+          }
+        ]
+      },
+      "dup_fd": {
+        "id": 63881,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 323,
+        "vlen": 2,
+        "params": [
+          {
+            "name": "oldf",
+            "type_id": 323
+          },
+          {
+            "name": "punch_hole",
+            "type_id": 7329
+          }
+        ]
+      }
+    },
+    "fixture_inputs": {
+      "config.h": "b28c83414c6eefed187dbdd2d9e7f2ea8b68afad3cd143c274385d235f5a8f89",
+      "module_config.h": "b28c83414c6eefed187dbdd2d9e7f2ea8b68afad3cd143c274385d235f5a8f89",
+      "python_layout.h": "9da0b72cf62edb5a255326fe3ab8a7dd53a56a5cff0d58563fe204f933cdb0fc",
+      "kernel_layout.h": "67e9c7f4856bac6ab46e6ea9a0a1134af9efd0507a57515a635d333466db3988",
+      "vmlinux.h": "ee91d8efc197baa1b91a125ccb2b14c2825f8fcdf3d844f8fcc409530b8d2d81",
+      "workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+      "deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0"
+    },
+    "thread_header_sha256": "29601bd9646cfcaf90d77eb334b7eff4c80dbdeff7148004c60a182ba932ccec"
+  },
+  "verification": {
+    "passed": true,
+    "scope": "Locally generated pinned inputs; bounded fixtures and steady-state CPU screen",
+    "production_files_unchanged_during_validation": true,
+    "counts_as_new_solution": false,
+    "cpu": {
+      "added_cpu_pct_one_core_median": 1.3850188956879312,
+      "added_cpu_pct_four_vcpu_median": 0.3462547239219828,
+      "one_core_pair_range": [
+        1.0766496047822223,
+        1.6150483316440454
+      ],
+      "all_five_pairs_below_target_one_core": false,
+      "four_vcpu_pair_range": [
+        0.26916240119555557,
+        0.40376208291101134
+      ],
+      "all_five_pairs_below_target_four_vcpu": false
+    },
+    "independently_recomputed_one_core_pairs": [
+      1.0766496047822223,
+      1.3522215843410088,
+      1.6150483316440454,
+      1.3858014028458994,
+      1.3850188956879312
+    ],
+    "module_removed": true,
+    "remaining_bpf_program_names": [
+      "lima_ticker",
+      "sd_devices",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_devices",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_devices",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_devices",
+      "sysctl_monitor"
+    ],
+    "evidence": "/opt/pidfd-compat-current/evidence",
+    "production_sha256": {
+      "reader.bpf.c": "dabb8795940681eaa77d17876ef2f223228bf99322f9b3118147793f6bc50c6f",
+      "loader.c": "ae1cc03514d3662bf9a72f69566064f4785875ce426b507a2a0e7df6ab49f8f6",
+      "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+      "module/Makefile": "ecca2288986e50ec7bdbb6b72ab9842d7cef28d0016416d8a074fa560b073f47",
+      "module/config.h": "87e391d43f6bcd55a39c9edba9e25cd83a1fe7522703c9787f1f23a85b2c46f6",
+      "module/iosec_native.c": "9dcf3004e24ce57d6855d44a8efdd8f27d2e4b557f959831227dc9fb795c2727"
+    },
+    "driver_sha256": {
+      "prepare_guest.py": "41c03926cafe2be8fbfa76b947f59a6f92975f02c7c67f82d1a497cdb18767c1",
+      "measure_collector_path_guest.py": "7966930b280e52215062893ad31e9faa009cc3a7ad4ad1a8b4276e04845f70ea",
+      "doctor_guest.py": "ab08e9f3b3d0d131669b0ea832a92aaa77e32d56c5bc243c605e03c380d045d2",
+      "held_collector_path_guest.py": "170e52ccd9e9370268370c582d174c739fba42be1cf0fb4d40e1285c3aca7d35",
+      "compat_guest.py": "93825dadc251036feec387fca65b02536142c7cabe0b0b45bc2f6c5d5525b890",
+      "history_guest.py": "9b9efb012037d512d3ac7a020ff0db98c8d1ce6da816fffc5c3121d400ad1882",
+      "validate_guest.py": "1d7748882311923c1c7e07976c7d9a194180c9619e46f4aa5ef139367c3e2342",
+      "build_collector_path_guest.py": "8b3b96b4cb5e22bf4076a48f176320c499e688782873e795d8ad490ba3483b3f",
+      "fixture_guest.py": "50991072e34301dca12f1903264878becb67b5c89cc33e5c084b83239968b2c2",
+      "collector_path_scope_guest.py": "4c7f8f45cb0ef6e2ed5cb409d630b385cae9e7fd0857c386a6d61ee9f8213860",
+      "oracle_collector_path_guest.py": "20f14506ba0b7b81fed0362bff535019fba85db7d5247701843f609781b9aac4",
+      "strings_collector_path_guest.py": "f581d21ad102b3eccce6aca7b5a8d1931f4233fa4d25783cfffa8bcb91cd1080",
+      "run_collector_path_guest.py": "21fb81e35faa60819898ab03f5fcd1bbbfabe9e89787c2060d1923060f116dc6",
+      "verify_deep_collector_path_guest.py": "3d2eaf9d6ecad00c7ea80f79df817941e355261ed166f17570f09d3958d4a3b0",
+      "settings.py": "8f5aa7fef9ebc60988d7624dbe304fa4dd840f126d659a4496300cd7a0dc73af"
+    },
+    "completed_at": "2026-10-09T08:51:22.574003+00:00"
+  },
+  "correctness": {
+    "implementer": "actual Muse deferred steady-end snapshot over Codex compact-write base",
+    "hypothesis": "Intermediate unread steady_end snapshots deferred to one final snapshot after last drain; cadence/output/release/flush/failure semantics unchanged",
+    "proposers": [
+      "Muse09 architecture",
+      "Muse129 pidfd"
+    ],
+    "prior": {
+      "original": "Codex130",
+      "bulk": "actual Muse CLI",
+      "compact": "Codex",
+      "native_trampolines": "actual Muse CLI",
+      "cleanup_indexes": "Codex",
+      "method": "Codex actual syscall capability",
+      "fused": "actual Muse CLI",
+      "callback_walk": "Codex"
+    },
+    "build": {
+      "reader.bpf.c": "dabb8795940681eaa77d17876ef2f223228bf99322f9b3118147793f6bc50c6f",
+      "loader.c": "ae1cc03514d3662bf9a72f69566064f4785875ce426b507a2a0e7df6ab49f8f6",
+      "config.h": "b28c83414c6eefed187dbdd2d9e7f2ea8b68afad3cd143c274385d235f5a8f89",
+      "python_layout.h": "9da0b72cf62edb5a255326fe3ab8a7dd53a56a5cff0d58563fe204f933cdb0fc",
+      "kernel_layout.h": "67e9c7f4856bac6ab46e6ea9a0a1134af9efd0507a57515a635d333466db3988",
+      "vmlinux.h": "ee91d8efc197baa1b91a125ccb2b14c2825f8fcdf3d844f8fcc409530b8d2d81",
+      "reader.bpf.o": "9becd384053878614ad19d5de9634c0682b65387accdc0db4d9afb944685a93a",
+      "fentry.bpf.o": "9becd384053878614ad19d5de9634c0682b65387accdc0db4d9afb944685a93a",
+      "loader": "d2f1c98e526eec8318db384845d1d48e4cebb75412f4cba860d522f9da9c8173",
+      "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "/usr/bin/python3.14": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+    },
+    "attach-check": {
+      "exit_code": 0,
+      "attached": [
+        "ATTACH_OK prog=seed_thread sec=uprobe",
+        "ATTACH_OK prog=eval_return sec=uretprobe",
+        "ATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write",
+        "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd",
+        "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat",
+        "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2",
+        "ATTACH_OK prog=open_begin sec=fentry/do_file_open",
+        "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+        "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+        "ATTACH_OK prog=open_bound sec=fexit/do_file_open",
+        "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+        "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+        "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+        "ATTACH_OK prog=installed sec=fentry/fd_install",
+        "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+        "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+        "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+        "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+        "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+        "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+        "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+        "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+        "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+        "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+        "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+        "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+        "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+        "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+        "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+        "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+        "ATTACH_OK prog=file_released sec=fentry/__fput",
+        "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+        "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+        "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+        "ATTACH_OK prog=warm_mm_retired sec=fentry/mmput"
+      ],
+      "failed": []
+    },
+    "regression": {
+      "passed": true,
+      "profiles": {
+        "direct": {
+          "kernel_records": 24,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "c49b5353c9fa756430046179381b61f774bc2ca413a0ec8f9e2f417fe245b185"
+        },
+        "controls": {
+          "kernel_records": 31,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": true,
+          "raw_log_sha256": "c23094f9220e532181166aa268ec0c44782778beb48f553e5511ac17feee70cd"
+        },
+        "native": {
+          "kernel_records": 10,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "a4d1c1cead4647f05d516b90d2070b862d0128e0c2ddec290bfaeefc6578149a"
+        },
+        "lifetime": {
+          "kernel_records": 38,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "555822fe10280041c5c57a5eb96892d876d4874bec6cfaeb95447b57432000dc"
+        },
+        "pressure": {
+          "kernel_records": 412,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 1,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "a3b851aaaea275d402f6168a15a4c67ca597adf14f3c152c4bd3b2d2a5b133b8"
+        }
+      },
+      "kernel_records": 515,
+      "counts_as_tested_solution": false,
+      "count_increment": 0
+    },
+    "deep": {
+      "status": "passed",
+      "results": [
+        {
+          "depth": 4,
+          "actual_frames": 10,
+          "captured_frames": 10,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "bdda19e78d09b1b3ba10049ff3b7df9b958de4b1c0d640ce4c192c1526329916"
+        },
+        {
+          "depth": 10,
+          "actual_frames": 16,
+          "captured_frames": 16,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "5c7c5d9424c3f4b16e27ee1ec8e77d5a18fafb2cc5428d00b552e0dc87b54784"
+        },
+        {
+          "depth": 11,
+          "actual_frames": 17,
+          "captured_frames": 16,
+          "complete": false,
+          "flags": 32,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "5f32946d95a3084491a534ad1d8235610be9156f700b5371777fb698392e89c0"
+        }
+      ],
+      "fixture_sha256": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
+      "bpf_source_sha256": "dabb8795940681eaa77d17876ef2f223228bf99322f9b3118147793f6bc50c6f"
+    },
+    "held": {
+      "passed": true,
+      "test": "ctypes.PyDLLwrite retainsGIL; collector-batch candidate (actual Muse)",
+      "profiles": [
+        {
+          "profile": "serial",
+          "complete_writes": 3
+        },
+        {
+          "profile": "threads",
+          "complete_writes": 13
+        }
+      ]
+    },
+    "status": "correctness-checks-passed; CPU not measured by this script",
+    "remaining_bpf_programs": [
+      "lima_ticker",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_egress",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_fw_ingress",
+      "sd_fw_ingress",
+      "sysctl_monitor"
+    ],
+    "cleanup_ok": true
+  },
+  "strings": {
+    "passed": true,
+    "real_kernel_capture": true,
+    "owned_synthetic_metadata": true,
+    "guard_page_cases": 44,
+    "malformed_cases": 11,
+    "partial_cold_cases": 17,
+    "checks": [
+      "Exact200byte frame including zero tails",
+      "Short/exact-limit/over-limit filename and function",
+      "Embedded NUL and empty strings",
+      "Both string objects end immediately before PROT_NONE page",
+      "All15unused frames zero",
+      "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+      "Exactly8B file/function payloads and linetable bytes recover across cold page",
+      "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+      "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+    ],
+    "module_sha256": "6e6732904f489968a0ecdc31a26472234fd3dcded5b495d75c8c350216d6bbdc",
+    "artifacts": {
+      "strings.bpf.c": "4a87038996b3cd6b2c2ce929f53c92a784034f72cf0c87ba352cb6b27da6d4f0",
+      "vmlinux.h": "ee91d8efc197baa1b91a125ccb2b14c2825f8fcdf3d844f8fcc409530b8d2d81",
+      "step-0.log": "afb83d4e7ecfeb7b3f69d6b247b142a770143e2c3bb90f7be7898368cf6afe23",
+      "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174",
+      "loader": "f65e5cc478ebf1a2758f3575c398e2ffd8d7b6e2fe063e5d55e8aec684de8259",
+      "strings.bpf.o": "8af6884d7e5de82c6823f0d46c14edc6252f9852a68697662b3eb4aafb9c17f5",
+      "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "loader.c": "3b00cef6ce5bc763dbf853e7319b4c73858d97d7c53219a70d233f0efe69b608"
+    },
+    "full_goal_complete": false
+  },
+  "history": {
+    "passed": true,
+    "application": {
+      "tid": 13918,
+      "closed_while_blocked": true,
+      "written": 4096,
+      "pid": 13916,
+      "target": 13917,
+      "fd": 8,
+      "inode": 543312
+    },
+    "actors": {
+      "opener": {
+        "pid_tid": 59773059872349,
+        "birth": 960293971352,
+        "count": 1,
+        "flags": 0
+      },
+      "acquirer": {
+        "pid_tid": 59768764905052,
+        "birth": 959942925186,
+        "count": 1,
+        "flags": 0
+      },
+      "live": {
+        "pid_tid": 59768764905054,
+        "birth": 960310274457,
+        "count": 4,
+        "flags": 0
+      }
+    },
+    "raw_sha256": "5637bc5fe335a47f23218f846ca486f5375ec3557f35dbc98a246caa7edc8d6b",
+    "fixture_sha256": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417"
+  },
+  "compat": {
+    "passed": true,
+    "application": {
+      "compat_calls": 3,
+      "native_getfd": 1,
+      "writes": 1
+    },
+    "native_getfd_records": 1,
+    "native_write_records": 1,
+    "compat_calls_create_no_native_records": true
+  },
+  "source_oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+    "records": 999,
+    "stacks": 2937,
+    "frames": 16035,
+    "source_sha256": {
+      "/var/tmp/pidfd-standalone/workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+      "/usr/lib/python3.14/threading.py": "5323909624ec2165e70b6d31333e4191b63d383d2dc5a7d7d516a3475ea2b7e3"
+    },
+    "input_sha256": {
+      "hardened-serial-0-hardened.bin": "97107187c30ef4c6ec6f4c5c969fe9855fc75960044fd5ad09677d96cff8ba20",
+      "hardened-serial-1-hardened.bin": "b7af840dbf2ea027dccc55bdf2d01ab3f404dafb01a15bbb8a50350b0a5b743d",
+      "hardened-serial-2-hardened.bin": "8b071c52a3af2034bfcef37608e9f74ba2f0ee8f47e1f114fb754fcd41283c44",
+      "hardened-serial-3-hardened.bin": "8f474b0a78c02f5ebb68581534ab98d48b9f62a8f59f8154ad1302f0fcbf8684",
+      "hardened-serial-4-hardened.bin": "d78a69d43e0ab51f72f8538b87c1fd7a710f50ae55ae6e699451c96f77e6d015",
+      "hardened-threads-0-hardened.bin": "b3d21a8665fc022b7ee1411d37248ed0d022042cc10b76b8849187d96baaf075"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "physical_Intel_performance_claim": false,
+  "evidence_sha256": {
+    "deep-10.json": "5bbe6da939cddf43f7ae74607b842d0b81c910121cfee2a12056374104e68763",
+    "attach-check.json": "cee63d94beb6527d0050cc570320719225e1d03b34edc7d3d0ee5bc7eae402d3",
+    "provenance.json": "3704e8b387c621d5af62a2602b73f5e06fc22040878b58d48ec29c2a261d48ad",
+    "correctness.json": "a13b8315558be78959c1ff86b26423ba919f357b9823bd5d686dc7fbff40d65a",
+    "pins.json": "fbe174cc0ca5018f420061e4303c006cb1b490260c3213e829bad90bbb51a1f2",
+    "deep-11.json": "06ca2a94fb13055a391e8c7fb484160ff2e2f0359c0453cd0eaf45b9cd9e30e4",
+    "verification.json": "b069514e2119b897f4832a8515790718887e11998033773d6650391c436d6f71",
+    "deep-verification.json": "f3f5ef9a9655aafe5b76f08989b6a5bba05d6be9a48831a65a6e4a1514f5af19",
+    "build.json": "c20536f9b73603b971e502eed69e9cbab85ceb4f7cd92f7e2102e8afe90ac7f4",
+    "deep-4.json": "d906900db2017cab5ad9b49f8e7805692c7ca5a7dfc238849e84b62ffacd0dc0",
+    "string-controls/verification.json": "877244a5be69d10e74e42d2d5b725c9c70530f577728fe0d98499cd216358b38",
+    "compat-control/verification.json": "6648fb77e41a014de81199c890d85caa38faf644539d582b98bc9d1a77b1695b",
+    "held-baseline/threads.json": "e8c39b398ab011c40e2ac55b25e78d9ad9990b9dac98861e3f990438da64228a",
+    "held-baseline/serial.json": "a88ad1f01021c5032c42de1f6993ea8d03b0a6ac99f08975d32d20138ef0b4ea",
+    "held-baseline/verification.json": "4bc3e225883efb0d75e0c6ac26e34b227b6c57801612c3b730fc7548bd4de1c1",
+    "cpu/hardened-serial-3-raw.json": "ac3e0008730edab6165e3ea257a18e507f33e9175a6e31c0e36de95293e8de41",
+    "cpu/hardened-serial-4-hardened.json": "b75ce32180f00431aebc7faf3a59bd742aff9c45fdd06ffcae76f57e81c86e8c",
+    "cpu/hardened-serial-4-raw.json": "5bd80236be9800e2d3fc5e7f64400bffd8bb6a329f19fbc79bceec6d0017b291",
+    "cpu/hardened-serial-3-hardened.json": "a3239c395f71e9b71483f10588878315ee9c3ee304708fb063e1c88c6115263a",
+    "cpu/fast-results.json": "89f3d70eb631500d54fcc10866ed88f5cd175f8c7e98f8b1b6fa3f68a589f75a",
+    "cpu/hardened-threads-0-hardened.json": "f77834541b3f910b9293a04778d8ecca9b69067d3717f29495e8798653e49b9c",
+    "cpu/hardened-serial-2-hardened.json": "2dffd51ca2a7eeec74cb039140181807acba114a6f3f626cbcf16ff60cefa26b",
+    "cpu/hardened-threads-0-raw.json": "9ab1ecf6fd69ecac59d54eadd370be0bd3c494d3170b7d6d7cc9ce7f1341fe5a",
+    "cpu/hardened-serial-0-raw.json": "6cbaac04aaedca230f4a4dd799cf9d09bb3e2f861dd9a13f902d32de9fc71338",
+    "cpu/hardened-serial-0-hardened.json": "fac163c89f1cc5a54b5f6ffe3d6c09201ba9bb6ef91e46e223fc26084e4577c0",
+    "cpu/hardened-serial-1-raw.json": "c80738a439167da080d032a2bbbb73b6e9f9b5f98414c1bbeb6e85ce21761eae",
+    "cpu/hardened-serial-1-hardened.json": "f5b132feeceffae4c66dab86e83a63a871f4054fceeaef98cb8262f70dfa4b62",
+    "cpu/hardened-serial-2-raw.json": "50b9bb57dc831d667c1abcb8b1108deddcd8c90acb316499ed6c0b056c1e2080",
+    "build/manifest.json": "b421497cb3fa703502093e3cc430c40df4e3822ecd3a4313304ed44368d925ca",
+    "expanded/bindings.json": "4a356f6b650d8923d19ed970c6d10105a778b1aa147ba8eb7fd71d78e4bf43aa",
+    "expanded/bytecode-position-verification.json": "7c9aa37ef385b4d27e1054d978e728af215ea18a2e3eebe75bcaf50eeea5e6e8",
+    "scopes/measure_collector_path_guest.json": "27ff054e8799b2d8827759f60377a9c6cefd55fd1cc198a529010b1a1a1217e3",
+    "scopes/history_guest.json": "0c1315f4d57aff56377ba1357c979770f95546bd9962e68c9dadffb73cd34afe",
+    "scopes/strings_collector_path_guest.json": "1942066ce836ca7f1cf24bc077abacf608f4f47a674ca4afee849fcc1550c6d3",
+    "scopes/run_collector_path_guest.json": "f5305f91bec0bb92c921bf119e9ef570caf73cc1a4fce7f982226d57825b788e",
+    "scopes/compat_guest.json": "3e71121210f068fffa7d369f6463490c43b4dac3df7c3235a9a6a7055ffbd439",
+    "regression/evidence/pidfd-source-verification.json": "015248fdc5b812eabc433bd801253aff9d445b8e39d400bc1bef8925b5404d0e",
+    "held-baseline/expanded/bytecode-position-verification.json": "8f13791dba94f90060d26ad05619c7b4fc3014d39bb11a43c3f686dbebe35c41",
+    "compat-control/expanded/bytecode-position-verification.json": "1b95b8fdf2d23ffbbda57f9643769979f3a95e239594431cafd681d7cb299e76",
+    "history-control/candidate/verification.json": "d36677d244c312599808cd2945ca8ff1c12cff21e7746f14b9835a89eae7275b",
+    "history-control/candidate/expanded/bytecode-position-verification.json": "e9fc2b9247e470f3a56654486ad58ed905830c5247ab0a871658f8e98e1e1ce8"
+  },
+  "interpreter_elf_header": "ELF Header:\n  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 \n  Class:                             ELF64\n  Data:                              2's complement, little endian\n  Version:                           1 (current)\n  OS/ABI:                            UNIX - System V\n  ABI Version:                       0\n  Type:                              EXEC (Executable file)\n  Machine:                           Advanced Micro Devices X86-64\n  Version:                           0x1\n  Entry point address:               0x672c20\n  Start of program headers:          64 (bytes into file)\n  Start of section headers:          7474856 (bytes into file)\n  Flags:                             0x0\n  Size of this header:               64 (bytes)\n  Size of program headers:           56 (bytes)\n  Number of program headers:         15\n  Size of section headers:           64 (bytes)\n  Number of section headers:         36\n  Section header string table index: 35\n",
+  "cpu_reporting_note": "One-core percentage is the primary screen. Historical four_vcpu fields are a fixed four-core normalization, not a measurement of whole-machine overhead on a two-vCPU guest. Setup/shutdown and deferred kernel work are excluded."
+}

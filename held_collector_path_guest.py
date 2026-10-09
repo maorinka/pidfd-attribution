@@ -14,5 +14,5 @@ for profile in ['serial','threads']:
   assert x.complete and x.accepted and x.result==x.inner==1 and not x.live.flags
   assert ns['stack'](x.live)[0][1]=='write_leaf' and ns['stack'](x.live)[0][0]==str(g/'held_fixture.py')
  (expanded/(profile+'.bin')).write_bytes(b''.join(bytes(x) for x in rows));checks.append({'profile':profile,'complete_writes':len(finals)})
-subprocess.run(['/usr/bin/python3.14',str(r/'support/bytecode_oracle_guest.py'),str(expanded)],check=True)
+subprocess.run([str(__import__('settings').PYTHON),str(r/'support/bytecode_oracle_guest.py'),str(expanded)],check=True)
 (e/'verification.json').write_text(json.dumps({'passed':True,'test':'ctypes.PyDLLwrite retainsGIL; collector-batch candidate (actual Muse)','profiles':checks},indent=2)+'\n');print(checks)

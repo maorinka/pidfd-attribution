@@ -14,19 +14,21 @@
       "original": "experiments/pidfd_collector_path_muse/reader.bpf.c",
       "sha256": "bbd8f194ec94ddee0931d6c4c337f5a641c542b89e1bab4230c53b604c5f37a3",
       "byte_identical": false,
-      "port_sha256": "27b5003d26ae687e1f5749de1b9d04ca5732a13b78304b6c2a2f9820e042cb20"
+      "port_sha256": "dabb8795940681eaa77d17876ef2f223228bf99322f9b3118147793f6bc50c6f"
     },
     {
       "file": "loader.c",
       "original": "experiments/pidfd_collector_path_muse/loader.c",
       "sha256": "6d9c27e49a0dd9c866ba0a970de467278eb5b961d32e8ad59d6a7a230689570c",
-      "byte_identical": true
+      "byte_identical": false,
+      "port_sha256": "ae1cc03514d3662bf9a72f69566064f4785875ce426b507a2a0e7df6ab49f8f6"
     },
     {
       "file": "direct_ring.h",
       "original": "experiments/pidfd_collector_path_muse/direct_ring.h",
       "sha256": "e29070dbe94f79517a490374656266c427bc7a2d9ed9a19035be62324639f3e5",
-      "byte_identical": true
+      "byte_identical": false,
+      "port_sha256": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1"
     },
     {
       "file": "module/Makefile",
@@ -44,13 +46,16 @@
       "file": "module/iosec_native.c",
       "original": "experiments/pidfd_collector_path_muse/module/iosec_native.c",
       "sha256": "ce3dfe1bfa433a437d013d2e9ed4722d301cb0afb3a9a95e6a770b7efb235122",
-      "byte_identical": true
+      "byte_identical": false,
+      "port_sha256": "9dcf3004e24ce57d6855d44a8efdd8f27d2e4b557f959831227dc9fb795c2727"
     }
   ],
   "historical_cpu_pct_one_core_median": 0.3131730425134857,
   "historical_cpu_source": "evidence/pidfd-collector-path-muse/verification.json",
   "historical_measurement_is_new_copy_measurement": false,
   "counts_as_new_solution": false,
-  "standalone_port": "Codex: repository-local paths, generated configuration, native x86_64/arm64 syscall adapter, target setup and validation",
-  "collector_semantics_preserved": true
+  "standalone_port": "Repository-local paths; generated Python 3.10\u20133.14 layouts and ELF relocation; BTF-selected file-open/table hooks; Linux 6.8 kfunc registration; native x86_64/arm64 adapters; target setup and validation.",
+  "collector_semantics_preserved": true,
+  "collector_source_changes": "Formatting and interpreter selection in loader; direct-ring changes are formatting only.",
+  "compatibility_limits": "Ubuntu 22.04 requires its Linux 6.8 HWE kernel. Python 3.11/3.13 adapters are not certified by the distribution matrix. No Linux 5.15 support or module-free equivalence claimed."
 }

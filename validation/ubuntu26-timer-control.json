@@ -1,0 +1,23 @@
+{
+  "scope": "Only the owned disposable Ubuntu 26.04 validation VM",
+  "paused_timers": [
+    "apt-daily-upgrade.timer",
+    "apt-daily.timer",
+    "dpkg-db-backup.timer",
+    "e2scrub_all.timer",
+    "fstrim.timer",
+    "fwupd-refresh.timer",
+    "logrotate.timer",
+    "man-db.timer",
+    "motd-news.timer",
+    "sysstat-collect.timer",
+    "sysstat-rotate.timer",
+    "sysstat-summary.timer",
+    "systemd-tmpfiles-clean.timer",
+    "update-notifier-download.timer",
+    "update-notifier-motd.timer",
+    "xfs_scrub_all.timer"
+  ],
+  "validation_pid": 9383,
+  "restored": true
+}

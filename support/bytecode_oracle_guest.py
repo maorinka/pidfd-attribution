@@ -16,7 +16,7 @@ class Event(c.Structure):
         ('result',c.c_long),('inner',c.c_long)]+[(name,c.c_uint) for name in
         ['fd','stage','accepted','complete','label_count','coverage']]
 
-assert sys.version_info[:2]==(3,14),sys.version
+assert sys.version_info[:2] in ((3,10),(3,11),(3,12),(3,13),(3,14)),sys.version
 assert c.sizeof(Event)==9760,c.sizeof(Event)
 directory=Path(sys.argv[1])
 code_cache={}
@@ -28,7 +28,8 @@ def codes(path):
         module=compile(payload,path,'exec',dont_inherit=True,optimize=0)
         found={}
         def visit(code):
-            found.setdefault(code.co_name,[]).append(list(code.co_positions()))
+            positions=list(code.co_positions()) if hasattr(code, 'co_positions') else [(next((line for start,end,line in code.co_lines() if start<=offset<end),None),) for offset in range(0,len(code.co_code),2)]
+            found.setdefault(code.co_name,[]).append(positions)
             for value in code.co_consts:
                 if isinstance(value,types.CodeType):visit(value)
         visit(module)
@@ -58,7 +59,7 @@ for binary in sorted(directory.glob('*.bin')):
                     bytecode=frame.bytecode,reported_line=frame.line,compiled_position_lines=list(actual))
                 checked_frames+=1
 assert checked_records and checked_frames,'No binary records checked'
-report=dict(status='passed',oracle='Offline stockCPython3.14 compile/co_positions at exact captured bytecode offset; no execution of fixture',
+report=dict(status='passed',oracle='Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture',
             python=sys.version,records=checked_records,stacks=checked_stacks,frames=checked_frames,
             source_sha256=hashes,input_sha256=inputs,
             limitations='Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof.')

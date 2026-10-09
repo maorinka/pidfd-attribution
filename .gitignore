@@ -5,6 +5,7 @@ __pycache__/
 /generated/
 /evidence/
 /evidence-runs/
+/.deps/
 *.o
 *.ko
 *.mod

@@ -1,0 +1,41 @@
+name: Ubuntu compatibility validation
+
+# Dedicated, disposable test VMs with passwordless sudo are required.
+# This is an opt-in workflow; no hosted-runner kernel compatibility is assumed.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ubuntu22-arm64
+            labels: '["self-hosted", "Linux", "ARM64", "pidfd-ubuntu22"]'
+          - target: ubuntu24-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-ubuntu24"]'
+          - target: ubuntu26-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-ubuntu26"]'
+    runs-on: ${{ fromJSON(matrix.labels) }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install target dependencies
+        run: sudo ./install-ubuntu.sh
+      - name: Check target and run functional validation
+        run: |
+          sudo ./run.sh doctor
+          sudo ./run.sh validate
+      - name: Retain reports and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            evidence/**/*.json
+            evidence/**/*.log
+          if-no-files-found: warn

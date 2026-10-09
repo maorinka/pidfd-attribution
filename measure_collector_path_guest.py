@@ -30,7 +30,7 @@ def check_source(s):
     frames=stack(s)
     assert frames[-1][1] in ['<module>','_bootstrap']
     for i,(path,fn,line,bc) in enumerate(frames):
-        assert path==str(LOCAL/'workload.py') or path=='/usr/lib/python3.14/threading.py'
+        assert path==str(LOCAL/'workload.py') or path==__import__('threading').__file__
         if path not in trees:trees[path]=ast.parse(Path(path).read_text())
         t=trees[path]
         if fn!='<module>':
@@ -77,7 +77,7 @@ for profile,count,rate,repeats in [('threads',50,0,1),('serial',150,50,5)]:
             env=dict(os.environ,PIDFD_PROFILE=profile,PIDFD_WRITES=str(count),PIDFD_RATE=str(rate),
                      PIDFD_RESULT=str(appfile),PIDFD_FIXTURE=str(LOCAL/'workload.py'))
             if mode!='raw':env['PIDFD_BINARY']=str(TIMED/(tag+'.bin'))
-            command=['/usr/bin/python3.14','workload.py'] if mode=='raw' else ['./loader']
+            command=[str(__import__('settings').PYTHON),'workload.py'] if mode=='raw' else ['./loader']
             if mode!='raw':shutil.copyfile(LOCAL/'fentry.bpf.o',LOCAL/'reader.bpf.o')
             with (TIMED/(tag+'.log')).open('w') as out,(TIMED/(tag+'.stderr')).open('w') as err:
                 start=time.monotonic();p=subprocess.Popen(command,cwd=LOCAL,env=env,stdout=out,stderr=err)

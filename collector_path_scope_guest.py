@@ -13,7 +13,7 @@ scopes=E/'scopes';scopes.mkdir(exist_ok=True)
 report=dict(baseline_bpf_ids=sorted(baseline_ids),script=str(script),args=sys.argv[2:],module_sha256=hashlib.sha256(module.read_bytes()).hexdigest(),taint_before=Path('/proc/sys/kernel/tainted').read_text().strip(),CPU_acceptance=False,full_goal_complete=False)
 p=subprocess.run(['insmod',str(module)],capture_output=True,text=True);assert p.returncode==0,p.stderr
 try:
- p=subprocess.run(['/usr/bin/python3.14',str(script)]+sys.argv[2:])
+ p=subprocess.run([str(__import__('settings').PYTHON),str(script)]+sys.argv[2:])
  report['exit_code']=p.returncode
 finally:
  deadline=time.monotonic()+10

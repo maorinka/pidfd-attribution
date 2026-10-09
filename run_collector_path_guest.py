@@ -17,12 +17,12 @@ S = ROOT
 E = ROOT / 'evidence'
 G = Path('/var/tmp/pidfd-standalone')
 PRE = __import__('settings').PREPARED
-ALLOWED = set(p['name'] for p in json.loads(subprocess.check_output(['bpftool', '-j', 'prog', 'show'])))
+ALLOWED = set(p.get('name', 'unnamed:'+str(p['id'])) for p in json.loads(subprocess.check_output(['bpftool', '-j', 'prog', 'show'])))
 sha = lambda p: hashlib.sha256(Path(p).read_bytes()).hexdigest()
 run = lambda *a, **k: subprocess.run(*a, check=True, **k)
 
 def programs():
-    return sorted(p['name'] for p in json.loads(subprocess.check_output(['bpftool', '-j', 'prog', 'show'])))
+    return sorted(p.get('name', 'unnamed:'+str(p['id'])) for p in json.loads(subprocess.check_output(['bpftool', '-j', 'prog', 'show'])))
 
 def preflight():
     busy = [l for l in subprocess.run(['pgrep', '-af', r'loader|measure_|run_guest'], capture_output=True, text=True).stdout.splitlines()
@@ -33,22 +33,22 @@ def preflight():
 def build():
     G.mkdir(exist_ok=True)
     B=Path('/var/tmp/pidfd-standalone/build');B.mkdir(parents=True,exist_ok=True)
-    for n in ['config.h', 'vmlinux.h', 'workload.py', 'deep_fixture.py']:
+    for n in ['config.h', 'python_layout.h', 'kernel_layout.h', 'vmlinux.h', 'workload.py', 'deep_fixture.py']:
         shutil.copy2(PRE / n, B / n)
     for n in ['reader.bpf.c', 'loader.c', 'direct_ring.h', 'arch.h']:
         shutil.copy2(S / n, B / n)
-    cc = ['clang', '-O2', '-g', '-target', 'bpf', '-D__TARGET_ARCH_' + __import__('settings').ARCH, '-I.', '-c', 'reader.bpf.c', '-o', 'reader.bpf.o']
+    cc = ['clang', '-O2', '-g', '-target', 'bpf', '-mcpu=v3', '-D__TARGET_ARCH_' + __import__('settings').ARCH, *__import__('settings').BPF_INCLUDES, '-I.', '-c', 'reader.bpf.c', '-o', 'reader.bpf.o']
     with (E / 'bpf-build.log').open('w') as output:
         run(cc, cwd=B, stdout=output, stderr=subprocess.STDOUT)
     shutil.copy2(B / 'reader.bpf.o', B / 'fentry.bpf.o')
-    gcc = ['gcc', '-O2', '-Wall', '-Werror', 'loader.c', '-lbpf', '-lelf', '-lz', '-o']
+    gcc = ['gcc', '-O2', '-Wall', '-Werror', *__import__('settings').BPF_INCLUDES, 'loader.c', *__import__('settings').BPF_LIBS, '-o']
     run(gcc + ['loader'], cwd=B)
     b = E / 'build'; b.mkdir(parents=True, exist_ok=True)
-    names = ['reader.bpf.c', 'loader.c', 'config.h', 'vmlinux.h', 'reader.bpf.o', 'fentry.bpf.o', 'loader', 'direct_ring.h', 'arch.h']
+    names = ['reader.bpf.c', 'loader.c', 'config.h', 'python_layout.h', 'kernel_layout.h', 'vmlinux.h', 'reader.bpf.o', 'fentry.bpf.o', 'loader', 'direct_ring.h', 'arch.h']
     for n in names:
         shutil.copy2(B / n, b / n)
     manifest = {n: sha(b / n) for n in names}
-    manifest['/usr/bin/python3.14'] = sha('/usr/bin/python3.14')
+    manifest[str(__import__('settings').PYTHON)] = sha(__import__('settings').PYTHON)
     (E / 'build.json').write_text(json.dumps(manifest, indent=2) + '\n')
     for n in names:
         target=G/n
@@ -104,7 +104,7 @@ def regression():
     for profile in ['direct', 'controls', 'native', 'lifetime', 'pressure']:
         with (tree / 'evidence' / f'pidfd-source-{profile}.log').open('w') as out:
             run(['./loader', profile], cwd=g, stdout=out)
-    return json.loads(subprocess.check_output(['/usr/bin/python3.14', str(verify)], text=True))
+    return json.loads(subprocess.check_output([str(__import__('settings').PYTHON), str(verify)], text=True))
 
 def deep():
     for depth in [4, 10, 11]:
@@ -114,11 +114,11 @@ def deep():
             run(['./loader'], cwd=G, env=env, stdout=out)
         for suffix in ['json', 'log']:
             shutil.copy2(G / f'deep-{depth}.{suffix}', E / f'deep-{depth}.{suffix}')
-    run(['/usr/bin/python3.14', str(S / 'verify_deep_collector_path_guest.py'), str(E), str(E / 'deep-verification.json')], stdout=subprocess.DEVNULL)
+    run([str(__import__('settings').PYTHON), str(S / 'verify_deep_collector_path_guest.py'), str(E), str(E / 'deep-verification.json')], stdout=subprocess.DEVNULL)
     return json.loads((E / 'deep-verification.json').read_text())
 
 def held():
-    p = subprocess.run(['/usr/bin/python3.14', str(S / 'held_collector_path_guest.py')],
+    p = subprocess.run([str(__import__('settings').PYTHON), str(S / 'held_collector_path_guest.py')],
                        capture_output=True, text=True)
     (E / 'held-baseline' / 'runner.log').write_text(f'exit={p.returncode}\nstdout:\n{p.stdout}\nstderr:\n{p.stderr}\n')
     assert p.returncode == 0, p.stderr[-2000:]

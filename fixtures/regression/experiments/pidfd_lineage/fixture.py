@@ -87,7 +87,7 @@ try:
         assert not os.get_inheritable(close_on_exec)
         child_exec=os.fork()
         if child_exec==0:
-            os.execv('/usr/bin/python3.14',['python3.14','exec_control.py',str(alias),str(close_on_exec)])
+            os.execv(__import__('sys').executable,[__import__('sys').executable,'exec_control.py',str(alias),str(close_on_exec)])
         assert os.waitpid(child_exec,0)==(child_exec,0)
         os.close(close_on_exec)
         assert write_outer(alias,b'P')==1
@@ -95,7 +95,7 @@ try:
         readfd,writefd=os.pipe()
         share=ctypes.CDLL('./share.so',use_errno=True)
         sharer=share.start_sharer(readfd);assert sharer>0
-        os.unshare(os.CLONE_FILES)
+        assert libc.syscall(272 if os.uname().machine == 'x86_64' else 97,1024)==0,ctypes.get_errno()
         assert write_outer(alias,b'U')==1
         assert os.write(writefd,b'x')==1
         assert os.waitpid(sharer,0)==(sharer,0)

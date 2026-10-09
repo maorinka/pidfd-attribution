@@ -16,11 +16,11 @@ for raw in sorted((e / 'cpu').glob('*.bin')):
     bindings[raw.name] = {'raw_sha256': hashlib.sha256(raw.read_bytes()).hexdigest(),
                           'expanded_sha256': hashlib.sha256(expanded).hexdigest()}
 (x / 'bindings.json').write_text(json.dumps(bindings, indent=2) + '\n')
-subprocess.run(['/usr/bin/python3.14', str(r / 'support/bytecode_oracle_guest.py'), str(x)], check=True)
+subprocess.run([str(__import__('settings').PYTHON), str(r / 'support/bytecode_oracle_guest.py'), str(x)], check=True)
 
 # Codex offline source-position check for the independent concurrent-close gate.
 for name in ('candidate',):
     raw=e/'history-control'/name/'records.bin'
     dest=e/'history-control'/name/'expanded';dest.mkdir(exist_ok=True)
     (dest/'records.bin').write_bytes(b''.join(bytes(row) for row in ns['events'](raw)))
-    subprocess.run(['/usr/bin/python3.14',str(r/'support/bytecode_oracle_guest.py'),str(dest)],check=True)
+    subprocess.run([str(__import__('settings').PYTHON),str(r/'support/bytecode_oracle_guest.py'),str(dest)],check=True)

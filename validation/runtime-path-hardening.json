@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "checks": [
+    "symlink staging directory rejected before build/module loading",
+    "foreign-owned staging directory rejected before build/module loading"
+  ],
+  "scope": "Negative staging-path controls in the owned Ubuntu 24.04 VM; module never loaded"
+}

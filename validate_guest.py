@@ -1,6 +1,6 @@
 """Fresh, isolated build and bounded validation of the reviewed pidfd pipeline."""
 from pathlib import Path
-import argparse, datetime, fcntl, hashlib, json, os, shutil, statistics, subprocess, sys
+import argparse, datetime, fcntl, hashlib, json, os, shutil, stat, statistics, subprocess, sys
 
 S = Path(__file__).resolve().parent
 R = S
@@ -11,7 +11,21 @@ parser.add_argument('action', choices=('doctor', 'prepare', 'build', 'validate',
 parser.add_argument('--fixture', type=Path, help='Owned Python fixture for run; exits when fixture exits')
 args = parser.parse_args()
 assert sys.platform == 'linux' and os.geteuid() == 0, 'Run through ./run.sh in the owned Linux guest'
-lock = open('/var/tmp/pidfd-standalone.lock', 'w')
+# Reject pre-created writable or foreign staging directories before any
+# root build/copy/load operation. Keep the lock inside the protected parent.
+runtime = Path('/var/tmp/pidfd-standalone')
+for directory in [runtime, *[Path(str(runtime)+suffix) for suffix in ('-held','-strings','-compat','-output')]]:
+    directory.mkdir(mode=0o700, exist_ok=True)
+    info=directory.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid!=0 or info.st_mode & 0o022:
+        raise RuntimeError('Unsafe runtime directory: '+str(directory))
+    directory.chmod(0o700)
+lock_fd=os.open(runtime/'.lock',os.O_RDWR|os.O_CREAT|os.O_NOFOLLOW,0o600)
+info=os.fstat(lock_fd)
+if not stat.S_ISREG(info.st_mode) or info.st_uid!=0 or info.st_nlink!=1 or info.st_mode & 0o022:
+    os.close(lock_fd)
+    raise RuntimeError('Unsafe runtime lock')
+lock = os.fdopen(lock_fd, 'r+')
 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
 if args.action == 'doctor':
     from doctor_guest import doctor
@@ -78,6 +92,6 @@ assert not Path('/sys/module/iosec_native').exists()
 allowed = {'lima_ticker', 'sd_devices', 'sd_fw_egress', 'sd_fw_ingress', 'sysctl_monitor'}
 remaining = json.loads(subprocess.check_output(['bpftool', '-j', 'prog', 'show']))
 assert {p['id'] for p in remaining} == baseline_ids, 'BPF program set changed'
-report = dict(passed=True, scope='Locally generated pinned inputs; bounded fixtures and steady-state CPU screen', production_files_unchanged_during_validation=True, counts_as_new_solution=False, cpu=cpu['summary'], independently_recomputed_one_core_pairs=one_core, module_removed=True, remaining_bpf_program_names=[p['name'] for p in remaining], evidence=str(E), production_sha256={row['file']: sha(S / row['file']) for row in provenance['production_files']}, driver_sha256={p.name: sha(p) for p in S.glob('*.py')}, completed_at=datetime.datetime.now(datetime.timezone.utc).isoformat())
+report = dict(passed=True, scope='Locally generated pinned inputs; bounded fixtures and steady-state CPU screen', production_files_unchanged_during_validation=True, counts_as_new_solution=False, cpu=cpu['summary'], independently_recomputed_one_core_pairs=one_core, module_removed=True, remaining_bpf_program_names=[p.get('name', 'unnamed:'+str(p['id'])) for p in remaining], evidence=str(E), production_sha256={row['file']: sha(S / row['file']) for row in provenance['production_files']}, driver_sha256={p.name: sha(p) for p in S.glob('*.py')}, completed_at=datetime.datetime.now(datetime.timezone.utc).isoformat())
 (E / 'verification.json').write_text(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))
