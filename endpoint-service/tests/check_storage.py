@@ -16,6 +16,21 @@ from wire import records
 with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
     directory = Path(temporary)
     directory.chmod(0o700)
+    controller = directory / "capture-controller"
+    subprocess.run(
+        [
+            "gcc",
+            "-std=c11",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            str(ROOT / "tests/capture_controller.c"),
+            "-o",
+            str(controller),
+        ],
+        check=True,
+    )
+    controller_output = subprocess.check_output([str(controller)], text=True)
     executable = directory / "storage-test"
     subprocess.run(
         [
@@ -54,6 +69,7 @@ with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
                 count += 1
     result = dict(
         passed=True,
+        adaptive_controller=controller_output.strip(),
         rotations=5,
         retained_segments=3,
         input_records=38400,

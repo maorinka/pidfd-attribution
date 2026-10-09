@@ -1,0 +1,87 @@
+{
+  "passed": false,
+  "backend": "module-free",
+  "kernel": "6.8.0-142-generic",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "trials": [
+    {
+      "mode": "normal",
+      "return_probe_attached": true,
+      "source_positive_control": true,
+      "empty_maps_verified": 19,
+      "zero_diagnostics": true,
+      "post_retirement_complete_writes": 0,
+      "post_retirement_incomplete_writes": 64,
+      "source_flags": [
+        0,
+        64
+      ],
+      "kernel_accepted_writes": 65,
+      "complete_source_writes": 1,
+      "incomplete_source_writes": 64,
+      "incorrect_complete_bindings": 0,
+      "reused_addresses": 52,
+      "oracle": {
+        "status": "passed",
+        "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "records": 73,
+        "stacks": 145,
+        "frames": 435,
+        "source_sha256": {
+          "/var/tmp/pidfd-binding-pr68rbmo/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+        },
+        "input_sha256": {
+          "records.bin": "31906165201feba2befa84380f139ae3177a500bf7a373250ce851f23432b8c1"
+        },
+        "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+      },
+      "raw_sha256": "d231181785234dd960b5bbea22b472ff71cc82ed5fed789b0ee6af98e919b144"
+    },
+    {
+      "mode": "missing-returns",
+      "return_probe_attached": false,
+      "source_positive_control": true,
+      "empty_maps_verified": 19,
+      "zero_diagnostics": true,
+      "post_retirement_complete_writes": 0,
+      "post_retirement_incomplete_writes": 64,
+      "source_flags": [
+        0,
+        64
+      ],
+      "kernel_accepted_writes": 65,
+      "complete_source_writes": 1,
+      "incomplete_source_writes": 64,
+      "incorrect_complete_bindings": 0,
+      "reused_addresses": 56,
+      "oracle": {
+        "status": "passed",
+        "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+        "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+        "records": 73,
+        "stacks": 145,
+        "frames": 435,
+        "source_sha256": {
+          "/var/tmp/pidfd-binding-pr68rbmo/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+        },
+        "input_sha256": {
+          "records.bin": "87069a1d3d15ccc84b12d2cc8fb18cb437a705f5e30098d0ece71cde8934ec7e"
+        },
+        "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+      },
+      "raw_sha256": "6ef64951978857bb6db91b6cefd326cdd912af450d19d6cd90ef0d3d39b38cb0"
+    }
+  ],
+  "bpf_object_sha256": "526155c46bb29f452a8f64b0df39912d60fdb07f576519228dfdb4db22744f11",
+  "source_sha256": {
+    "tests/source_binding_guest.py": "f7b968443cc97526600e508cc8bbbde20deb527e353d417ace1e5c7a560005dc",
+    "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+    "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+    "module-free/loader.c": "6f66c244ac9f658ffbad7c2183193e9a289f24aec32c563d06fec15ed3f6e464",
+    "module-free/reader.bpf.c": "c87b7beaafbf2e64c6631e6ba8a936ee87905e91da80a4c11d805d1167312008"
+  },
+  "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+  "cleanup_ok": false,
+  "base": "/var/tmp/pidfd-binding-pr68rbmo"
+}

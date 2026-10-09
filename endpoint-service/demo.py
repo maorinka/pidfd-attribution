@@ -152,4 +152,5 @@ def run():
     print("PIDFD_WORKLOAD " + json.dumps(result), flush=True)
 
 
-run()
+if __name__ == "__main__":
+    run()

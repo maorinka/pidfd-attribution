@@ -126,6 +126,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
             "arch.h",
             "source_protocol.h",
             "bpf_task_helpers.h",
+            "python_binding.bpf.h",
             "support/offsets.c",
             "support/python_layout.py",
             "install-ubuntu.sh",

@@ -67,6 +67,7 @@ def build():
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",
+        "python_binding.bpf.h",
     ]:
         shutil.copy2(SOURCE_DIR / n, B / n)
     cc = [
@@ -114,6 +115,7 @@ def build():
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",
+        "python_binding.bpf.h",
     ]
     for n in names:
         shutil.copy2(B / n, b / n)
@@ -178,6 +180,7 @@ def regression():
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",
+        "python_binding.bpf.h",
     ]:
         shutil.copy2(RUNTIME_DIR / n, tree / "build" / n)
     g = RUNTIME_DIR / "regression"

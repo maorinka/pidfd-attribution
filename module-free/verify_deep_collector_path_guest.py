@@ -19,7 +19,8 @@ for depth in [4, 10, 11]:
     text = (RUNTIME_DIR / f"deep-{depth}.log").read_text()
     app = json.loads((RUNTIME_DIR / f"deep-{depth}.json").read_text())
     assert text.count("MAP_EMPTY ") == 19 and "MAPS_EMPTY 1" in text
-    assert dict(re.findall(r"DIAGNOSTIC (\d+) (\d+)", text)) == {"0": "0", "1": "0"}
+    diagnostics = dict(re.findall(r"DIAGNOSTIC (\d+) (\d+)", text))
+    assert {key: diagnostics[key] for key in ("0", "1")} == {"0": "0", "1": "0"}
     rows = text_events(text)
     finals = [e for e in rows if e.stage == 9]
     assert len(finals) == app["writes"] == 3

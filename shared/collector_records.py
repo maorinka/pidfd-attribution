@@ -233,7 +233,7 @@ class WorkloadVerifier:
             int(key): int(value)
             for key, value in re.findall(r"DIAGNOSTIC (\d+) (\d+)", text)
         }
-        assert diagnostics == {0: 0, 1: 0}, diagnostics
+        assert {key: diagnostics[key] for key in (0, 1)} == {0: 0, 1: 0}, diagnostics
         rows = text_events(text) if mode == "live-text" else events(binary)
         finals = [
             event for event in rows if event.stage == 9 and event.inode == app["inode"]

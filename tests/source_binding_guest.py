@@ -9,6 +9,7 @@ import ctypes
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -16,6 +17,10 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from shared.validation_lock import validation_lock
+
+validation_fd = validation_lock()
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--backend", choices=("root", "module-free"), default="module-free")
 args = parser.parse_args()
@@ -66,6 +71,7 @@ def ids():
 baseline = ids()
 report = dict(
     passed=False,
+    baseline_bpf_ids=baseline,
     backend=args.backend,
     kernel=os.uname().release,
     python=sys.version,
@@ -169,7 +175,13 @@ try:
                 return_probe_attached=return_attached,
                 source_positive_control=True,
                 empty_maps_verified=19,
-                zero_diagnostics=True,
+                zero_error_diagnostics=True,
+                diagnostic_counts={
+                    int(key): int(value)
+                    for key, value in re.findall(
+                        r"DIAGNOSTIC (\d+) (\d+)", trial.stdout
+                    )
+                },
                 post_retirement_complete_writes=sum(
                     bool(e.complete) for e in writes[1:]
                 ),
@@ -189,7 +201,11 @@ try:
         assert ids() == baseline
     report["passed"] = True
 finally:
-    report["cleanup_ok"] = ids() == baseline
+    report["final_bpf_ids"] = ids()
+    report["final_bpf_programs"] = json.loads(
+        subprocess.check_output(["bpftool", "-j", "prog", "show"])
+    )
+    report["cleanup_ok"] = report["final_bpf_ids"] == baseline
     report["base"] = str(base)
     (backend / "evidence/source-binding.json").write_text(
         json.dumps(report, indent=2) + "\n"

@@ -263,14 +263,15 @@ int main(int argc, char **argv) {
     return 13;
   printf("CLEANUP_FALLBACK %u\n", cleanup_bits);
   unsigned long long value;
-  for (unsigned int key = 0; key < 2; key++) {
+  for (unsigned int key = 0; key < IOSEC_DIAG_COUNT; key++) {
     if (bpf_map_lookup_elem(bpf_object__find_map_fd_by_name(obj, "diagnostics"),
                             &key, &value))
       return 10;
     printf("DIAGNOSTIC %u %llu\n", key, value);
     unsigned long long expected =
         (key == 1 && argc > 1 && !strcmp(argv[1], "pressure")) ? 1 : 0;
-    dirty |= value != expected;
+    if (key <= IOSEC_DIAG_STATE_ERRORS)
+      dirty |= value != expected;
   }
   printf("OUTPUT_RESERVE state=%d chunk=%d written=%llu reserved_end=%llu "
          "calls=%llu fallback_errno=%d\n",

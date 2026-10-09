@@ -193,6 +193,7 @@ for n in [
     "arch.h",
     "source_protocol.h",
     "bpf_task_helpers.h",
+    "python_binding.bpf.h",
 ]:
     shutil.copy2(ROOT / "evidence/build" / n, RUNTIME_DIR / n)
 for i, cmd in enumerate(

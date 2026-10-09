@@ -1,6 +1,7 @@
 {
   "state_dir": "/var/lib/iosec-endpoint",
   "capture_python": false,
+  "bpf_stats": false,
   "path_prefix": "",
   "cgroup_id": 0,
   "segment_bytes": 16777216,

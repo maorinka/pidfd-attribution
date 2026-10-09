@@ -6,6 +6,7 @@ import struct
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from service import (
@@ -69,6 +70,7 @@ class ConfigurationTests(unittest.TestCase):
         for values in (
             {"unknown": 1},
             {"capture_python": 1},
+            {"bpf_stats": 1},
             {"poll_ms": True},
             {"state_dir": "/tmp/../root"},
             {"path_prefix": "relative"},
@@ -80,6 +82,12 @@ class ConfigurationTests(unittest.TestCase):
         ):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 self.config(values)
+
+    def test_optional_runtime_statistics(self):
+        self.assertNotIn("--bpf-stats", collector_command(configuration()))
+        self.assertIn(
+            "--bpf-stats", collector_command(self.config({"bpf_stats": True}))
+        )
 
     def test_optional_source_capture(self):
         self.assertNotIn("--capture-python", collector_command(configuration()))
@@ -197,6 +205,32 @@ class WireTests(unittest.TestCase):
 
 
 class HealthTests(unittest.TestCase):
+    def test_degraded_capture_is_unhealthy_without_fabricating_history_loss(self):
+        for requested, effective, expected in (
+            (True, False, 1),
+            (True, True, 0),
+            (False, False, 0),
+        ):
+            health = dict(
+                schema_version=1,
+                boot_id="test",
+                updated_monotonic_ns=1,
+                state="running",
+                history_gaps=False,
+                requested_capture_python=requested,
+                effective_capture_python=effective,
+            )
+            output = io.StringIO()
+            with self.subTest(requested=requested, effective=effective), patch(
+                "service.Path.read_text", side_effect=[json.dumps(health), "test"]
+            ), patch("service.Path.exists", return_value=True), patch(
+                "service.time.monotonic_ns", return_value=100
+            ), redirect_stdout(
+                output
+            ):
+                self.assertEqual(status(dict(state_dir="/unused")), expected)
+            self.assertFalse(json.loads(output.getvalue())["history_gaps"])
+
     def test_incomplete_or_wrongly_typed_health_is_an_error_exit(self):
         valid = dict(
             schema_version=1,
@@ -211,6 +245,8 @@ class HealthTests(unittest.TestCase):
             {**valid, "history_gaps": "false"},
             {**valid, "updated_monotonic_ns": True},
             {**valid, "state": []},
+            {**valid, "requested_capture_python": "false"},
+            {**valid, "effective_capture_python": 1},
         ]
         variants.extend(
             {key: value for key, value in valid.items() if key != missing}

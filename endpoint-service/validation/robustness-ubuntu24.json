@@ -1,0 +1,2280 @@
+{
+  "passed": true,
+  "scope": "Module-free Intel Ubuntu24 real BPF attachments, overload/epoch recovery, injected birth mismatch, bounded storage, and shipped systemd unit",
+  "integration": {
+    "passed": true,
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "base": "/var/tmp/pidfd-service-test-idnvsw1q",
+    "baseline_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ],
+    "lockdown": "[none] integrity confidentiality",
+    "modules_disabled": "0",
+    "no_cap_sys_module": true,
+    "identity": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2246,
+        "session": "bff1b3d151323aad504ab2706fbcfdd9",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 942769842549,
+        "updated_monotonic_ns": 947649173078,
+        "updated_realtime_ns": 1791570982905894396,
+        "attachments": 29,
+        "capture_python": false,
+        "records": 18,
+        "session_bytes": 4032,
+        "active_segment": "events-01791570978026588867-bff1b3d151323aad504ab2706fbcfdd9-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19400,
+        "restart_resets_history": true,
+        "requested_capture_python": false,
+        "effective_capture_python": false,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 0,
+        "python_returns": 0,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "independent_existing_process_writes": 5,
+      "pidfd_writes": 3,
+      "duplicate_rejected": true
+    },
+    "source": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2255,
+        "session": "6d315b7638a3704956c437604c64ece5",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 947852686685,
+        "updated_monotonic_ns": 956922015389,
+        "updated_realtime_ns": 1791570992178740707,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 50,
+        "session_bytes": 118600,
+        "active_segment": "events-01791570983109434003-6d315b7638a3704956c437604c64ece5-0000000005.bin",
+        "segments_created": 6,
+        "segments_deleted": 3,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19404,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 12605,
+        "python_returns": 12605,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 6,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "serial_writes": 3,
+      "threaded_writes": 13,
+      "oracle_frames": 279,
+      "leader_first_exit_writes": 5,
+      "rotation_keeps_session": true,
+      "bounded_segments": true
+    },
+    "restart": {
+      "new_session": true,
+      "crash_cleanup": true,
+      "subsequent_writes": 3
+    },
+    "global": {
+      "empty_prefix": true,
+      "pidfd_writes": 3
+    },
+    "capacity": {
+      "explicit_history_gap": true,
+      "state_errors": 22
+    },
+    "task_birth_guard": {
+      "positive_before": true,
+      "mismatch_unknown": true,
+      "reseeded_after": true,
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2290,
+        "session": "ebe6456fff5fa47ae87f6358654783a8",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 974872098208,
+        "updated_monotonic_ns": 982004093380,
+        "updated_realtime_ns": 1791571017260819698,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 11,
+        "session_bytes": 23864,
+        "active_segment": "events-01791571010128833526-ebe6456fff5fa47ae87f6358654783a8-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 22144,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 4061,
+        "python_returns": 4061,
+        "binding_invalidations": 1,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": true,
+        "bpf_runtime": [
+          {
+            "id": 2552,
+            "name": "seed_thread",
+            "run_time_ns": 8617045,
+            "run_cnt": 4214,
+            "delta_run_time_ns": 48001,
+            "delta_run_cnt": 9,
+            "mean_run_time_ns": 5333
+          },
+          {
+            "id": 2553,
+            "name": "eval_return",
+            "run_time_ns": 10650061,
+            "run_cnt": 4214,
+            "delta_run_time_ns": 26000,
+            "delta_run_cnt": 9,
+            "mean_run_time_ns": 2888
+          },
+          {
+            "id": 2554,
+            "name": "write_fused_entry",
+            "run_time_ns": 1248008,
+            "run_cnt": 46,
+            "delta_run_time_ns": 6000,
+            "delta_run_cnt": 4,
+            "mean_run_time_ns": 1500
+          },
+          {
+            "id": 2555,
+            "name": "acquire_fused_entry",
+            "run_time_ns": 1153006,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2556,
+            "name": "openat_fused_entry",
+            "run_time_ns": 13164066,
+            "run_cnt": 588,
+            "delta_run_time_ns": 125001,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 125001
+          },
+          {
+            "id": 2557,
+            "name": "openat2_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2558,
+            "name": "open_begin",
+            "run_time_ns": 1106006,
+            "run_cnt": 631,
+            "delta_run_time_ns": 4000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 4000
+          },
+          {
+            "id": 2559,
+            "name": "openat_fused_cleanup",
+            "run_time_ns": 745003,
+            "run_cnt": 583,
+            "delta_run_time_ns": 6000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 6000
+          },
+          {
+            "id": 2560,
+            "name": "openat2_fused_cleanup",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2561,
+            "name": "open_bound",
+            "run_time_ns": 905005,
+            "run_cnt": 628,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2562,
+            "name": "target_bound",
+            "run_time_ns": 73001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2563,
+            "name": "reference_bound",
+            "run_time_ns": 236001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2564,
+            "name": "receive_bound",
+            "run_time_ns": 175001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2565,
+            "name": "installed",
+            "run_time_ns": 1667006,
+            "run_cnt": 537,
+            "delta_run_time_ns": 6000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 6000
+          },
+          {
+            "id": 2566,
+            "name": "receive_return",
+            "run_time_ns": 164001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2567,
+            "name": "acquire_finish",
+            "run_time_ns": 219001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2568,
+            "name": "syscall_begin",
+            "run_time_ns": 2102013,
+            "run_cnt": 6974,
+            "delta_run_time_ns": 135001,
+            "delta_run_cnt": 392,
+            "mean_run_time_ns": 344
+          },
+          {
+            "id": 2569,
+            "name": "write_file",
+            "run_time_ns": 149001,
+            "run_cnt": 46,
+            "delta_run_time_ns": 7000,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 1166
+          },
+          {
+            "id": 2570,
+            "name": "write_inner",
+            "run_time_ns": 159000,
+            "run_cnt": 46,
+            "delta_run_time_ns": 7000,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 1166
+          },
+          {
+            "id": 2571,
+            "name": "write_finish",
+            "run_time_ns": 371003,
+            "run_cnt": 46,
+            "delta_run_time_ns": 6000,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2572,
+            "name": "alias_begin",
+            "run_time_ns": 88000,
+            "run_cnt": 28,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2573,
+            "name": "alias_file",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2574,
+            "name": "alias_finish",
+            "run_time_ns": 84000,
+            "run_cnt": 28,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2575,
+            "name": "slot_close_begin",
+            "run_time_ns": 721003,
+            "run_cnt": 883,
+            "delta_run_time_ns": 106000,
+            "delta_run_cnt": 34,
+            "mean_run_time_ns": 3117
+          },
+          {
+            "id": 2576,
+            "name": "slot_close_done",
+            "run_time_ns": 740001,
+            "run_cnt": 883,
+            "delta_run_time_ns": 101000,
+            "delta_run_cnt": 35,
+            "mean_run_time_ns": 2885
+          },
+          {
+            "id": 2577,
+            "name": "table_duplicate_begin",
+            "run_time_ns": 252002,
+            "run_cnt": 14,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2578,
+            "name": "table_duplicate_done",
+            "run_time_ns": 622003,
+            "run_cnt": 14,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2579,
+            "name": "forked",
+            "run_time_ns": 357002,
+            "run_cnt": 14,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2580,
+            "name": "exec_close_begin",
+            "run_time_ns": 204002,
+            "run_cnt": 17,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2581,
+            "name": "exec_close_done",
+            "run_time_ns": 620002,
+            "run_cnt": 17,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2582,
+            "name": "file_released",
+            "run_time_ns": 1113007,
+            "run_cnt": 570,
+            "delta_run_time_ns": 154001,
+            "delta_run_cnt": 41,
+            "mean_run_time_ns": 3756
+          },
+          {
+            "id": 2583,
+            "name": "executed",
+            "run_time_ns": 312002,
+            "run_cnt": 17,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2584,
+            "name": "exited",
+            "run_time_ns": 159002,
+            "run_cnt": 14,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2585,
+            "name": "table_physically_freed",
+            "run_time_ns": 6045034,
+            "run_cnt": 8702,
+            "delta_run_time_ns": 596003,
+            "delta_run_cnt": 241,
+            "mean_run_time_ns": 2473
+          },
+          {
+            "id": 2586,
+            "name": "warm_mm_retired",
+            "run_time_ns": 393000,
+            "run_cnt": 54,
+            "delta_run_time_ns": 12000,
+            "delta_run_cnt": 12,
+            "mean_run_time_ns": 1000
+          }
+        ]
+      }
+    },
+    "adaptive_capture": {
+      "degraded_identity_writes": 3,
+      "recovered_source_writes": 3,
+      "history_gap_preserved": true,
+      "transition_journal": [
+        {
+          "before_monotonic_ns": 987667740327,
+          "after_monotonic_ns": 987667740327,
+          "epoch": 2,
+          "capture_python": false,
+          "ring_drops": 36729,
+          "backlog_bytes": 4505528
+        },
+        {
+          "before_monotonic_ns": 987687875291,
+          "after_monotonic_ns": 987687875291,
+          "epoch": 2,
+          "capture_python": false,
+          "ring_drops": 36729,
+          "backlog_bytes": 2564024
+        },
+        {
+          "before_monotonic_ns": 997820965581,
+          "after_monotonic_ns": 997820996581,
+          "epoch": 3,
+          "capture_python": true,
+          "ring_drops": 36729,
+          "backlog_bytes": 0
+        },
+        {
+          "before_monotonic_ns": 987649903358,
+          "after_monotonic_ns": 987649903358,
+          "epoch": 2,
+          "capture_python": false,
+          "ring_drops": 36729,
+          "backlog_bytes": 6447032
+        }
+      ],
+      "degraded_health": {
+        "schema_version": 1,
+        "state": "running",
+        "pid": 2308,
+        "session": "0d712d44bd4a30340ab33cb52f8b0200",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 982121953170,
+        "updated_monotonic_ns": 987635169384,
+        "updated_realtime_ns": 1791571022891887702,
+        "attachments": 35,
+        "capture_python": false,
+        "records": 1024,
+        "session_bytes": 638776,
+        "active_segment": "events-01791571017378688488-0d712d44bd4a30340ab33cb52f8b0200-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 36729,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": true,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 22144,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": false,
+        "capture_epoch": 2,
+        "capture_transitions": 1,
+        "degraded_ns": 17486969,
+        "ring_backlog_bytes": 8388336,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 1404,
+        "python_returns": 1402,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": true,
+        "bpf_runtime": [
+          {
+            "id": 2592,
+            "name": "seed_thread",
+            "run_time_ns": 3594019,
+            "run_cnt": 1568,
+            "delta_run_time_ns": 3343018,
+            "delta_run_cnt": 1406,
+            "mean_run_time_ns": 2377
+          },
+          {
+            "id": 2593,
+            "name": "eval_return",
+            "run_time_ns": 4021021,
+            "run_cnt": 1568,
+            "delta_run_time_ns": 3857021,
+            "delta_run_cnt": 1406,
+            "mean_run_time_ns": 2743
+          },
+          {
+            "id": 2594,
+            "name": "write_fused_entry",
+            "run_time_ns": 534603680,
+            "run_cnt": 50021,
+            "delta_run_time_ns": 534486680,
+            "delta_run_cnt": 50015,
+            "mean_run_time_ns": 10686
+          },
+          {
+            "id": 2595,
+            "name": "acquire_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2596,
+            "name": "openat_fused_entry",
+            "run_time_ns": 7185038,
+            "run_cnt": 75,
+            "delta_run_time_ns": 6952036,
+            "delta_run_cnt": 47,
+            "mean_run_time_ns": 147915
+          },
+          {
+            "id": 2597,
+            "name": "openat2_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2598,
+            "name": "open_begin",
+            "run_time_ns": 594001,
+            "run_cnt": 75,
+            "delta_run_time_ns": 384001,
+            "delta_run_cnt": 49,
+            "mean_run_time_ns": 7836
+          },
+          {
+            "id": 2599,
+            "name": "openat_fused_cleanup",
+            "run_time_ns": 381001,
+            "run_cnt": 71,
+            "delta_run_time_ns": 102000,
+            "delta_run_cnt": 47,
+            "mean_run_time_ns": 2170
+          },
+          {
+            "id": 2600,
+            "name": "openat2_fused_cleanup",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2601,
+            "name": "open_bound",
+            "run_time_ns": 408003,
+            "run_cnt": 72,
+            "delta_run_time_ns": 281001,
+            "delta_run_cnt": 49,
+            "mean_run_time_ns": 5734
+          },
+          {
+            "id": 2602,
+            "name": "target_bound",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2603,
+            "name": "reference_bound",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2604,
+            "name": "receive_bound",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2605,
+            "name": "installed",
+            "run_time_ns": 643001,
+            "run_cnt": 92,
+            "delta_run_time_ns": 125000,
+            "delta_run_cnt": 43,
+            "mean_run_time_ns": 2906
+          },
+          {
+            "id": 2606,
+            "name": "receive_return",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2607,
+            "name": "acquire_finish",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2608,
+            "name": "syscall_begin",
+            "run_time_ns": 55605273,
+            "run_cnt": 52205,
+            "delta_run_time_ns": 55394272,
+            "delta_run_cnt": 51921,
+            "mean_run_time_ns": 1066
+          },
+          {
+            "id": 2609,
+            "name": "write_file",
+            "run_time_ns": 77212402,
+            "run_cnt": 50019,
+            "delta_run_time_ns": 77158402,
+            "delta_run_cnt": 50015,
+            "mean_run_time_ns": 1542
+          },
+          {
+            "id": 2610,
+            "name": "write_inner",
+            "run_time_ns": 15188084,
+            "run_cnt": 50019,
+            "delta_run_time_ns": 15098083,
+            "delta_run_cnt": 50015,
+            "mean_run_time_ns": 301
+          },
+          {
+            "id": 2611,
+            "name": "write_finish",
+            "run_time_ns": 110533549,
+            "run_cnt": 50019,
+            "delta_run_time_ns": 110454549,
+            "delta_run_cnt": 50015,
+            "mean_run_time_ns": 2208
+          },
+          {
+            "id": 2612,
+            "name": "alias_begin",
+            "run_time_ns": 102001,
+            "run_cnt": 9,
+            "delta_run_time_ns": 19000,
+            "delta_run_cnt": 5,
+            "mean_run_time_ns": 3800
+          },
+          {
+            "id": 2613,
+            "name": "alias_file",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2614,
+            "name": "alias_finish",
+            "run_time_ns": 46000,
+            "run_cnt": 9,
+            "delta_run_time_ns": 9000,
+            "delta_run_cnt": 5,
+            "mean_run_time_ns": 1800
+          },
+          {
+            "id": 2615,
+            "name": "slot_close_begin",
+            "run_time_ns": 209001,
+            "run_cnt": 115,
+            "delta_run_time_ns": 78000,
+            "delta_run_cnt": 105,
+            "mean_run_time_ns": 742
+          },
+          {
+            "id": 2616,
+            "name": "slot_close_done",
+            "run_time_ns": 122000,
+            "run_cnt": 114,
+            "delta_run_time_ns": 76000,
+            "delta_run_cnt": 105,
+            "mean_run_time_ns": 723
+          },
+          {
+            "id": 2617,
+            "name": "table_duplicate_begin",
+            "run_time_ns": 138000,
+            "run_cnt": 1,
+            "delta_run_time_ns": 138000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 138000
+          },
+          {
+            "id": 2618,
+            "name": "table_duplicate_done",
+            "run_time_ns": 104000,
+            "run_cnt": 1,
+            "delta_run_time_ns": 104000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 104000
+          },
+          {
+            "id": 2619,
+            "name": "forked",
+            "run_time_ns": 244001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 244001,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 244001
+          },
+          {
+            "id": 2620,
+            "name": "exec_close_begin",
+            "run_time_ns": 82000,
+            "run_cnt": 1,
+            "delta_run_time_ns": 82000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 82000
+          },
+          {
+            "id": 2621,
+            "name": "exec_close_done",
+            "run_time_ns": 84001,
+            "run_cnt": 1,
+            "delta_run_time_ns": 84001,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 84001
+          },
+          {
+            "id": 2622,
+            "name": "file_released",
+            "run_time_ns": 474001,
+            "run_cnt": 51,
+            "delta_run_time_ns": 300000,
+            "delta_run_cnt": 45,
+            "mean_run_time_ns": 6666
+          },
+          {
+            "id": 2623,
+            "name": "executed",
+            "run_time_ns": 78000,
+            "run_cnt": 1,
+            "delta_run_time_ns": 78000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 78000
+          },
+          {
+            "id": 2624,
+            "name": "exited",
+            "run_time_ns": 51000,
+            "run_cnt": 1,
+            "delta_run_time_ns": 51000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 51000
+          },
+          {
+            "id": 2625,
+            "name": "table_physically_freed",
+            "run_time_ns": 1665011,
+            "run_cnt": 1688,
+            "delta_run_time_ns": 1518009,
+            "delta_run_cnt": 1616,
+            "mean_run_time_ns": 939
+          },
+          {
+            "id": 2626,
+            "name": "warm_mm_retired",
+            "run_time_ns": 201001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 156001,
+            "delta_run_cnt": 4,
+            "mean_run_time_ns": 39000
+          }
+        ]
+      },
+      "recovered_health": {
+        "schema_version": 1,
+        "state": "running",
+        "pid": 2308,
+        "session": "0d712d44bd4a30340ab33cb52f8b0200",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 982121953170,
+        "updated_monotonic_ns": 1000940564196,
+        "updated_realtime_ns": 1791571036197282514,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 13295,
+        "session_bytes": 8310680,
+        "active_segment": "events-01791571017378688488-0d712d44bd4a30340ab33cb52f8b0200-0000000003.bin",
+        "segments_created": 4,
+        "segments_deleted": 1,
+        "retention_skipped": 0,
+        "ring_drops": 36729,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": true,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 22144,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 3,
+        "capture_transitions": 2,
+        "degraded_ns": 10203095166,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 54523,
+        "python_returns": 54520,
+        "binding_invalidations": 1,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": true,
+        "bpf_runtime": [
+          {
+            "id": 2592,
+            "name": "seed_thread",
+            "run_time_ns": 105972510,
+            "run_cnt": 108991,
+            "delta_run_time_ns": 3219012,
+            "delta_run_cnt": 2032,
+            "mean_run_time_ns": 1584
+          },
+          {
+            "id": 2593,
+            "name": "eval_return",
+            "run_time_ns": 135067677,
+            "run_cnt": 108991,
+            "delta_run_time_ns": 4214021,
+            "delta_run_cnt": 2033,
+            "mean_run_time_ns": 2072
+          },
+          {
+            "id": 2594,
+            "name": "write_fused_entry",
+            "run_time_ns": 535474681,
+            "run_cnt": 50327,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2595,
+            "name": "acquire_fused_entry",
+            "run_time_ns": 1139006,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2596,
+            "name": "openat_fused_entry",
+            "run_time_ns": 19659103,
+            "run_cnt": 468,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2597,
+            "name": "openat2_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2598,
+            "name": "open_begin",
+            "run_time_ns": 3065012,
+            "run_cnt": 472,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2599,
+            "name": "openat_fused_cleanup",
+            "run_time_ns": 1446004,
+            "run_cnt": 464,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2600,
+            "name": "openat2_fused_cleanup",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2601,
+            "name": "open_bound",
+            "run_time_ns": 1755008,
+            "run_cnt": 469,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2602,
+            "name": "target_bound",
+            "run_time_ns": 170001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2603,
+            "name": "reference_bound",
+            "run_time_ns": 247001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2604,
+            "name": "receive_bound",
+            "run_time_ns": 268002,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2605,
+            "name": "installed",
+            "run_time_ns": 3845017,
+            "run_cnt": 488,
+            "delta_run_time_ns": 5000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 5000
+          },
+          {
+            "id": 2606,
+            "name": "receive_return",
+            "run_time_ns": 177001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2607,
+            "name": "acquire_finish",
+            "run_time_ns": 240001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2608,
+            "name": "syscall_begin",
+            "run_time_ns": 71122337,
+            "run_cnt": 119387,
+            "delta_run_time_ns": 234001,
+            "delta_run_cnt": 1053,
+            "mean_run_time_ns": 222
+          },
+          {
+            "id": 2609,
+            "name": "write_file",
+            "run_time_ns": 77963405,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2610,
+            "name": "write_inner",
+            "run_time_ns": 15819085,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 3000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1500
+          },
+          {
+            "id": 2611,
+            "name": "write_finish",
+            "run_time_ns": 111238553,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 500
+          },
+          {
+            "id": 2612,
+            "name": "alias_begin",
+            "run_time_ns": 436002,
+            "run_cnt": 155,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2613,
+            "name": "alias_file",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2614,
+            "name": "alias_finish",
+            "run_time_ns": 406000,
+            "run_cnt": 155,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2615,
+            "name": "slot_close_begin",
+            "run_time_ns": 1366007,
+            "run_cnt": 636,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2616,
+            "name": "slot_close_done",
+            "run_time_ns": 1204005,
+            "run_cnt": 635,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2617,
+            "name": "table_duplicate_begin",
+            "run_time_ns": 188001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2618,
+            "name": "table_duplicate_done",
+            "run_time_ns": 333000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2619,
+            "name": "forked",
+            "run_time_ns": 314001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2620,
+            "name": "exec_close_begin",
+            "run_time_ns": 102000,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2621,
+            "name": "exec_close_done",
+            "run_time_ns": 160001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2622,
+            "name": "file_released",
+            "run_time_ns": 2278007,
+            "run_cnt": 448,
+            "delta_run_time_ns": 4000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 4000
+          },
+          {
+            "id": 2623,
+            "name": "executed",
+            "run_time_ns": 111001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2624,
+            "name": "exited",
+            "run_time_ns": 116000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2625,
+            "name": "table_physically_freed",
+            "run_time_ns": 15308077,
+            "run_cnt": 12499,
+            "delta_run_time_ns": 55000,
+            "delta_run_cnt": 49,
+            "mean_run_time_ns": 1122
+          },
+          {
+            "id": 2626,
+            "name": "warm_mm_retired",
+            "run_time_ns": 806001,
+            "run_cnt": 142,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          }
+        ]
+      },
+      "runtime_health": {
+        "schema_version": 1,
+        "state": "running",
+        "pid": 2308,
+        "session": "0d712d44bd4a30340ab33cb52f8b0200",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 982121953170,
+        "updated_monotonic_ns": 1000940564196,
+        "updated_realtime_ns": 1791571036197282514,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 13295,
+        "session_bytes": 8310680,
+        "active_segment": "events-01791571017378688488-0d712d44bd4a30340ab33cb52f8b0200-0000000003.bin",
+        "segments_created": 4,
+        "segments_deleted": 1,
+        "retention_skipped": 0,
+        "ring_drops": 36729,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": true,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 22144,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 3,
+        "capture_transitions": 2,
+        "degraded_ns": 10203095166,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 54523,
+        "python_returns": 54520,
+        "binding_invalidations": 1,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": true,
+        "bpf_runtime": [
+          {
+            "id": 2592,
+            "name": "seed_thread",
+            "run_time_ns": 105972510,
+            "run_cnt": 108991,
+            "delta_run_time_ns": 3219012,
+            "delta_run_cnt": 2032,
+            "mean_run_time_ns": 1584
+          },
+          {
+            "id": 2593,
+            "name": "eval_return",
+            "run_time_ns": 135067677,
+            "run_cnt": 108991,
+            "delta_run_time_ns": 4214021,
+            "delta_run_cnt": 2033,
+            "mean_run_time_ns": 2072
+          },
+          {
+            "id": 2594,
+            "name": "write_fused_entry",
+            "run_time_ns": 535474681,
+            "run_cnt": 50327,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2595,
+            "name": "acquire_fused_entry",
+            "run_time_ns": 1139006,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2596,
+            "name": "openat_fused_entry",
+            "run_time_ns": 19659103,
+            "run_cnt": 468,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2597,
+            "name": "openat2_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2598,
+            "name": "open_begin",
+            "run_time_ns": 3065012,
+            "run_cnt": 472,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2599,
+            "name": "openat_fused_cleanup",
+            "run_time_ns": 1446004,
+            "run_cnt": 464,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2600,
+            "name": "openat2_fused_cleanup",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2601,
+            "name": "open_bound",
+            "run_time_ns": 1755008,
+            "run_cnt": 469,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2602,
+            "name": "target_bound",
+            "run_time_ns": 170001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2603,
+            "name": "reference_bound",
+            "run_time_ns": 247001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2604,
+            "name": "receive_bound",
+            "run_time_ns": 268002,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2605,
+            "name": "installed",
+            "run_time_ns": 3845017,
+            "run_cnt": 488,
+            "delta_run_time_ns": 5000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 5000
+          },
+          {
+            "id": 2606,
+            "name": "receive_return",
+            "run_time_ns": 177001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2607,
+            "name": "acquire_finish",
+            "run_time_ns": 240001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2608,
+            "name": "syscall_begin",
+            "run_time_ns": 71122337,
+            "run_cnt": 119387,
+            "delta_run_time_ns": 234001,
+            "delta_run_cnt": 1053,
+            "mean_run_time_ns": 222
+          },
+          {
+            "id": 2609,
+            "name": "write_file",
+            "run_time_ns": 77963405,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2610,
+            "name": "write_inner",
+            "run_time_ns": 15819085,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 3000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 1500
+          },
+          {
+            "id": 2611,
+            "name": "write_finish",
+            "run_time_ns": 111238553,
+            "run_cnt": 50325,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 2,
+            "mean_run_time_ns": 500
+          },
+          {
+            "id": 2612,
+            "name": "alias_begin",
+            "run_time_ns": 436002,
+            "run_cnt": 155,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2613,
+            "name": "alias_file",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2614,
+            "name": "alias_finish",
+            "run_time_ns": 406000,
+            "run_cnt": 155,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2615,
+            "name": "slot_close_begin",
+            "run_time_ns": 1366007,
+            "run_cnt": 636,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2616,
+            "name": "slot_close_done",
+            "run_time_ns": 1204005,
+            "run_cnt": 635,
+            "delta_run_time_ns": 1000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2617,
+            "name": "table_duplicate_begin",
+            "run_time_ns": 188001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2618,
+            "name": "table_duplicate_done",
+            "run_time_ns": 333000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2619,
+            "name": "forked",
+            "run_time_ns": 314001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2620,
+            "name": "exec_close_begin",
+            "run_time_ns": 102000,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2621,
+            "name": "exec_close_done",
+            "run_time_ns": 160001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2622,
+            "name": "file_released",
+            "run_time_ns": 2278007,
+            "run_cnt": 448,
+            "delta_run_time_ns": 4000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 4000
+          },
+          {
+            "id": 2623,
+            "name": "executed",
+            "run_time_ns": 111001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2624,
+            "name": "exited",
+            "run_time_ns": 116000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2625,
+            "name": "table_physically_freed",
+            "run_time_ns": 15308077,
+            "run_cnt": 12499,
+            "delta_run_time_ns": 55000,
+            "delta_run_cnt": 49,
+            "mean_run_time_ns": 1122
+          },
+          {
+            "id": 2626,
+            "name": "warm_mm_retired",
+            "run_time_ns": 806001,
+            "run_cnt": 142,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 1,
+            "mean_run_time_ns": 2000
+          }
+        ]
+      },
+      "final_health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2308,
+        "session": "0d712d44bd4a30340ab33cb52f8b0200",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 982121953170,
+        "updated_monotonic_ns": 1003186637339,
+        "updated_realtime_ns": 1791571038443375657,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 13295,
+        "session_bytes": 8310680,
+        "active_segment": "events-01791571017378688488-0d712d44bd4a30340ab33cb52f8b0200-0000000003.bin",
+        "segments_created": 4,
+        "segments_deleted": 1,
+        "retention_skipped": 0,
+        "ring_drops": 36729,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": true,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 22144,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 3,
+        "capture_transitions": 2,
+        "degraded_ns": 10203095166,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 55156,
+        "python_returns": 55154,
+        "binding_invalidations": 1,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": true,
+        "bpf_runtime": [
+          {
+            "id": 2592,
+            "name": "seed_thread",
+            "run_time_ns": 107011514,
+            "run_cnt": 109614,
+            "delta_run_time_ns": 1039004,
+            "delta_run_cnt": 623,
+            "mean_run_time_ns": 1667
+          },
+          {
+            "id": 2593,
+            "name": "eval_return",
+            "run_time_ns": 136381682,
+            "run_cnt": 109614,
+            "delta_run_time_ns": 1314005,
+            "delta_run_cnt": 623,
+            "mean_run_time_ns": 2109
+          },
+          {
+            "id": 2594,
+            "name": "write_fused_entry",
+            "run_time_ns": 535479681,
+            "run_cnt": 50331,
+            "delta_run_time_ns": 5000,
+            "delta_run_cnt": 4,
+            "mean_run_time_ns": 1250
+          },
+          {
+            "id": 2595,
+            "name": "acquire_fused_entry",
+            "run_time_ns": 1139006,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2596,
+            "name": "openat_fused_entry",
+            "run_time_ns": 20305106,
+            "run_cnt": 471,
+            "delta_run_time_ns": 646003,
+            "delta_run_cnt": 3,
+            "mean_run_time_ns": 215334
+          },
+          {
+            "id": 2597,
+            "name": "openat2_fused_entry",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2598,
+            "name": "open_begin",
+            "run_time_ns": 3073012,
+            "run_cnt": 475,
+            "delta_run_time_ns": 8000,
+            "delta_run_cnt": 3,
+            "mean_run_time_ns": 2666
+          },
+          {
+            "id": 2599,
+            "name": "openat_fused_cleanup",
+            "run_time_ns": 1454004,
+            "run_cnt": 467,
+            "delta_run_time_ns": 8000,
+            "delta_run_cnt": 3,
+            "mean_run_time_ns": 2666
+          },
+          {
+            "id": 2600,
+            "name": "openat2_fused_cleanup",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2601,
+            "name": "open_bound",
+            "run_time_ns": 1757008,
+            "run_cnt": 472,
+            "delta_run_time_ns": 2000,
+            "delta_run_cnt": 3,
+            "mean_run_time_ns": 666
+          },
+          {
+            "id": 2602,
+            "name": "target_bound",
+            "run_time_ns": 170001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2603,
+            "name": "reference_bound",
+            "run_time_ns": 247001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2604,
+            "name": "receive_bound",
+            "run_time_ns": 268002,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2605,
+            "name": "installed",
+            "run_time_ns": 3855017,
+            "run_cnt": 491,
+            "delta_run_time_ns": 10000,
+            "delta_run_cnt": 3,
+            "mean_run_time_ns": 3333
+          },
+          {
+            "id": 2606,
+            "name": "receive_return",
+            "run_time_ns": 177001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2607,
+            "name": "acquire_finish",
+            "run_time_ns": 240001,
+            "run_cnt": 2,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2608,
+            "name": "syscall_begin",
+            "run_time_ns": 71357339,
+            "run_cnt": 120575,
+            "delta_run_time_ns": 235002,
+            "delta_run_cnt": 1188,
+            "mean_run_time_ns": 197
+          },
+          {
+            "id": 2609,
+            "name": "write_file",
+            "run_time_ns": 77975406,
+            "run_cnt": 50331,
+            "delta_run_time_ns": 12001,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 2000
+          },
+          {
+            "id": 2610,
+            "name": "write_inner",
+            "run_time_ns": 15824085,
+            "run_cnt": 50331,
+            "delta_run_time_ns": 5000,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 833
+          },
+          {
+            "id": 2611,
+            "name": "write_finish",
+            "run_time_ns": 111244553,
+            "run_cnt": 50331,
+            "delta_run_time_ns": 6000,
+            "delta_run_cnt": 6,
+            "mean_run_time_ns": 1000
+          },
+          {
+            "id": 2612,
+            "name": "alias_begin",
+            "run_time_ns": 436002,
+            "run_cnt": 155,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2613,
+            "name": "alias_file",
+            "run_time_ns": 0,
+            "run_cnt": 0,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2614,
+            "name": "alias_finish",
+            "run_time_ns": 406000,
+            "run_cnt": 155,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2615,
+            "name": "slot_close_begin",
+            "run_time_ns": 1447007,
+            "run_cnt": 673,
+            "delta_run_time_ns": 81000,
+            "delta_run_cnt": 37,
+            "mean_run_time_ns": 2189
+          },
+          {
+            "id": 2616,
+            "name": "slot_close_done",
+            "run_time_ns": 1286006,
+            "run_cnt": 673,
+            "delta_run_time_ns": 82001,
+            "delta_run_cnt": 38,
+            "mean_run_time_ns": 2157
+          },
+          {
+            "id": 2617,
+            "name": "table_duplicate_begin",
+            "run_time_ns": 188001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2618,
+            "name": "table_duplicate_done",
+            "run_time_ns": 333000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2619,
+            "name": "forked",
+            "run_time_ns": 314001,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2620,
+            "name": "exec_close_begin",
+            "run_time_ns": 102000,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2621,
+            "name": "exec_close_done",
+            "run_time_ns": 160001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2622,
+            "name": "file_released",
+            "run_time_ns": 2414008,
+            "run_cnt": 492,
+            "delta_run_time_ns": 136001,
+            "delta_run_cnt": 44,
+            "mean_run_time_ns": 3090
+          },
+          {
+            "id": 2623,
+            "name": "executed",
+            "run_time_ns": 111001,
+            "run_cnt": 3,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2624,
+            "name": "exited",
+            "run_time_ns": 116000,
+            "run_cnt": 5,
+            "delta_run_time_ns": 0,
+            "delta_run_cnt": 0,
+            "mean_run_time_ns": 0
+          },
+          {
+            "id": 2625,
+            "name": "table_physically_freed",
+            "run_time_ns": 16063083,
+            "run_cnt": 12893,
+            "delta_run_time_ns": 755006,
+            "delta_run_cnt": 394,
+            "mean_run_time_ns": 1916
+          },
+          {
+            "id": 2626,
+            "name": "warm_mm_retired",
+            "run_time_ns": 814001,
+            "run_cnt": 154,
+            "delta_run_time_ns": 8000,
+            "delta_run_cnt": 12,
+            "mean_run_time_ns": 666
+          }
+        ]
+      }
+    },
+    "ring_pressure": {
+      "explicit_history_gap": true,
+      "ring_drops": 36729
+    },
+    "cgroup": {
+      "exact_id": 4464,
+      "matching_writes": 3,
+      "excluded_records": 0,
+      "unknown_id_rejected": true,
+      "empty_group_accepted": true
+    },
+    "final_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34
+    ],
+    "modules_unchanged": true,
+    "cleanup_ok": true,
+    "sources": {
+      "reader.bpf.c": "0da4da5ef927bfd2af1391e8e81b8cb6e53eabdea16dea4e673419ce317e1452",
+      "collector.c": "3150b9accea4667f5331b17de6ba4f46da9bf99b59322cf009cc3f5c9d7a67e5",
+      "direct_ring.h": "cd9bff4b0d5f0c401d900900ed3216871ed99414985af828cd1e379852822a7d",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f"
+    }
+  },
+  "storage": {
+    "passed": true,
+    "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+    "rotations": 5,
+    "retained_segments": 3,
+    "input_records": 38400,
+    "decoded_retained_records": 1024,
+    "record_boundaries_preserved": true,
+    "no_preallocated_zero_tail": true,
+    "failed_write_does_not_release_ring": true,
+    "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+    "admin_modified_segments_preserved": true,
+    "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+    "bounded_consumer_backlog_retry": true,
+    "busy_record_no_spin": true,
+    "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1"
+  },
+  "systemd": {
+    "passed": true,
+    "previous_test_installation_preserved_at": "/var/tmp/pidfd-systemd-before-robustness-kilumes7",
+    "exit_code": 0,
+    "systemd": {
+      "passed": true,
+      "base": "/var/tmp/pidfd-systemd-test-uavhs7iv",
+      "installation_bpf_ids": [
+        2,
+        18,
+        2936,
+        2937,
+        2938,
+        2939,
+        2940,
+        2941,
+        2942,
+        2943,
+        2944,
+        2945,
+        2946,
+        2947
+      ],
+      "hardening": {
+        "SystemCallArchitectures": "native",
+        "RestrictNamespaces": "yes",
+        "RestrictSUIDSGID": "yes",
+        "PrivateDevices": "yes",
+        "ProtectProc": "invisible"
+      },
+      "source_writes": 3,
+      "attachments": 35,
+      "effective_capabilities": "0xc001200004",
+      "cap_sys_module": false,
+      "watchdog_notification": true,
+      "reload_rotates": true,
+      "automatic_restart": true,
+      "old_session": "d66567c246d7e50500246ba6459cffa1",
+      "new_session": "802f565c9b5241f8a4b15389ab5946ae",
+      "active_health": {
+        "schema_version": 1,
+        "state": "running",
+        "pid": 2592,
+        "session": "802f565c9b5241f8a4b15389ab5946ae",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 1474899661510,
+        "updated_monotonic_ns": 1478939711217,
+        "updated_realtime_ns": 1791571514196431535,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 0,
+        "session_bytes": 0,
+        "active_segment": "events-01791571510156380828-802f565c9b5241f8a4b15389ab5946ae-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 26964,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 0,
+        "python_returns": 0,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "final_health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 2592,
+        "session": "802f565c9b5241f8a4b15389ab5946ae",
+        "boot_id": "1c08b266-ed90-48b2-9d77-f768333050be",
+        "start_monotonic_ns": 1474899661510,
+        "updated_monotonic_ns": 1481833834111,
+        "updated_realtime_ns": 1791571517090561429,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 0,
+        "session_bytes": 0,
+        "active_segment": "events-01791571510156380828-802f565c9b5241f8a4b15389ab5946ae-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 26964,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "python_entries": 5108,
+        "python_returns": 5108,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "final_bpf_ids": [
+        2,
+        18,
+        2949,
+        2950,
+        2951,
+        2952,
+        2953,
+        2954,
+        2955,
+        2956,
+        2957,
+        2958,
+        2959,
+        2960,
+        2961
+      ],
+      "baseline_bpf_ids": [
+        2,
+        18,
+        2949,
+        2950,
+        2951,
+        2952,
+        2953,
+        2954,
+        2955,
+        2956,
+        2957,
+        2958,
+        2959,
+        2960,
+        2961
+      ],
+      "cleanup_ok": true
+    },
+    "previous_test_installation_restored": true
+  },
+  "build_manifest": {
+    "schema_version": 1,
+    "upstream_only": true,
+    "pins": {
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "python_binary": "/usr/bin/python3.12",
+      "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+      "python_version": "(3, 12, 3)",
+      "offsets": {
+        "TSTATE_FRAME": 56,
+        "CFRAME_FRAME": 0,
+        "TSTATE_FRAME_INDIRECT": 1,
+        "FRAME_CODE": 0,
+        "FRAME_INSTR": 56,
+        "FRAME_PREVIOUS": 8,
+        "FRAME_OWNER": 70,
+        "CODE_FILENAME": 112,
+        "CODE_NAME": 120,
+        "CODE_FIRSTLINE": 68,
+        "CODE_LINETABLE": 136,
+        "CODE_BYTECODE": 192,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 40,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 12,
+        "CODE_TYPE_ADDRESS": 10670688,
+        "PYTHON_TEXT_ADDRESS": 4325376,
+        "IOSEC_COMPAT_MASK": 2
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 79611,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 739,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 12
+            },
+            {
+              "name": "pathname",
+              "type_id": 4751
+            },
+            {
+              "name": "op",
+              "type_id": 20581
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 30648,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 601,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 601
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 20606
+            }
+          ]
+        }
+      },
+      "target_inputs": {
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754"
+      },
+      "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+    },
+    "sources": {
+      "reader.bpf.c": "0da4da5ef927bfd2af1391e8e81b8cb6e53eabdea16dea4e673419ce317e1452",
+      "collector.c": "3150b9accea4667f5331b17de6ba4f46da9bf99b59322cf009cc3f5c9d7a67e5",
+      "direct_ring.h": "cd9bff4b0d5f0c401d900900ed3216871ed99414985af828cd1e379852822a7d",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "source_protocol.h": "d3b734fa97a08eed4229ff22b3fc42a082a0f71a805d5f30d171381024a63d86",
+      "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+      "python_binding.bpf.h": "5b9c26103c25c9011764051622934977b1348e0e1e52b29f742e17e63840837f",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+      "capture_controller.h": "4cf68b1856cd2eed0441e4a1b2f4e03481cda118d0b57241dddfadf6b0163db9",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411"
+    },
+    "artifacts": {
+      "collector": "79833518213f47d1c6fbae406594999908123a4f936361035ba5e022bb3715db",
+      "reader.bpf.o": "14c20224c4385e7442eafbb1a1575eb8eb1c11f7db3fca12b27989525ce9bcf0"
+    }
+  },
+  "current_service_py_sha256": "b9296b3e7e32007f3dfef9ae7ca9da5bebc503d44bd2d4dd668bdfc316fa1613",
+  "service_validation_phase": "Live systemd/integration checks preceded the additional optional-boolean health validation; final service status changes are covered by offline tests."
+}

@@ -5,6 +5,9 @@ import hashlib, json, os, subprocess, sys, time
 
 ROOT = __import__("settings").ROOT
 EVIDENCE_DIR = ROOT / "evidence"
+from shared.validation_lock import validation_lock
+
+validation_fd = validation_lock()
 module = EVIDENCE_DIR / "build/iosec_native.ko"
 script = Path(sys.argv[1])
 assert script.is_file()
@@ -37,7 +40,10 @@ report = dict(
 p = subprocess.run(["insmod", str(module)], capture_output=True, text=True)
 assert p.returncode == 0, p.stderr
 try:
-    p = subprocess.run([str(__import__("settings").PYTHON), str(script)] + sys.argv[2:])
+    p = subprocess.run(
+        [str(__import__("settings").PYTHON), str(script)] + sys.argv[2:],
+        pass_fds=(validation_fd,),
+    )
     report["exit_code"] = p.returncode
 finally:
     deadline = time.monotonic() + 10

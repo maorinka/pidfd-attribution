@@ -23,6 +23,9 @@
     },
     {
       "file": "bpf_task_helpers.h"
+    },
+    {
+      "file": "python_binding.bpf.h"
     }
   ]
 }

@@ -16,6 +16,7 @@ for name in (
     "arch.h",
     "source_protocol.h",
     "bpf_task_helpers.h",
+    "python_binding.bpf.h",
     "config.h",
     "kernel_layout.h",
     "python_layout.h",

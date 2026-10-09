@@ -14,6 +14,10 @@ import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT.parent))
+from shared.validation_lock import validation_lock
+
+validation_fd = validation_lock()
 sys.path.insert(0, str(ROOT))
 from service import configuration
 from wire import records

@@ -18,6 +18,7 @@ ROOT = Path(__file__).resolve().parent
 DEFAULTS = dict(
     state_dir="/var/lib/iosec-endpoint",
     capture_python=False,
+    bpf_stats=False,
     path_prefix="",
     cgroup_id=0,
     segment_bytes=16 * 1024 * 1024,
@@ -34,7 +35,9 @@ PRODUCTION = (
     "arch.h",
     "source_protocol.h",
     "bpf_task_helpers.h",
+    "python_binding.bpf.h",
     "policy.h",
+    "capture_controller.h",
     "protocol.h",
 )
 
@@ -48,8 +51,9 @@ def configuration(path=None):
     if not isinstance(supplied, dict) or supplied.keys() - DEFAULTS.keys():
         raise ValueError("Config must be an object with only documented keys")
     result = dict(DEFAULTS, **supplied)
-    if type(result["capture_python"]) is not bool:
-        raise ValueError("capture_python must be boolean")
+    for name in ("capture_python", "bpf_stats"):
+        if type(result[name]) is not bool:
+            raise ValueError(f"{name} must be boolean")
     state = result["state_dir"]
     if (
         not isinstance(state, str)
@@ -102,6 +106,8 @@ def collector_command(config, build_dir=None):
         result.extend(["--" + name.replace("_", "-"), str(config[name])])
     if config["capture_python"]:
         result.append("--capture-python")
+    if config["bpf_stats"]:
+        result.append("--bpf-stats")
     return result
 
 
@@ -371,6 +377,9 @@ def validate_health(health):
         raise ValueError("missing or invalid state")
     if type(health.get("history_gaps")) is not bool:
         raise ValueError("missing or invalid history_gaps")
+    for name in ("requested_capture_python", "effective_capture_python"):
+        if name in health and type(health[name]) is not bool:
+            raise ValueError(f"invalid {name}")
     return health
 
 
@@ -400,6 +409,10 @@ def status(config):
         and 0 <= age < 15
         and health["state"] == "running"
         and not health["history_gaps"]
+        and not (
+            health.get("requested_capture_python", False)
+            and not health.get("effective_capture_python", False)
+        )
     )
     print(json.dumps(health, indent=2))
     return 0 if health["healthy"] else 1

@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import struct
 import subprocess
 import sys
 import tempfile
@@ -17,6 +18,10 @@ import time
 import types
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT.parent))
+from shared.validation_lock import validation_lock
+
+validation_fd = validation_lock()
 sys.path.insert(0, str(ROOT))
 from service import configuration, collector_command, validate_cgroup
 from wire import records
@@ -377,9 +382,108 @@ try:
     result["capacity"] = dict(
         explicit_history_gap=True, state_errors=stopped["state_errors"]
     )
+    process, state, _ = start_sensor("birth-mismatch", capture=True, bpf_stats=True)
+    birth_result = BASE / "birth-result.json"
+    env = dict(
+        os.environ,
+        PIDFD_DEMO_ROOT=str(BASE / "files/birth-mismatch"),
+        PIDFD_RESULT=str(birth_result),
+        PIDFD_WRITES="3",
+    )
+    fixture = subprocess.Popen(
+        [sys.executable, str(ROOT / "tests/birth_fixture.py")],
+        env=env,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    active.append(fixture)
+    ready = json.loads(fixture.stdout.readline())
+    wait_for(
+        lambda: any(
+            row["name"] == "seed_thread" for row in health(state).get("bpf_runtime", [])
+        )
+    )
+    seed_id = next(
+        row["id"]
+        for row in health(state)["bpf_runtime"]
+        if row["name"] == "seed_thread"
+    )
+    seed = json.loads(
+        subprocess.check_output(["bpftool", "-j", "prog", "show", "id", str(seed_id)])
+    )
+    if isinstance(seed, list):
+        seed = seed[0]
+    maps = json.loads(subprocess.check_output(["bpftool", "-j", "map", "show"]))
+    binding_map = next(
+        row["id"]
+        for row in maps
+        if row["id"] in seed["map_ids"] and row["name"] == "threads"
+    )
+    key = struct.pack("<Q", (ready["pid"] << 32) | ready["pid"])
+    key_args = [f"{byte:02x}" for byte in key]
+    original = json.loads(
+        subprocess.check_output(
+            [
+                "bpftool",
+                "-j",
+                "map",
+                "lookup",
+                "id",
+                str(binding_map),
+                "key",
+                "hex",
+                *key_args,
+            ]
+        )
+    )
+    state_pointer, birth, epoch = struct.unpack(
+        "<QQQ", bytes(int(byte, 16) for byte in original["value"])
+    )
+    altered = struct.pack("<QQQ", state_pointer, birth ^ 1, epoch)
+    subprocess.run(
+        [
+            "bpftool",
+            "map",
+            "update",
+            "id",
+            str(binding_map),
+            "key",
+            "hex",
+            *key_args,
+            "value",
+            "hex",
+            *[f"{byte:02x}" for byte in altered],
+        ],
+        check=True,
+    )
+    fixture.stdin.write("x")
+    fixture.stdin.flush()
+    fixture.communicate(timeout=30)
+    assert fixture.returncode == 0
+    wait_for(lambda: health(state).get("binding_invalidations", 0) > 0)
+    stopped = stop(process, state)
+    application = json.loads(birth_result.read_text())
+    birth_writes = [
+        event
+        for event in read_events(state)
+        if event["stage"] == 9
+        and event["inode"] == application["inode"]
+        and event["emitter"]["pid"] == application["pid"]
+    ]
+    assert len(birth_writes) == 3 and all(event["accepted"] for event in birth_writes)
+    assert birth_writes[0]["source_complete"]
+    assert (
+        not birth_writes[1]["source_complete"]
+        and not birth_writes[1]["actors"]["writer"]["frames"]
+    )
+    assert birth_writes[2]["source_complete"]
+    result["task_birth_guard"] = dict(
+        positive_before=True, mismatch_unknown=True, reseeded_after=True, health=stopped
+    )
     # Stop the consumer while producers continue. Ring exhaustion is an
     # observable loss condition, even when all attribution state fits.
-    process, state, _ = start_sensor("ring-pressure")
+    process, state, _ = start_sensor("ring-pressure", capture=True, bpf_stats=True)
     process.send_signal(signal.SIGSTOP)
     subprocess.run(
         [
@@ -393,7 +497,50 @@ try:
     )
     process.send_signal(signal.SIGCONT)
     wait_for(lambda: health(state).get("ring_drops", 0) > 0)
+    wait_for(lambda: health(state).get("effective_capture_python") is False)
+    degraded_health = health(state)
+    degraded_writes = verify_writes(state, demo("degraded-identity"), source=False)
+    wait_for(lambda: health(state).get("effective_capture_python") is True, timeout=60)
+    recovered_writes = verify_writes(state, demo("recovered-source"), source=True)
+    recovered_health = health(state)
+    assert recovered_health["history_gaps"]
+    assert recovered_health["capture_epoch"] > degraded_health["capture_epoch"]
+    assert recovered_health["python_entries"] > 0
+    assert recovered_health["python_returns"] > 0
+    assert recovered_health["uprobe_missed_callbacks"] is None
+    wait_for(
+        lambda: any(row["run_cnt"] > 0 for row in health(state).get("bpf_runtime", []))
+    )
+    runtime_health = health(state)
+    assert any(row["delta_run_cnt"] > 0 for row in runtime_health["bpf_runtime"])
     stopped = stop(process, state, expect_gaps=True)
+    journals = list(state.glob("events-*.bin.capture.jsonl"))
+    assert len(journals) <= configuration()["max_segments"]
+    assert all(
+        path.stat().st_size <= 1024**2
+        and Path(str(path).removesuffix(".capture.jsonl")).is_file()
+        for path in journals
+    )
+    mode_records = [
+        json.loads(line)
+        for path in state.glob("events-*.bin.capture.jsonl")
+        for line in path.read_text().splitlines()
+    ]
+    assert any(not row["capture_python"] for row in mode_records)
+    assert any(
+        row["capture_python"] and row["epoch"] > degraded_health["capture_epoch"]
+        for row in mode_records
+    )
+    result["adaptive_capture"] = dict(
+        degraded_identity_writes=len(degraded_writes),
+        recovered_source_writes=len(recovered_writes),
+        history_gap_preserved=True,
+        transition_journal=mode_records,
+        degraded_health=degraded_health,
+        recovered_health=recovered_health,
+        runtime_health=runtime_health,
+        final_health=stopped,
+    )
     result["ring_pressure"] = dict(
         explicit_history_gap=True, ring_drops=stopped["ring_drops"]
     )

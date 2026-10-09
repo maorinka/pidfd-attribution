@@ -24,19 +24,13 @@ char LICENSE[] SEC("license") = "GPL";
 static __always_inline int task_is_monitored(void);
 
 struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, IOSEC_THREAD_CAPACITY);
-  __type(key, unsigned long long);
-  __type(value, unsigned long long);
-} threads SEC(".maps");
-struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
   __uint(max_entries, IOSEC_RING_BYTES);
 } events SEC(".maps");
 
 struct {
   __uint(type, BPF_MAP_TYPE_ARRAY);
-  __uint(max_entries, 2);
+  __uint(max_entries, IOSEC_DIAG_COUNT);
   __type(key, unsigned int);
   __type(value, unsigned long long);
 } diagnostics SEC(".maps");
@@ -74,87 +68,11 @@ struct {
   __uint(map_flags, BPF_F_RDONLY_PROG);
   __type(value, unsigned char[IOSEC_EVENT_BYTES]);
 } zero_bytes SEC(".maps");
-/* kernel pending-return depth is authoritative; skipped instances must
- * not inflate a software counter. Capacity matches tested kernel64 limit.
- * Other probe consumers/failed registrations/state swaps remain full gates. */
-struct eval_shadow {
-  unsigned long long states[IOSEC_RETURN_DEPTH];
-  unsigned int depth;
-};
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, IOSEC_THREAD_CAPACITY);
-  __type(key, unsigned long long);
-  __type(value, struct eval_shadow);
-} shadows SEC(".maps");
-
-SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
-  if (!task_is_monitored())
-    return 0;
-  unsigned long long key = bpf_get_current_pid_tgid(),
-                     state = PT_REGS_PARM1(ctx);
-  unsigned int depth = pending_depth();
-  struct eval_shadow *s = bpf_map_lookup_elem(&shadows, &key);
-  if (!s) {
-    unsigned int z = 0;
-    unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
-    if (zero)
-      UPDATE(&shadows, &key, zero, BPF_NOEXIST);
-    s = bpf_map_lookup_elem(&shadows, &key);
-  }
-  if (!s) {
-    bpf_map_delete_elem(&threads, &key);
-    return 0;
-  }
-  s->depth = depth;
-  if (depth < 64)
-    s->states[depth & 63] = state;
-  /* The entry argument is the actual current state, even when the kernel
-   * cannot install another return instance. Later registered returns resync. */
-  UPDATE(&threads, &key, &state, BPF_ANY);
+static __always_inline int capture_enabled(void) { return 1; }
+static __always_inline unsigned long long current_capture_epoch(void) {
   return 0;
 }
-SEC("uretprobe") int eval_return(struct pt_regs *ctx) {
-  if (!task_is_monitored())
-    return 0;
-  unsigned long long key = bpf_get_current_pid_tgid();
-  unsigned int depth = pending_depth();
-  struct eval_shadow *s = bpf_map_lookup_elem(&shadows, &key);
-  if (!s || depth > 64) {
-    bpf_map_delete_elem(&threads, &key);
-    return 0;
-  }
-  s->depth = depth;
-  if (depth < 64)
-    s->states[depth & 63] = 0;
-  if (!depth) {
-    bpf_map_delete_elem(&threads, &key);
-    return 0;
-  }
-  /* Empty slots can belong to unrelated return probes; only recorded states
-   * participate. This is not yet a proof against arbitrary missed callbacks. */
-  unsigned long long state = 0;
-#pragma clang loop unroll(disable)
-  for (unsigned int i = 0; i < 64; i++) {
-    if (i >= depth)
-      break;
-    unsigned long long slot = (unsigned long long)depth - 1 - i;
-    if (slot >= 64)
-      break;
-    /* Keep the older verifier's bound local to each map read; otherwise
-     * LLVM can turn the loop into a decrementing pointer with a negative
-     * constant offset that older kernels cannot prove safe. */
-    asm volatile("" : "+r"(slot));
-    state = s->states[slot & 63];
-    if (state)
-      break;
-  }
-  if (state)
-    UPDATE(&threads, &key, &state, BPF_ANY);
-  else
-    bpf_map_delete_elem(&threads, &key);
-  return 0;
-}
+#include "python_binding.bpf.h"
 
 struct {
   __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
@@ -555,13 +473,13 @@ static __always_inline int capture_python_source(struct source_event *e) {
   e->pid_tid = tid;
   struct task_struct *task = (void *)bpf_get_current_task_btf();
   e->birth = BPF_CORE_READ(task, start_time);
-  unsigned long long *state = bpf_map_lookup_elem(&threads, &tid);
+  struct python_binding *state = lookup_python_binding(tid);
   if (!state) {
     e->flags = IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
   struct walk_context walk = {.event = e};
-  int failed = read_u64(*state + TSTATE_FRAME, &walk.frame);
+  int failed = read_u64(state->state + TSTATE_FRAME, &walk.frame);
 #if TSTATE_FRAME_INDIRECT
   if (!failed)
     failed = !walk.frame || read_u64(walk.frame + CFRAME_FRAME, &walk.frame);
@@ -870,7 +788,7 @@ static __always_inline int fused_capture_source(struct source_event *out,
                                                 char *line_buf,
                                                 struct line_value *line_val) {
   (void)line_val;
-  unsigned long long *state = bpf_map_lookup_elem(&threads, &tid);
+  struct python_binding *state = lookup_python_binding(tid);
   if (!state) {
     if (clear_source(out)) {
       out->count = 0;
@@ -883,7 +801,8 @@ static __always_inline int fused_capture_source(struct source_event *out,
     out->flags = IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
-  int rc = iosec_native_capture(*state, out, sizeof(*out), line_buf, 4096);
+  int rc =
+      iosec_native_capture(state->state, out, sizeof(*out), line_buf, 4096);
   if (rc) {
     out->pid_tid = 0;
     out->birth = 0;
@@ -1790,15 +1709,25 @@ int forked(struct bpf_raw_tracepoint_args *ctx) {
     UPDATE(&subjects, &child, &one, BPF_ANY);
     unsigned long long pk = (parent << 32) | BPF_CORE_READ(p, pid),
                        ck = (child << 32) | BPF_CORE_READ(c, pid);
-    unsigned long long *state = bpf_map_lookup_elem(&threads, &pk);
+    struct python_binding *state = bpf_map_lookup_elem(&threads, &pk);
     struct eval_shadow *shadow = bpf_map_lookup_elem(&shadows, &pk);
     /* fork preserves this thread's userspace address space and active native
      * call chain. Exec retires the copy; fresh interpreter entries overwrite
      * it. Native thread creation receives no inherited Python pointer. */
-    if (state)
-      UPDATE(&threads, &ck, state, BPF_ANY);
-    if (shadow)
+    unsigned long long child_birth = BPF_CORE_READ(c, start_time);
+    if (state && state->birth == BPF_CORE_READ(p, start_time) &&
+        state->epoch == current_capture_epoch()) {
+      struct python_binding inherited = *state;
+      inherited.birth = child_birth;
+      UPDATE(&threads, &ck, &inherited, BPF_ANY);
+    }
+    if (shadow && shadow->birth == BPF_CORE_READ(p, start_time) &&
+        shadow->epoch == current_capture_epoch()) {
       UPDATE(&shadows, &ck, shadow, BPF_ANY);
+      struct eval_shadow *inherited = bpf_map_lookup_elem(&shadows, &ck);
+      if (inherited)
+        inherited->birth = child_birth;
+    }
   }
   return 0;
 }
@@ -1861,7 +1790,9 @@ SEC("tracepoint/sched/sched_process_exec") int executed(void *ctx) {
 }
 SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid(), pid = tid >> 32;
-  if ((unsigned int)tid == pid)
+  struct task_struct *task = (void *)bpf_get_current_task_btf();
+  /* do_exit decrements live before invoking sched_process_exit. */
+  if (BPF_CORE_READ(task, signal, live.counter) == 0)
     bpf_map_delete_elem(&subjects, &pid);
   bpf_map_delete_elem(&shadows, &tid);
   bpf_map_delete_elem(&threads, &tid);

@@ -1,0 +1,56 @@
+{
+  "scope": "Map eviction and native-kfunc security design audit; no runtime validation claim",
+  "maps": {
+    "threads": {
+      "type": "HASH",
+      "reason": "Authoritative current-state binding; failure must remain observable and unknown. Task birth and capture epoch now validate lookup."
+    },
+    "shadows": {
+      "type": "HASH",
+      "reason": "Paired return history. Independent eviction could restore inconsistent state; retained exact with invalidation and depth diagnostics."
+    },
+    "warm_tmp": {
+      "type": "HASH",
+      "reason": "Map-owned scratch is passed through sleepable capture. Eviction and recreation need a lifetime/ownership proof before conversion."
+    },
+    "fused_opener": {
+      "type": "HASH",
+      "reason": "Operation-entry snapshot, not a recomputable cache. Endpoint snapshots now carry capture epoch and are rejected across transitions."
+    },
+    "fused_lineval": {
+      "type": "HASH",
+      "reason": "Sleepable per-thread scratch ownership must remain coherent with warm_tmp."
+    },
+    "slots": {
+      "type": "HASH",
+      "reason": "Descriptor identity and generation state; exhaustion increments state_errors, history gaps remain explicit."
+    },
+    "origins": {
+      "type": "HASH",
+      "reason": "Frozen opener provenance; exhaustion increments state_errors, no silent eviction."
+    }
+  },
+  "eviction_metrics": "Lookup absence counts as binding_unavailable, not an eviction count. No implicit LRU eviction is claimed measurable.",
+  "native_kfunc_admission": {
+    "implemented": false,
+    "remaining_exposure": "While loaded, tracing kfuncs remain available to other authorized tracing BPF loaders.",
+    "rejected_mechanisms": [
+      "Program-name allowlist",
+      "Loader-supplied BTF metadata as authentication",
+      "Reproducible program tag as ownership proof"
+    ],
+    "requirements": [
+      "Define trust boundary between loader security domains",
+      "Use kernel-enforced loader admission, such as supported LSM policy, with deployment-specific adversary testing",
+      "Verify APIs and load-time ordering on every supported kernel",
+      "Keep test-only registrations opt-in; retain module-free fleet default"
+    ],
+    "claim": "Existing program-type filtering and gated test registrations are not object ownership authentication."
+  },
+  "performance_limits": [
+    "Identity-only collection retains global hook and attached-probe dispatch costs",
+    "Runtime statistics incur global instrumentation while the scoped handle is open",
+    "BPF runtime counters omit some dispatch/application and userspace costs",
+    "No lossless or production performance claim is made"
+  ]
+}

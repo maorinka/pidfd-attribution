@@ -1,6 +1,7 @@
 /* Continuous collector. Source attribution lives in reader.bpf.c; storage,
  * admission, attachment ownership, and health are deliberately kept here. */
 #define _GNU_SOURCE
+#include "capture_controller.h"
 #include "policy.h"
 #include "protocol.h"
 #include "python_layout.h"
@@ -37,6 +38,7 @@ struct configuration {
   unsigned long long segment_bytes;
   unsigned int max_segments, poll_ms, health_ms, sync_ms, state_entries;
   struct endpoint_policy policy;
+  bool bpf_stats;
 };
 static struct configuration cfg = {.state_dir = "/var/lib/iosec-endpoint",
                                    .segment_bytes = 16 * 1024 * 1024,
@@ -51,6 +53,44 @@ static unsigned long long segment_number, session_bytes, deleted_segments;
 static unsigned long long retention_skipped;
 static unsigned long long ring_drops, state_errors, start_ns, start_real_ns;
 static unsigned int attachment_count, cleanup_bits;
+static struct capture_controller capture;
+static unsigned long long diagnostic_counts[IOSEC_DIAG_COUNT];
+static int capture_fd = -1, transition_fd = -1, stats_fd = -1;
+static struct bpf_object *stats_object;
+static unsigned long long stats_previous_ns[64], stats_previous_count[64];
+static unsigned long long ring_backlog, transition_bytes;
+#define CAPTURE_JOURNAL_BYTES (1024 * 1024)
+static int new_segment(void);
+
+static unsigned long long now_ns(clockid_t clock);
+static int record_capture_mode(unsigned long long before,
+                               unsigned long long after) {
+  char record[512];
+  int length =
+      snprintf(record, sizeof(record),
+               "{\"before_monotonic_ns\":%llu,\"after_monotonic_ns\":%llu,"
+               "\"epoch\":%llu,\"capture_python\":%s,\"ring_drops\":%llu,"
+               "\"backlog_bytes\":%llu}\n",
+               before, after, (unsigned long long)capture.epoch,
+               capture.effective ? "true" : "false", ring_drops, ring_backlog);
+  if (length < 0 || (size_t)length >= sizeof(record) ||
+      write(transition_fd, record, length) != length ||
+      fdatasync(transition_fd))
+    return -1;
+  transition_bytes += length;
+  return 0;
+}
+static int apply_capture_mode(void) {
+  unsigned int key = 0;
+  unsigned long long mode = (capture.epoch << 1) | capture.effective;
+  unsigned long long before = now_ns(CLOCK_MONOTONIC);
+  if (bpf_map_update_elem(capture_fd, &key, &mode, BPF_ANY))
+    return -1;
+  unsigned long long after = now_ns(CLOCK_MONOTONIC);
+  if (transition_bytes + 512 > CAPTURE_JOURNAL_BYTES)
+    return new_segment();
+  return record_capture_mode(before, after);
+}
 static volatile sig_atomic_t stopping, rotate_requested;
 
 static unsigned long long now_ns(clockid_t clock) {
@@ -197,6 +237,23 @@ static int prune_segments(void) {
     if (unlinkat(directory_fd, names[i], 0))
       goto fail;
     deleted_segments++;
+    char journal[128];
+    snprintf(journal, sizeof(journal), "%s.capture.jsonl", names[i]);
+    int journal_fd =
+        openat(directory_fd, journal, O_PATH | O_CLOEXEC | O_NOFOLLOW);
+    if (journal_fd >= 0) {
+      if (!secure_file(journal_fd)) {
+        if (unlinkat(directory_fd, journal, 0)) {
+          close(journal_fd);
+          goto fail;
+        }
+      } else {
+        skip_retained(journal, errno);
+      }
+      close(journal_fd);
+    } else if (errno != ENOENT) {
+      skip_retained(journal, errno);
+    }
   }
   for (size_t i = 0; i < count; i++)
     free(names[i]);
@@ -221,6 +278,11 @@ static int close_segment(void) {
   return rc;
 }
 static int new_segment(void) {
+  if (transition_fd >= 0) {
+    if (close(transition_fd))
+      return -1;
+    transition_fd = -1;
+  }
   if (close_segment() || prune_segments())
     return -1;
   if (segment_number >= 9999999999ULL) {
@@ -243,6 +305,18 @@ static int new_segment(void) {
   direct_reserve_state = DIRECT_RESERVE_UNPROBED;
   direct_reserve_errno = 0;
   direct_reserve_startup(fd);
+  if (capture_fd >= 0) {
+    char journal[128];
+    snprintf(journal, sizeof(journal), "%s.capture.jsonl", active_segment);
+    transition_fd =
+        openat(directory_fd, journal,
+               O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
+    transition_bytes = 0;
+    unsigned long long observed = now_ns(CLOCK_MONOTONIC);
+    if (transition_fd < 0 || secure_file(transition_fd) ||
+        record_capture_mode(observed, observed))
+      return -1;
+  }
   return fsync(directory_fd);
 }
 static int output_prepare(unsigned long long batch) {
@@ -292,26 +366,79 @@ static int write_health(const char *state, int error) {
   struct rusage usage = {0};
   getrusage(RUSAGE_SELF, &usage);
   unsigned long long observed_ns = now_ns(CLOCK_MONOTONIC);
-  fprintf(out,
-          "{\"schema_version\":1,\"state\":\"%s\",\"pid\":%u,"
-          "\"session\":\"%s\",\"boot_id\":\"%s\",\"start_monotonic_ns\":%llu,"
-          "\"updated_monotonic_ns\":%llu,\"updated_realtime_ns\":%llu,"
-          "\"attachments\":%u,\"capture_python\":%s,\"records\":%llu,"
-          "\"session_bytes\":%llu,\"active_segment\":\"%s\","
-          "\"segments_created\":%llu,\"segments_deleted\":%llu,"
-          "\"retention_skipped\":%llu,"
-          "\"ring_drops\":%llu,\"state_errors\":%llu,\"cleanup_fallback\":%u,"
-          "\"history_gaps\":%s,\"errno\":%d,\"reservation_state\":%d,"
-          "\"reservation_errno\":%d,\"max_rss_kib\":%ld,"
-          "\"restart_resets_history\":true}\n",
-          state, (unsigned)getpid(), session, boot_id, start_ns, observed_ns,
-          now_ns(CLOCK_REALTIME), attachment_count,
-          cfg.policy.capture_python ? "true" : "false", output_records,
-          session_bytes + (binary ? direct_written : 0), active_segment,
-          segment_number, deleted_segments, retention_skipped, ring_drops,
-          state_errors, cleanup_bits,
-          ring_drops || state_errors ? "true" : "false", error,
-          direct_reserve_state, direct_reserve_errno, usage.ru_maxrss);
+  fprintf(
+      out,
+      "{\"schema_version\":1,\"state\":\"%s\",\"pid\":%u,"
+      "\"session\":\"%s\",\"boot_id\":\"%s\",\"start_monotonic_ns\":%llu,"
+      "\"updated_monotonic_ns\":%llu,\"updated_realtime_ns\":%llu,"
+      "\"attachments\":%u,\"capture_python\":%s,\"records\":%llu,"
+      "\"session_bytes\":%llu,\"active_segment\":\"%s\","
+      "\"segments_created\":%llu,\"segments_deleted\":%llu,"
+      "\"retention_skipped\":%llu,"
+      "\"ring_drops\":%llu,\"state_errors\":%llu,\"cleanup_fallback\":%u,"
+      "\"history_gaps\":%s,\"errno\":%d,\"reservation_state\":%d,"
+      "\"reservation_errno\":%d,\"max_rss_kib\":%ld,"
+      "\"restart_resets_history\":true,"
+      "\"requested_capture_python\":%s,\"effective_capture_python\":%s,"
+      "\"capture_epoch\":%llu,\"capture_transitions\":%llu,"
+      "\"degraded_ns\":%llu,\"ring_backlog_bytes\":%llu,"
+      "\"uprobe_missed_callbacks\":null,"
+      "\"python_entries\":%llu,\"python_returns\":%llu,"
+      "\"binding_invalidations\":%llu,\"return_depth_overflow\":%llu,"
+      "\"binding_unavailable\":%llu,\"bpf_stats_enabled\":%s,"
+      "\"bpf_runtime\":[",
+      state, (unsigned)getpid(), session, boot_id, start_ns, observed_ns,
+      now_ns(CLOCK_REALTIME), attachment_count,
+      capture.effective ? "true" : "false", output_records,
+      session_bytes + (binary ? direct_written : 0), active_segment,
+      segment_number, deleted_segments, retention_skipped, ring_drops,
+      state_errors, cleanup_bits, ring_drops || state_errors ? "true" : "false",
+      error, direct_reserve_state, direct_reserve_errno, usage.ru_maxrss,
+      capture.requested ? "true" : "false",
+      capture.effective ? "true" : "false", (unsigned long long)capture.epoch,
+      (unsigned long long)capture.transitions,
+      (unsigned long long)(capture.degraded_ns +
+                           (capture.degraded_since_ns
+                                ? observed_ns - capture.degraded_since_ns
+                                : 0)),
+      ring_backlog, diagnostic_counts[IOSEC_DIAG_PYTHON_ENTRIES],
+      diagnostic_counts[IOSEC_DIAG_PYTHON_RETURNS],
+      diagnostic_counts[IOSEC_DIAG_BINDING_INVALIDATIONS],
+      diagnostic_counts[IOSEC_DIAG_RETURN_DEPTH_OVERFLOW],
+      diagnostic_counts[IOSEC_DIAG_BINDING_UNAVAILABLE],
+      stats_fd >= 0 ? "true" : "false");
+  if (stats_fd >= 0 && stats_object) {
+    struct bpf_program *program;
+    unsigned int index = 0;
+    bool first = true;
+    bpf_object__for_each_program(program, stats_object) {
+      if (!bpf_program__autoload(program))
+        continue;
+      struct bpf_prog_info info = {0};
+      unsigned int size = sizeof(info);
+      if (index >= 64 ||
+          bpf_obj_get_info_by_fd(bpf_program__fd(program), &info, &size)) {
+        fclose(out);
+        unlinkat(directory_fd, temp, 0);
+        return -1;
+      }
+      unsigned long long runtime = info.run_time_ns - stats_previous_ns[index];
+      unsigned long long count = info.run_cnt - stats_previous_count[index];
+      fprintf(
+          out,
+          "%s{\"id\":%u,\"name\":\"%s\",\"run_time_ns\":%llu,"
+          "\"run_cnt\":%llu,\"delta_run_time_ns\":%llu,\"delta_run_cnt\":%llu,"
+          "\"mean_run_time_ns\":%llu}",
+          first ? "" : ",", info.id, bpf_program__name(program),
+          (unsigned long long)info.run_time_ns,
+          (unsigned long long)info.run_cnt, runtime, count,
+          count ? runtime / count : 0);
+      stats_previous_ns[index] = info.run_time_ns;
+      stats_previous_count[index++] = info.run_cnt;
+      first = false;
+    }
+  }
+  fputs("]}\n", out);
   int rc = fflush(out);
   if (!rc)
     rc = fdatasync(fd);
@@ -325,12 +452,13 @@ static int write_health(const char *state, int error) {
 }
 static int read_diagnostics(struct bpf_object *obj) {
   int fd = bpf_object__find_map_fd_by_name(obj, "diagnostics");
-  unsigned int key = 0;
-  if (bpf_map_lookup_elem(fd, &key, &ring_drops))
-    return -1;
-  key = 1;
-  if (bpf_map_lookup_elem(fd, &key, &state_errors))
-    return -1;
+  unsigned int key;
+  for (key = 0; key < IOSEC_DIAG_COUNT; key++) {
+    if (bpf_map_lookup_elem(fd, &key, &diagnostic_counts[key]))
+      return -1;
+  }
+  ring_drops = diagnostic_counts[IOSEC_DIAG_RING_DROPS];
+  state_errors = diagnostic_counts[IOSEC_DIAG_STATE_ERRORS];
   key = 0;
   return bpf_map_lookup_elem(
       bpf_object__find_map_fd_by_name(obj, "cleanup_fallback"), &key,
@@ -358,6 +486,7 @@ static int parse_options(int argc, char **argv) {
       {"path-prefix", required_argument, NULL, 'f'},
       {"cgroup-id", required_argument, NULL, 'g'},
       {"capture-python", no_argument, NULL, 'c'},
+      {"bpf-stats", no_argument, NULL, 't'},
       {NULL, 0, NULL, 0}};
   int option;
   while ((option = getopt_long(argc, argv, "", options, NULL)) != -1) {
@@ -371,6 +500,9 @@ static int parse_options(int argc, char **argv) {
       break;
     case 'g':
       cfg.policy.cgroup_id = number(optarg);
+      break;
+    case 't':
+      cfg.bpf_stats = true;
       break;
     case 'c':
       cfg.policy.capture_python = 1;
@@ -437,6 +569,9 @@ int main(int argc, char **argv) {
         "Invalid collector options; use service.py with a validated config.\n");
     return 2;
   }
+  capture = (struct capture_controller){.requested = cfg.policy.capture_python,
+                                        .effective = cfg.policy.capture_python,
+                                        .epoch = 1};
   umask(0077);
   start_ns = now_ns(CLOCK_MONOTONIC);
   start_real_ns = now_ns(CLOCK_REALTIME);
@@ -473,6 +608,11 @@ int main(int argc, char **argv) {
   int result = 1, failure_errno = 0, policy_fd = -1;
   if (write_health("starting", 0))
     goto cleanup;
+  if (cfg.bpf_stats) {
+    stats_fd = bpf_enable_stats(BPF_STATS_RUN_TIME);
+    if (stats_fd < 0)
+      goto cleanup;
+  }
   obj = bpf_object__open_file("reader.bpf.o", NULL);
   if (libbpf_get_error(obj)) {
     obj = NULL;
@@ -489,7 +629,9 @@ int main(int argc, char **argv) {
   if (configure_maps(obj) || bpf_object__load(obj) ||
       bpf_map_freeze(bpf_object__find_map_fd_by_name(obj, "zero_bytes")))
     goto cleanup;
+  stats_object = obj;
   policy_fd = bpf_object__find_map_fd_by_name(obj, "policy");
+  capture_fd = bpf_object__find_map_fd_by_name(obj, "capture_control");
   unsigned int key = 0;
   cfg.policy.excluded_tgid = getpid();
   cfg.policy.enabled = 0;
@@ -519,7 +661,7 @@ int main(int argc, char **argv) {
     }
     links[attachment_count++] = link;
   }
-  if (new_segment())
+  if (new_segment() || apply_capture_mode())
     goto cleanup;
   cfg.policy.enabled = 1;
   if (bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
@@ -532,6 +674,18 @@ int main(int argc, char **argv) {
   unsigned long long last_health = now_ns(CLOCK_MONOTONIC),
                      last_sync = last_health;
   while (!stopping) {
+    unsigned long long before_drain = now_ns(CLOCK_MONOTONIC);
+    ring_backlog = __atomic_load_n(ring.producer, __ATOMIC_ACQUIRE) -
+                   __atomic_load_n(ring.consumer, __ATOMIC_ACQUIRE);
+    if (capture.requested &&
+        before_drain - capture.last_sample_ns >= CAPTURE_SAMPLE_NS) {
+      if (read_diagnostics(obj))
+        goto cleanup;
+      if (capture_controller_sample(&capture, before_drain, ring_drops,
+                                    ring_backlog, IOSEC_RING_BYTES) &&
+          apply_capture_mode())
+        goto cleanup;
+    }
     int drain = direct_consume(&ring);
     if (drain < 0)
       goto cleanup;
@@ -585,14 +739,23 @@ cleanup:
   if (obj && policy_fd >= 0 && read_diagnostics(obj))
     result = 1;
   direct_close(&ring);
-  if (obj)
-    bpf_object__close(obj);
   if (close_segment())
     result = 1;
   if (result && !failure_errno)
     failure_errno = errno ? errno : EIO;
+  /* Publish final counters while program fds and the scoped stats handle live.
+   */
   if (write_health(result ? "failed" : "stopped", failure_errno))
     result = 1;
+  stats_object = NULL;
+  if (obj)
+    bpf_object__close(obj);
+  if (stats_fd >= 0)
+    close(stats_fd);
+  stats_fd = -1;
+
+  if (transition_fd >= 0)
+    close(transition_fd);
   fprintf(stderr, "STOP records=%llu drops=%llu state_errors=%llu result=%d\n",
           output_records, ring_drops, state_errors, result);
   close(lock_fd);
