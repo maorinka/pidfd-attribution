@@ -14,12 +14,26 @@ import time
 from wire import records
 
 ROOT = Path(__file__).resolve().parent
-DEFAULTS = dict(state_dir="/var/lib/iosec-endpoint", capture_python=False,
-                path_prefix="", cgroup_id=0, segment_bytes=16 * 1024 * 1024,
-                max_segments=8, poll_ms=20, health_ms=1000, sync_ms=1000,
-                state_entries=1024)
-PRODUCTION = ("reader.bpf.c", "collector.c", "direct_ring.h", "arch.h",
-              "policy.h", "protocol.h")
+DEFAULTS = dict(
+    state_dir="/var/lib/iosec-endpoint",
+    capture_python=False,
+    path_prefix="",
+    cgroup_id=0,
+    segment_bytes=16 * 1024 * 1024,
+    max_segments=8,
+    poll_ms=20,
+    health_ms=1000,
+    sync_ms=1000,
+    state_entries=1024,
+)
+PRODUCTION = (
+    "reader.bpf.c",
+    "collector.c",
+    "direct_ring.h",
+    "arch.h",
+    "policy.h",
+    "protocol.h",
+)
 
 
 def sha(path):
@@ -34,14 +48,31 @@ def configuration(path=None):
     if type(result["capture_python"]) is not bool:
         raise ValueError("capture_python must be boolean")
     state = result["state_dir"]
-    if not isinstance(state, str) or not state.startswith("/") or ".." in Path(state).parts:
+    if (
+        not isinstance(state, str)
+        or not state.startswith("/")
+        or ".." in Path(state).parts
+    ):
         raise ValueError("state_dir must be an absolute path without '..'")
     prefix = result["path_prefix"]
-    if not isinstance(prefix, str) or "\0" in prefix or len(prefix.encode()) >= 80 or (prefix and not prefix.startswith("/")):
-        raise ValueError("path_prefix must be empty or an absolute prefix of at most 79 UTF-8 bytes")
-    bounds = dict(cgroup_id=(0, 2**64 - 1), segment_bytes=(2 * 1024**2, 1024**3),
-                  max_segments=(2, 1024), poll_ms=(1, 1000), health_ms=(100, 5000),
-                  sync_ms=(100, 60000), state_entries=(128, 8192))
+    if (
+        not isinstance(prefix, str)
+        or "\0" in prefix
+        or len(prefix.encode()) >= 80
+        or (prefix and not prefix.startswith("/"))
+    ):
+        raise ValueError(
+            "path_prefix must be empty or an absolute prefix of at most 79 UTF-8 bytes"
+        )
+    bounds = dict(
+        cgroup_id=(0, 2**64 - 1),
+        segment_bytes=(2 * 1024**2, 1024**3),
+        max_segments=(2, 1024),
+        poll_ms=(1, 1000),
+        health_ms=(100, 5000),
+        sync_ms=(100, 60000),
+        state_entries=(128, 8192),
+    )
     for name, (minimum, maximum) in bounds.items():
         value = result[name]
         if type(value) is not int or not minimum <= value <= maximum:
@@ -54,8 +85,17 @@ def configuration(path=None):
 def collector_command(config, build_dir=None):
     build_dir = Path(build_dir or ROOT / "build")
     result = [str(build_dir / "collector")]
-    for name in ("state_dir", "segment_bytes", "max_segments", "poll_ms",
-                 "health_ms", "sync_ms", "state_entries", "path_prefix", "cgroup_id"):
+    for name in (
+        "state_dir",
+        "segment_bytes",
+        "max_segments",
+        "poll_ms",
+        "health_ms",
+        "sync_ms",
+        "state_entries",
+        "path_prefix",
+        "cgroup_id",
+    ):
         result.extend(["--" + name.replace("_", "-"), str(config[name])])
     if config["capture_python"]:
         result.append("--capture-python")
@@ -64,37 +104,94 @@ def collector_command(config, build_dir=None):
 
 def linux_root():
     if sys.platform != "linux" or os.geteuid() != 0:
-        raise RuntimeError("This command requires root on a supported Ubuntu Linux host")
+        raise RuntimeError(
+            "This command requires root on a supported Ubuntu Linux host"
+        )
 
 
 def build():
     linux_root()
     from doctor_guest import doctor
+
     if doctor():
         raise RuntimeError("Preflight failed")
     from prepare_guest import prepare
     from settings import ARCH, BPF_INCLUDES, BPF_LIBS, PREPARED
+
     pins = prepare()
     directory = ROOT / "build"
     directory.mkdir(exist_ok=True)
-    for name in (*PRODUCTION, "config.h", "python_layout.h", "kernel_layout.h", "vmlinux.h"):
-        shutil.copy2((ROOT if name in PRODUCTION else PREPARED) / name, directory / name)
+    for name in (
+        *PRODUCTION,
+        "config.h",
+        "python_layout.h",
+        "kernel_layout.h",
+        "vmlinux.h",
+    ):
+        shutil.copy2(
+            (ROOT if name in PRODUCTION else PREPARED) / name, directory / name
+        )
     with (directory / "bpf-build.log").open("w") as out:
-        subprocess.run(["clang", "-O2", "-g", "-target", "bpf", "-mcpu=v3",
-                        "-D__TARGET_ARCH_" + ARCH, *BPF_INCLUDES, "-I.", "-c",
-                        "reader.bpf.c", "-o", "reader.bpf.o"], cwd=directory,
-                       stdout=out, stderr=subprocess.STDOUT, check=True)
-    symbols = subprocess.check_output(["readelf", "-Ws", "reader.bpf.o"], cwd=directory, text=True)
-    undefined = [line for line in symbols.splitlines() if " UND " in line and len(line.split()) > 7]
-    sections = subprocess.check_output(["readelf", "-SW", "reader.bpf.o"], cwd=directory, text=True)
+        subprocess.run(
+            [
+                "clang",
+                "-O2",
+                "-g",
+                "-target",
+                "bpf",
+                "-mcpu=v3",
+                "-D__TARGET_ARCH_" + ARCH,
+                *BPF_INCLUDES,
+                "-I.",
+                "-c",
+                "reader.bpf.c",
+                "-o",
+                "reader.bpf.o",
+            ],
+            cwd=directory,
+            stdout=out,
+            stderr=subprocess.STDOUT,
+            check=True,
+        )
+    symbols = subprocess.check_output(
+        ["readelf", "-Ws", "reader.bpf.o"], cwd=directory, text=True
+    )
+    undefined = [
+        line
+        for line in symbols.splitlines()
+        if " UND " in line and len(line.split()) > 7
+    ]
+    sections = subprocess.check_output(
+        ["readelf", "-SW", "reader.bpf.o"], cwd=directory, text=True
+    )
     if undefined or ".ksyms" in sections:
         raise RuntimeError("Non-upstream BPF dependencies detected")
-    subprocess.run(["gcc", "-O2", "-std=gnu11", "-Wall", "-Wextra", "-Werror",
-                    *BPF_INCLUDES, "collector.c", *BPF_LIBS, "-o", "collector"],
-                   cwd=directory, check=True)
-    manifest = dict(schema_version=1, upstream_only=True, pins=pins,
-                    sources={name: sha(directory / name) for name in PRODUCTION},
-                    artifacts={name: sha(directory / name) for name in ("collector", "reader.bpf.o")})
+    subprocess.run(
+        [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            *BPF_INCLUDES,
+            "collector.c",
+            *BPF_LIBS,
+            "-o",
+            "collector",
+        ],
+        cwd=directory,
+        check=True,
+    )
+    manifest = dict(
+        schema_version=1,
+        upstream_only=True,
+        pins=pins,
+        sources={name: sha(directory / name) for name in PRODUCTION},
+        artifacts={
+            name: sha(directory / name) for name in ("collector", "reader.bpf.o")
+        },
+    )
     (directory / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print("Built continuous collector:", directory)
     return manifest
@@ -103,10 +200,16 @@ def build():
 def verify_build(config):
     manifest = json.loads((ROOT / "build/manifest.json").read_text())
     pins = manifest["pins"]
-    if pins["kernel"] != os.uname().release or pins["kernel_btf_sha256"] != sha("/sys/kernel/btf/vmlinux"):
-        raise RuntimeError("Kernel changed: rebuild and reinstall the sensor for this kernel")
+    if pins["kernel"] != os.uname().release or pins["kernel_btf_sha256"] != sha(
+        "/sys/kernel/btf/vmlinux"
+    ):
+        raise RuntimeError(
+            "Kernel changed: rebuild and reinstall the sensor for this kernel"
+        )
     if config["capture_python"] and pins["python_sha256"] != sha(pins["python_binary"]):
-        raise RuntimeError("Selected Python binary changed: rebuild and reinstall before source capture")
+        raise RuntimeError(
+            "Selected Python binary changed: rebuild and reinstall before source capture"
+        )
     for name, expected in manifest["artifacts"].items():
         if sha(ROOT / "build" / name) != expected:
             raise RuntimeError(f"Artifact checksum mismatch: {name}")
@@ -119,10 +222,15 @@ def run(config):
     lockdown = Path("/sys/kernel/security/lockdown")
     if lockdown.exists() and "[confidentiality]" in lockdown.read_text():
         raise RuntimeError("Confidentiality lockdown is unsupported")
-    effective = next(line.split()[1] for line in Path("/proc/self/status").read_text().splitlines()
-                     if line.startswith("CapEff:"))
+    effective = next(
+        line.split()[1]
+        for line in Path("/proc/self/status").read_text().splitlines()
+        if line.startswith("CapEff:")
+    )
     if not int(effective, 16) & (1 << 21):
-        raise RuntimeError("Current tested attachment configuration requires CAP_SYS_ADMIN")
+        raise RuntimeError(
+            "Current tested attachment configuration requires CAP_SYS_ADMIN"
+        )
     verify_build(config)
     directory = Path(config["state_dir"])
     directory.mkdir(mode=0o700, parents=False, exist_ok=True)
@@ -136,17 +244,29 @@ def install(config_path):
     verify_build(config)
     # Validate all policy-dependent installation choices before changing /opt.
     if config["state_dir"] != DEFAULTS["state_dir"]:
-        raise RuntimeError("For systemd installation use the default state_dir; custom paths are supported in foreground mode")
+        raise RuntimeError(
+            "For systemd installation use the default state_dir; custom paths are supported in foreground mode"
+        )
     destination = Path("/etc/iosec-endpoint.json")
     if destination.exists() or destination.is_symlink():
         metadata = destination.lstat()
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != 0 or metadata.st_mode & 0o077:
-            raise RuntimeError("Existing /etc/iosec-endpoint.json must be a private root-owned regular file")
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != 0
+            or metadata.st_mode & 0o077
+        ):
+            raise RuntimeError(
+                "Existing /etc/iosec-endpoint.json must be a private root-owned regular file"
+            )
         if configuration(destination) != config:
-            raise RuntimeError("Existing /etc/iosec-endpoint.json differs; review it before installation")
+            raise RuntimeError(
+                "Existing /etc/iosec-endpoint.json differs; review it before installation"
+            )
     target = Path("/opt/iosec-endpoint")
     if target.exists() or target.is_symlink():
-        raise RuntimeError("/opt/iosec-endpoint already exists; stop the service and move the old installation before replacing it")
+        raise RuntimeError(
+            "/opt/iosec-endpoint already exists; stop the service and move the old installation before replacing it"
+        )
     staging = Path(tempfile.mkdtemp(prefix=".iosec-endpoint-", dir="/opt"))
     try:
         (staging / "build").mkdir()
@@ -163,11 +283,15 @@ def install(config_path):
             shutil.rmtree(staging)
     # Exclusive creation preserves existing fleet policy/configuration.
     try:
-        fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        fd = os.open(
+            destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
+        )
     except FileExistsError:
         existing = configuration(destination)
         if existing != config:
-            raise RuntimeError("Existing /etc/iosec-endpoint.json differs; review it before starting the installed service")
+            raise RuntimeError(
+                "Existing /etc/iosec-endpoint.json differs; review it before starting the installed service"
+            )
     else:
         with os.fdopen(fd, "w") as out:
             out.write(json.dumps(config, indent=2) + "\n")
@@ -181,14 +305,52 @@ def install(config_path):
     print("Installed. Start with: sudo systemctl enable --now iosec-endpoint")
 
 
+def validate_health(health):
+    if (
+        not isinstance(health, dict)
+        or type(health.get("schema_version")) is not int
+        or health.get("schema_version") != 1
+    ):
+        raise ValueError("unsupported or missing health schema")
+    if not isinstance(health.get("boot_id"), str) or not health["boot_id"]:
+        raise ValueError("missing or invalid boot_id")
+    timestamp = health.get("updated_monotonic_ns")
+    if type(timestamp) is not int or timestamp < 0:
+        raise ValueError("missing or invalid updated_monotonic_ns")
+    if health.get("state") not in ("starting", "running", "stopped", "failed"):
+        raise ValueError("missing or invalid state")
+    if type(health.get("history_gaps")) is not bool:
+        raise ValueError("missing or invalid history_gaps")
+    return health
+
+
 def status(config):
-    health = json.loads((Path(config["state_dir"]) / "health.json").read_text())
+    try:
+        health = validate_health(
+            json.loads((Path(config["state_dir"]) / "health.json").read_text())
+        )
+    except (OSError, ValueError) as error:
+        print(
+            json.dumps(
+                dict(healthy=False, error="Invalid health report: " + str(error))
+            )
+        )
+        return 1
     boot = Path("/proc/sys/kernel/random/boot_id")
     same_boot = boot.exists() and boot.read_text().strip() == health["boot_id"]
-    age = (time.monotonic_ns() - health["updated_monotonic_ns"]) / 1e9 if same_boot else None
+    age = (
+        (time.monotonic_ns() - health["updated_monotonic_ns"]) / 1e9
+        if same_boot
+        else None
+    )
     health["health_age_seconds"] = age
-    health["healthy"] = bool(same_boot and age is not None and 0 <= age < 15
-                             and health["state"] == "running" and not health["history_gaps"])
+    health["healthy"] = bool(
+        same_boot
+        and age is not None
+        and 0 <= age < 15
+        and health["state"] == "running"
+        and not health["history_gaps"]
+    )
     print(json.dumps(health, indent=2))
     return 0 if health["healthy"] else 1
 
@@ -208,15 +370,24 @@ def events(config, follow=False, writes_only=False):
             name = str(path)
             try:
                 with path.open("rb") as stream:
-                    for offset, event in records(stream, offsets.get(name, 0), tolerate_tail=True):
+                    for offset, event in records(
+                        stream, offsets.get(name, 0), tolerate_tail=True
+                    ):
                         offsets[name] = offset
                         # Filename carries session even after health is replaced.
                         event["session"] = path.name.split("-")[2]
                         event["segment"] = path.name
                         if not writes_only or event["stage"] == 9:
                             print(json.dumps(event, separators=(",", ":")), flush=True)
-                    if not follow and stream.tell() > offsets.get(name, 0) and name not in warned:
-                        print(f"Incomplete tail in {path.name} after offset {offsets.get(name, 0)}", file=sys.stderr)
+                    if (
+                        not follow
+                        and stream.tell() > offsets.get(name, 0)
+                        and name not in warned
+                    ):
+                        print(
+                            f"Incomplete tail in {path.name} after offset {offsets.get(name, 0)}",
+                            file=sys.stderr,
+                        )
                         warned.add(name)
             except FileNotFoundError:
                 continue  # Retention may prune between listing and open.
@@ -236,10 +407,15 @@ def main():
             child.add_argument("--follow", action="store_true")
             child.add_argument("--writes-only", action="store_true")
     args = parser.parse_args()
-    if hasattr(args, "config") and args.config is None and ROOT == Path("/opt/iosec-endpoint"):
+    if (
+        hasattr(args, "config")
+        and args.config is None
+        and ROOT == Path("/opt/iosec-endpoint")
+    ):
         args.config = "/etc/iosec-endpoint.json"
     if args.command == "doctor":
         from doctor_guest import doctor
+
         return doctor()
     if args.command == "build":
         build()

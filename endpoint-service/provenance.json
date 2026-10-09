@@ -17,5 +17,6 @@
     "Per-event monotonic timestamp and emitter identity in wire v2",
     "Avoid subject allowlist lifetime dependence and per-install full-map label counting",
     "Skip untracked writes before allocating per-thread state; retire aborted syscall state on exit/exec"
-  ]
+  ],
+  "review_fixes": "Canonical architecture/layout/install helpers; readable harness and shared parameterized verifier where applicable. Fresh runtime evidence: validation/review-fixes-ubuntu24.json. Backlog retry before sleep; schema-checked status; logged preservation of unmanaged retained segments; five additional tested systemd restrictions."
 }

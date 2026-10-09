@@ -1,0 +1,341 @@
+{
+  "passed": true,
+  "recorded_at": "2026-10-09T15:45:33.825508+00:00",
+  "environment": {
+    "ubuntu": "24.04",
+    "kernel": "6.8.0-142-generic",
+    "python": "3.12.3",
+    "architecture": "x86_64",
+    "virtualization": "Lima QEMU on Apple Silicon",
+    "physical_intel": false
+  },
+  "verification": {
+    "passed": true,
+    "scope": "Locally generated pinned inputs; bounded fixtures and steady-state CPU screen",
+    "production_files_unchanged_during_validation": true,
+    "counts_as_new_solution": false,
+    "cpu": {
+      "added_cpu_pct_one_core_median": 1.2336945444903,
+      "added_cpu_pct_four_vcpu_median": 0.308423636122575,
+      "one_core_pair_range": [
+        -1.2033440586408726,
+        1.5359764286549737
+      ],
+      "all_five_pairs_below_target_one_core": false,
+      "four_vcpu_pair_range": [
+        -0.30083601466021814,
+        0.38399410716374344
+      ],
+      "all_five_pairs_below_target_four_vcpu": false
+    },
+    "independently_recomputed_one_core_pairs": [
+      -1.2033440586408726,
+      1.2336945444903,
+      1.5359764286549737,
+      1.3224598006947474,
+      1.0740820308055663
+    ],
+    "module_removed": true,
+    "remaining_bpf_program_names": [
+      "hid_tail_call",
+      "lima_ticker",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_devices",
+      "sd_devices",
+      "sd_fw_egress",
+      "sd_fw_ingress",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices",
+      "sd_devices"
+    ],
+    "evidence": "/Users/maorhadad/projects/pidfd-attribution/evidence",
+    "production_sha256": {
+      "reader.bpf.c": "67160c4591347851b700921557333b21e399c0d0c679a9ec3f06c489eddcbc77",
+      "loader.c": "028dc7ebcf17276621e4baa0dec6c7abd5a4cd674ec6791144ab9d9f117dc4b1",
+      "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+      "module/Makefile": "ecca2288986e50ec7bdbb6b72ab9842d7cef28d0016416d8a074fa560b073f47",
+      "module/config.h": "87e391d43f6bcd55a39c9edba9e25cd83a1fe7522703c9787f1f23a85b2c46f6",
+      "module/iosec_native.c": "5aad6303b43f756a1c0cc32d5b21de539e66443f805560cf6b8cefaaf9614897"
+    },
+    "driver_sha256": {
+      "fixture_guest.py": "7ee690bfe8ce68f979f59f98b9d8524c5f5b80631099abcf6018246f79fc911a",
+      "measure_collector_path_guest.py": "71cb4c2d28784a77e365d46cf5694fcf7a99ca48ebf085d4263d69211ee515ed",
+      "compat_guest.py": "9c47fcab5fd1bbe12eca16495b655d4fd2b7af9098cd6dab3eaef7c6d2bf3a97",
+      "run_collector_path_guest.py": "c4bf2da3f199987191299655b8fe6bae07d7843f7ab5c414107d936d562593b8",
+      "history_guest.py": "c0fb130f6faed6def1c547b0e02781d9a0b6312e1cb07f43b2c6677304618ddd",
+      "oracle_collector_path_guest.py": "ebffe633bb8090e9ac1e4a76338e30f0c5d131bfd9610c34661ea7f0c4ba865b",
+      "held_collector_path_guest.py": "ba2104b2ae07bd1e507cc809b1d74b33bc61d951bc4425eb394ee54631696a70",
+      "verify_deep_collector_path_guest.py": "c61df67c7b77e122973082a7c1098ae46721946a8869f651023feeccfdf0742d",
+      "validate_guest.py": "464c4c45e7bbfe9071946e963111a5894c7013bbaaca43d121be51dbeec8b354",
+      "strings_collector_path_guest.py": "cfdbd4197f45f6c979efb59301626ab4c3a897011c57b707b1f5b52f18dbc9e1",
+      "settings.py": "9df3b939765e34ea15efbfb6fb225ae88603ff17c5975e9998ff2b5ad00ee844",
+      "build_collector_path_guest.py": "e86251707bb06c0421036f56c9c000565bba6e3282dca23b71a0b823de1a04aa",
+      "collector_path_scope_guest.py": "e8cf5025e96f454b08344a3047ed2ce68bb406ebe963812d1f9e5c1fea20d2cc",
+      "doctor_guest.py": "56a0ad1d23a7ca18d1ba203e6ca352f5361613e0149e981f762e84859f6fbee9",
+      "prepare_guest.py": "766c1b37f6b4b2192e35bc82a7c6da6e00054f9d4077a09777a7e0f3ef7e54f9"
+    },
+    "support_sha256": {
+      "support/run_guest_base.py": "03168c8e8e29c69f87e8213378f38d2dd14f00846e434715004a98b82fba1868",
+      "support/python_layout.py": "cff27a256230502e1b2979a3a1a447bfcb23cec118291fd670792035b67a69e2",
+      "support/collector_benchmark.py": "72fd3326a1e628d620010b2a094575be59b966f3efd662ed7b940322488e861d",
+      "support/__init__.py": "2cdc9f402263cb0cbcfba17d20bf538cc5c17e5043f3d8fb0cc832016da22559",
+      "support/bytecode_oracle_guest.py": "9567ff194c9bcbd65d191a8b048687d6f6351364b386930193e26ece35836b69",
+      "support/collector_records.py": "ff4e2510710a15d13ffbcb0da62da9d1b9459e8d14f27c91397b4d625d092790"
+    },
+    "regression_checker_sha256": "3fa56622bb41921247f27e297a462aa2afcd5db8f185d63a55cc44a2c682988e",
+    "completed_at": "2026-10-09T15:45:18.797214+00:00"
+  },
+  "pins": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python_binary": "/usr/bin/python3.12",
+    "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+    "python_version": "(3, 12, 3)",
+    "offsets": {
+      "TSTATE_FRAME": 56,
+      "CFRAME_FRAME": 0,
+      "TSTATE_FRAME_INDIRECT": 1,
+      "FRAME_CODE": 0,
+      "FRAME_INSTR": 56,
+      "FRAME_PREVIOUS": 8,
+      "FRAME_OWNER": 70,
+      "CODE_FILENAME": 112,
+      "CODE_NAME": 120,
+      "CODE_FIRSTLINE": 68,
+      "CODE_LINETABLE": 136,
+      "CODE_BYTECODE": 192,
+      "BYTES_SIZE": 16,
+      "BYTES_DATA": 32,
+      "UNICODE_STATE": 32,
+      "UNICODE_LENGTH": 16,
+      "ASCII_DATA": 40,
+      "OBJECT_TYPE": 8,
+      "PYTHON_MINOR": 12,
+      "CODE_TYPE_ADDRESS": 10670688,
+      "PYTHON_TEXT_ADDRESS": 4325376,
+      "IOSEC_COMPAT_MASK": 2
+    },
+    "kernel_hooks": {
+      "do_filp_open": {
+        "id": 79611,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 739,
+        "vlen": 3,
+        "params": [
+          {
+            "name": "dfd",
+            "type_id": 12
+          },
+          {
+            "name": "pathname",
+            "type_id": 4751
+          },
+          {
+            "name": "op",
+            "type_id": 20581
+          }
+        ]
+      },
+      "dup_fd": {
+        "id": 30648,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 601,
+        "vlen": 2,
+        "params": [
+          {
+            "name": "oldf",
+            "type_id": 601
+          },
+          {
+            "name": "punch_hole",
+            "type_id": 20606
+          }
+        ]
+      }
+    },
+    "fixture_inputs": {
+      "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+      "module_config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+      "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+      "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+      "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+      "workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+      "deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0"
+    },
+    "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+  },
+  "oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "records": 999,
+    "stacks": 2937,
+    "frames": 16035,
+    "source_sha256": {
+      "/var/tmp/pidfd-standalone/workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+      "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b"
+    },
+    "input_sha256": {
+      "hardened-serial-0-hardened.bin": "3c7c82d328f8c7fd16ab5dc83d226311cd8ad9c5d3882ff3359ca0db6d066c75",
+      "hardened-serial-1-hardened.bin": "e4d45c22a18eb50fe0387d1abf290d3eb0d647040b2dac8aff648e47271bad92",
+      "hardened-serial-2-hardened.bin": "57d8b000fc117447836e86dab480b466cfa57d7a0222b6a3f98466761000398d",
+      "hardened-serial-3-hardened.bin": "3d9632ba08465c9f87104c8132f2666f03dfccbd8f532fee219a9e6d576f8b48",
+      "hardened-serial-4-hardened.bin": "f6410e529bfdd61661fd5e72bf590301e8795343f4f14a0c7b30e99971d165bf",
+      "hardened-threads-0-hardened.bin": "3febff7f1454f192e7114308caf80cc25d04d1562ad10a70a75ba5b3895eb9e9"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "history_oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "records": 28,
+    "stacks": 70,
+    "frames": 73,
+    "source_sha256": {
+      "/Users/maorhadad/projects/pidfd-attribution/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
+      "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b"
+    },
+    "input_sha256": {
+      "records.bin": "fdca976eaa451bbae0b85b05bce4ede3df6422429ac8dfee2c30ca176a87cf64"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "controls": {
+    "strings": {
+      "passed": true,
+      "real_kernel_capture": true,
+      "owned_synthetic_metadata": true,
+      "guard_page_cases": 44,
+      "malformed_cases": 11,
+      "partial_cold_cases": 17,
+      "checks": [
+        "Exact200byte frame including zero tails",
+        "Short/exact-limit/over-limit filename and function",
+        "Embedded NUL and empty strings",
+        "Both string objects end immediately before PROT_NONE page",
+        "All15unused frames zero",
+        "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+        "Exactly8B file/function payloads and linetable bytes recover across cold page",
+        "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+        "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+      ],
+      "module_sha256": "a11e298fd3a98757546f1c3f8587273001a37b901812b8d6f8ad2aa9689071bc",
+      "artifacts": {
+        "loader.c": "0d27b3fd1675dec2025b89a21226230429a9dd926c5441318d062c0201924f63",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "strings.bpf.c": "4a87038996b3cd6b2c2ce929f53c92a784034f72cf0c87ba352cb6b27da6d4f0",
+        "loader": "51c143702de5615c2655a20cc4458ccc8966a98e9f41d7f44b9d945a01f39cab",
+        "step-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "strings.bpf.o": "95e127a6d9351b7ea4c4d8cc3574d453a9e00cee64acdd1c378263e3240b84d0",
+        "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174"
+      },
+      "full_goal_complete": false
+    },
+    "compat": {
+      "passed": true,
+      "application": {
+        "compat_calls": 3,
+        "native_getfd": 1,
+        "writes": 1
+      },
+      "native_getfd_records": 1,
+      "native_write_records": 1,
+      "compat_calls_create_no_native_records": true
+    },
+    "history": {
+      "passed": true,
+      "application": {
+        "tid": 3192,
+        "closed_while_blocked": true,
+        "written": 4096,
+        "pid": 3190,
+        "target": 3191,
+        "fd": 7,
+        "inode": 528035
+      },
+      "actors": {
+        "opener": {
+          "pid_tid": 13705240644727,
+          "birth": 1496243915404,
+          "count": 1,
+          "flags": 0
+        },
+        "acquirer": {
+          "pid_tid": 13700945677430,
+          "birth": 1495853441581,
+          "count": 1,
+          "flags": 0
+        },
+        "live": {
+          "pid_tid": 13700945677432,
+          "birth": 1496255432321,
+          "count": 4,
+          "flags": 0
+        }
+      },
+      "raw_sha256": "575d0b664131e08a4e242c7ced4a22dc37ea187b3bf06108db34a29a977a6e9c",
+      "fixture_sha256": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417"
+    },
+    "held": {
+      "passed": true,
+      "test": "ctypes.PyDLLwrite retainsGIL; collector-batch candidate (actual Muse)",
+      "profiles": [
+        {
+          "profile": "serial",
+          "complete_writes": 3
+        },
+        {
+          "profile": "threads",
+          "complete_writes": 13
+        }
+      ]
+    },
+    "deep": {
+      "status": "passed",
+      "results": [
+        {
+          "depth": 4,
+          "actual_frames": 10,
+          "captured_frames": 10,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "f0e202dad95fb6cdbd6b0a4368826b417d688e17fb8b4d60eb3b0e40350733d8"
+        },
+        {
+          "depth": 10,
+          "actual_frames": 16,
+          "captured_frames": 16,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "e4afd05a05822c9a124aefdb5d873153483d2147800bdc709a74ce60cc374194"
+        },
+        {
+          "depth": 11,
+          "actual_frames": 17,
+          "captured_frames": 16,
+          "complete": false,
+          "flags": 32,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "27b6172067b89224582adb80d1a94c5d714fc31055851a279a49ab126278cd5d"
+        }
+      ],
+      "fixture_sha256": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
+      "bpf_source_sha256": "67160c4591347851b700921557333b21e399c0d0c679a9ec3f06c489eddcbc77"
+    }
+  }
+}

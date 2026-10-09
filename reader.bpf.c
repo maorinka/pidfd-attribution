@@ -1,106 +1,10 @@
-/* Codex compact reusable write-entry copy; same35hooks19maps, entry-time full
- * populated histories and fresh live source. */
-/* THIS revision: Codex shared typed raw syscall-entry snapshot, 35 hooks.
- * Historical authors and source reader below unchanged. */
-/* Actual-Muse native direct-emit revision over the actual-Muse native-emit
- * scratch base (which itself sits on the Codex native-scalar base).
- * THIS revision: implemented by actual Muse CLI. ONLY emit() changes: the
- * scratch-copy serialization (ONE native iosec_emit_pack call into the
- * wire_scratch record followed by one bpf_ringbuf_output bulk copy) is
- * replaced by DIRECT native packing into the verifier-bounded reserved
- * ring slice obtained via bpf_dynptr_data with CONSTANT-size case dispatch
- * for all total frame counts 0..48. Each of the 49 cases calls
- * bpf_dynptr_data(&d,0,176+200*N) with a constant length, checks the slice
- * for nonnull, then calls iosec_emit_pack(slice,176+200*N,e,sizeof(*e)) in
- * the SAME branch so verifier range precision is not lost; submit/discard
- * handling is shared below the switch. The variable-length
- * bpf_dynptr_data(d,0,size) form is NOT used (Codex capability proved it
- * rejects at LOAD with R3 not known constant; only documented reserved
- * dynptr data is used, no unchecked dynptr internals). Complete record is
- * written before submit BPF_RB_NO_WAKEUP; discard exactly once on error
- * plus diagnostic(1); reservation failure keeps diagnostic(0). Wire bytes,
- * module (byte-identical), maps (19, wire_scratch retained but unused),
- * hooks (36), all begin-time history snapshots, fresh live capture and
- * discard/submit semantics are unchanged. Historical authors follow. */
-/* Muse native-reader revision over actual-Muse mapcopy base.
- * THIS revision: implemented by actual Muse CLI. BPF walkers, maps, hooks,
- * wire, and collector unchanged from mapcopy; the optimization lives in the
- * native module (compact ASCII header + bulk string reads). This file keeps
- * every mapcopy BPF byte identical except this header. Historical authors
- * follow (mapcopy header preserved below). */
-/* Muse mapcopy/mapzero revision over Codex native-copy/descriptor-reset base.
- * THIS revision: implemented by actual Muse CLI (mapcopy turn). Replaces
- * bpf_probe_read_kernel ONLY on known live BPF map copies with native
- * non-sleepable kfuncs: iosec_map_copy for writable initialized map-to-map
- * copies (copy_source 3224, copy_event 9760, location-table 4096 map buffers,
- * wire header 88) and iosec_map_zero for zeroing (clear_source 3224, fresh
- * 9760).
- * __sz const-source limitation: callee const is semantic only; the verifier
- * still requires a writable source region and rejects a readonly/frozen map
- * source at load, so no readonly source is passed or claimed.
- * ALL kernel task/file/fd/context BPF_CORE_READ/probe_reads and ALL user
- * read/fault/cold paths unchanged; no unchecked memcpy of kernel objects or
- * user heap; metadata-only write-begin reset stays. Historical authors follow.
- */
-/* Codex native-copy/descriptor-reset revision over actual Muse dynptr
- * transport. All populated fields and fresh capture retained; only unpopulated
- * payload initialization is avoided in write placeholders. Historical authors
- * follow. */
-/* Actual-Muse dynptr transport + robustness revision over the Codex native
- * sleepable heap reader; retains actual-Muse collector batching and the full
- * source/provenance ABI. THIS revision: implemented by actual Muse CLI.
- * Base native reader/fused capture: Codex; fused design actual Muse;
- * architecture Muse09/Muse129; original reader Codex130.
- * Change 1 (transport): emit() reserves the EXACT wire size with
- * bpf_ringbuf_reserve_dynptr and writes the header plus each actor's
- * populated frames directly from map memory with bpf_dynptr_write, then
- * submits BPF_RB_NO_WAKEUP. The intermediate frame-array copy into
- * wire_scratch is eliminated; wire_scratch remains only as the bounded
- * 176-byte header scratch (19 maps unchanged). Wire v1 (header 176,
- * 200 bytes/frame, <=16 frames/actor, <=48 total) and every field, stage,
- * diagnostic (0 ring loss, 1 encoding/read) and hook is unchanged.
- * Change 2 (robustness): overflow-safe instruction-address bound in both
- * walkers (instr>=code, difference>=CODE_BYTECODE, then bounded offset);
- * malformed-varint cast clamp and overflow-safe signed line accumulation in
- * the BPF decoder (reject with existing error flag 8, never an invented
- * line). Type-sentinel skip, partial-remainder flag 32 and empty-table
- * handling keep inherited semantics. */
-/* Codex callback-walk revision over actualMuse fusedcapture.
- * Proposed/implemented Codex; fused design/implementation actualMuse,
- * architecture Muse09/Muse129, originalreader Codex130. */
-/* Fused sleepable capture candidate; no SaveThread probe, no separate warming
- * pass. Every syscall still captures fresh Python heap data; diagnostic proof
- * for the paired-binding base is
- * evidence/pidfd-eval-shadow-codex/fd-matched/verification.json. Base: Codex
- * paired EvalFrame entry/return binding over resident-first warming.
- * Resident-first warming and cold Unicode headers: proposed/implemented by
- * Codex. Architecture Muse09; pidfd Muse129; original reader Codex130. Actual
- * Muse CLI implemented bulk copies, native kernel trampolines and the
- * syscall-local warming predecessor. Codex implemented compact transport,
- * metadata batching, frozen zero map, cleanup indexes and the paired-binding
- * revision. THIS revision (fused capture): implemented by actual Muse CLI.
- * Single fresh capture at verified sleepable syscall entry
- * (nofault-first/fault-fallback throughout, thread-owned buffers); nonsleepable
- * kernel hooks bind the already-current snapshot to the actual kernel object.
- * Nonsleepable fresh capture retained as fallback for uncovered paths and
- * missed snapshots. No residency cache is trusted. Exact fresh line-cache
- * validation and mm retirement remain. Binding probes, syscall/object ordering,
- * source frame limits (16 frames, 32 steps) and explicit partial/unknown flags
- * are retained. Wire v1 unchanged. Build-specific, mutable Python metadata
- * remains unattested.
- * Rev2 (verifier fix): first delivery used inline 4096-byte decode / 512-word
- * compare loops with unrolling disabled and no bpf_loop in sleepable context;
- * Codex independent compile/load rejected write_fused_entry with "sequence of
- * 8193 jumps too complex" (E2BIG, 75510 insns) in the inline decode loop
- * (evidence/pidfd-fused-capture-muse/first-load-failure). Codex then proved a
- * sleepable fentry.s bpf_loop callback CAN fault-copy a cold owned page
- * (evidence/pidfd-sleepable-loop-copy/verification.json). This revision keeps
- * the same single fused capture, bounds (16/32/4096/512/128), byte-compare,
- * fault-fallback, ordering, cleanup and CPU protocol, but reuses the existing
- * decode_byte/compare_line bpf_loop callbacks over the thread-owned line
- * buffer; the outer 32-step walk and 128-byte NUL scan stay small explicit
- * for-loops (no nesting, no new maps/programs). Nested callbacks remain
- * unvalidated and are not used. Codex independent capability and testing. */
+/* Kernel file/descriptor attribution with optional bounded CPython frames.
+ * Freeze opener and acquirer snapshots at operation entry, bind history to
+ * referenced/installed files, and accept writes only after inner/outer checks.
+ * Current-task user reads may fault only in sleepable hooks. Nonsleepable
+ * fallbacks preserve explicit unknown/error/truncation flags. The native module
+ * checks helper buffer bounds; wire v1 is 176 bytes plus populated frames.
+ * Provenance: provenance.json and git history. */
 #include "arch.h"
 #include "config.h"
 #include "kernel_layout.h"
@@ -1150,9 +1054,7 @@ static __always_inline struct event *fresh_raw(void) {
 static __always_inline struct event *fresh(void) {
   struct event *e = fresh_raw();
   if (e) {
-    unsigned int z = 0;
-    unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
-    if (!zero || iosec_map_zero(e, sizeof(*e))) {
+    if (iosec_map_zero(e, sizeof(*e))) {
       diagnostic(1);
       return 0;
     }

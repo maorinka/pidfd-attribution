@@ -2,7 +2,7 @@
 
 This backend records **opener → pidfd_getfd acquirer → writer**, with Python source frames and kernel file/task/table identities. It uses upstream BPF helpers only: no custom kfuncs, `.ko` files, module signing, or `CAP_SYS_MODULE`. It is a bounded research backend, not an endpoint-wide EDR service.
 
-The original module-backed prototype remains in the parent directory. This directory is self-contained, with separate generated inputs, evidence, and protected runtime directories under `/var/tmp/pidfd-module-free*`.
+The original module-backed prototype remains in the parent directory. It uses canonical helpers from [`../shared/`](../shared/README.md); keep the full repository checkout. Generated inputs, evidence, and protected runtime directories remain separate under `/var/tmp/pidfd-module-free*`.
 
 ## Run it
 
@@ -72,6 +72,8 @@ All three configurations passed the attribution controls, 72 metadata controls, 
 
 Ubuntu 22.04 used an arm64 VZ VM; the x86_64 runs used QEMU on Apple Silicon. The Ubuntu 26.04 result combines the initial correctness/string checks with a same-build history retry and the remaining controls: its first full command hit the inherited 20-second loader timeout before the fixture launched. The [failure is retained](validation/ubuntu26-history-timeout.json), and only the outer loader allowance increased to 120 seconds. Fixture synchronization and correctness assertions did not change. The reports preserve this distinction.
 
+The matrix above describes retained results from earlier revisions. The review fixes passed a fresh Ubuntu 24.04 run under integrity lockdown with module loading disabled and no `CAP_SYS_MODULE`: [`review-fixes-ubuntu24.json`](validation/review-fixes-ubuntu24.json). This report also records driver and shared-verifier hashes.
+
 ## Implementation and validation
 
 The BPF sleepable syscall-entry hooks read the current Python stack with nofault reads followed by upstream `bpf_copy_from_user` when needed. Scratch buffers are owned by the thread across faults. Nonsleepable fallback hooks retain explicit error/unknown flags. A bounded BPF walker decodes source positions; cached line-table prefixes are compared against current bytes before reuse.
@@ -83,6 +85,8 @@ Muse's collector style remains: mapped ring consumption, batched `writev` of up 
 Default validation checks all 35 attachments; successful/failed transfers and writes; reuse, lifetime and exec controls; capacity; stack-depth limits; normal serial/threaded writes; held-GIL writes; concurrent-close history; 72 synthetic guard-page/malformed/cold-page cases; and 147 byte-exact serializer cases spanning all 49 record lengths and three actor orderings, plus invalid-count rejection. On x86_64 it includes the IA32 `int $0x80` negative control. The independent offline oracle recompiles source without executing fixtures and checks captured bytecode positions with `co_lines()`/`co_positions()`.
 
 The final audit requires the kernel module set and exact BPF program-ID set to stay unchanged. Reference counts are excluded from the module comparison because they fluctuate without loads/unloads. Reports and hashes are retained in `validation/`; local detailed evidence and prior attempts remain ignored by Git. Boot-time system services changed the BPF program set in initial runs; those audit failures are retained separately rather than accepted as passes.
+
+Its hooks also run for unmonitored processes, including a tracking-map lookup on every `kmem_cache_free`; that systemwide kernel cost is outside the application/collector CPU figure.
 
 An optional CPU screen is available with `sudo ./run.sh benchmark`. It runs alternating raw/monitored trials after correctness checks. It excludes setup/shutdown and unaccounted kernel/deferred work. Physical Intel overhead is unmeasured; QEMU results are not hardware benchmarks.
 

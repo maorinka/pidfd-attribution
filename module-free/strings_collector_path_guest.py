@@ -1,13 +1,19 @@
 """Codex real kernel capture test of owned synthetic ASCII objects at guard pages."""
+
 from pathlib import Path
-import subprocess,hashlib,json,shutil
-R=__import__('settings').ROOT;E=R/'evidence/string-controls';G=Path('/var/tmp/pidfd-module-free-strings');E.mkdir(parents=True,exist_ok=True);G.mkdir(exist_ok=True)
-bpf=r'''#include "reader.bpf.c"
+import subprocess, hashlib, json, shutil
+
+R = __import__("settings").ROOT
+E = R / "evidence/string-controls"
+G = Path("/var/tmp/pidfd-module-free-strings")
+E.mkdir(parents=True, exist_ok=True)
+G.mkdir(exist_ok=True)
+bpf = r"""#include "reader.bpf.c"
 struct ctl {unsigned long long pid,address,calls;int result;unsigned char output[3224];unsigned char scratch[4096];struct line_value line_value;};
 struct {__uint(type,BPF_MAP_TYPE_ARRAY);__uint(max_entries,1);__type(key,unsigned int);__type(value,struct ctl);} control SEC(".maps");
 SEC("fentry.s/IOSEC_SYS_WRITE_PLACEHOLDER") int BPF_PROG(probe,const struct pt_regs *regs){unsigned int z=0;struct ctl *c=bpf_map_lookup_elem(&control,&z);if(!c||c->pid!=(bpf_get_current_pid_tgid()>>32))return 0;c->result=capture_state((struct source_event *)c->output,c->address,(char *)c->scratch,&c->line_value);c->calls++;return 0;}
-'''
-loader=r'''#define _GNU_SOURCE
+"""
+loader = r"""#define _GNU_SOURCE
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 #include <sys/mman.h>
@@ -73,61 +79,181 @@ for(int mode=0;mode<17;mode++){
  munmap(region,2*sysconf(_SC_PAGESIZE));
 }
  printf("STRING_GUARD_CASES %d MALFORMED_CASES 11\n",tests);close(sink);bpf_link__destroy(l);bpf_object__close(o);return 0;}
-'''
-bpf=bpf.replace('IOSEC_SYS_WRITE_PLACEHOLDER', '__x64_sys_write' if __import__('settings').ARCH == 'x86' else '__arm64_sys_write')
-config=(__import__('settings').PREPARED/'config.h').read_text()
+"""
+bpf = bpf.replace(
+    "IOSEC_SYS_WRITE_PLACEHOLDER",
+    "__x64_sys_write" if __import__("settings").ARCH == "x86" else "__arm64_sys_write",
+)
+config = (__import__("settings").PREPARED / "config.h").read_text()
 import re
-address=re.search(r'^#define CODE_TYPE_ADDRESS (\d+)$', config, re.M)[1]
-offsets={key:int(value) for key,value in re.findall(r'^#define (\w+) (\d+)$', config, re.M)}
+
+address = re.search(r"^#define CODE_TYPE_ADDRESS (\d+)$", config, re.M)[1]
+offsets = {
+    key: int(value) for key, value in re.findall(r"^#define (\w+) (\d+)$", config, re.M)
+}
 # Keep the guard-page controls meaningful for each real interpreter layout.
-loader=loader.replace('put64(code,8,11213488)','put64(code,8,synthetic_code_type())')
-loader=loader.replace('#include <stdint.h>','#include <stdint.h>\n#include <link.h>')
-type_helper = '''static int main_text(struct dl_phdr_info *info,size_t size,void *out){
+loader = loader.replace("put64(code,8,11213488)", "put64(code,8,synthetic_code_type())")
+loader = loader.replace("#include <stdint.h>", "#include <stdint.h>\n#include <link.h>")
+type_helper = """static int main_text(struct dl_phdr_info *info,size_t size,void *out){
  (void)size;if(info->dlpi_name[0])return 0;uint64_t start=UINT64_MAX;
  for(unsigned int i=0;i<info->dlpi_phnum;i++){const ElfW(Phdr) *p=&info->dlpi_phdr[i];if(p->p_type==PT_LOAD&&(p->p_flags&PF_X)&&p->p_vaddr<start)start=p->p_vaddr;}
  *(uint64_t*)out=info->dlpi_addr+start;return 1;}
 static uint64_t synthetic_code_type(void){uint64_t start=0;dl_iterate_phdr(main_text,&start);return start-PYTHON_TEXT_ADDRESS+CODE_TYPE_ADDRESS;}
-'''
-type_helper=type_helper.replace('PYTHON_TEXT_ADDRESS',str(offsets['PYTHON_TEXT_ADDRESS'])).replace('CODE_TYPE_ADDRESS',address)
-loader=loader.replace('static uint64_t pte',type_helper+'static uint64_t pte')
-for literal,macro in [(72,'TSTATE_FRAME'),(56,'FRAME_INSTR'),(68,'CODE_FIRSTLINE'),(112,'CODE_FILENAME'),(120,'CODE_NAME'),(136,'CODE_LINETABLE')]:
-    loader=loader.replace(f',{literal},',f',{offsets[macro]},')
-loader=loader.replace('+208',f'+{offsets["CODE_BYTECODE"]}')
-state_size=offsets['TSTATE_FRAME']+8
-frame_size=max(offsets[k]+8 for k in ('FRAME_CODE','FRAME_PREVIOUS','FRAME_INSTR'))
-if offsets['PYTHON_MINOR']>=11:
-    frame_size=max(frame_size,((offsets['FRAME_OWNER']+8)//8)*8)
-code_size=max(offsets[k]+8 for k in ('CODE_FILENAME','CODE_NAME','CODE_LINETABLE'))
-loader=loader.replace('state[80]',f'state[{state_size}]').replace('frame[64]',f'frame[{frame_size}]').replace('code[144]',f'code[{code_size}]')
-loader=loader.replace('cold_split(state,80,mode==4?76:72+mode-8',f'cold_split(state,{state_size},mode==4?{offsets["TSTATE_FRAME"]+4}:{offsets["TSTATE_FRAME"]}+mode-8')
-loader=loader.replace('cold_split(frame,64,32',f'cold_split(frame,{frame_size},{frame_size//2}')
-loader=loader.replace('cold_split(code,144,mode==5?12:72',f'cold_split(code,{code_size},mode==5?12:{code_size//2}')
-loader=loader.replace('-72;',f'-{offsets["TSTATE_FRAME"]};')
-if offsets['FRAME_CODE']:
-    loader=loader.replace('put64(frame,0,',f'put64(frame,{offsets["FRAME_CODE"]},')
-if offsets['PYTHON_MINOR']==10:
-    loader=re.sub(r'put64\(frame,'+str(offsets['FRAME_INSTR'])+r',\(uint64_t\)code(ptr)?\+'+str(offsets['CODE_BYTECODE'])+r'\)',f'put32(frame,{offsets["FRAME_INSTR"]},0)',loader)
-    loader=loader.replace('table[32]=128','table[32]=2')
-if offsets['ASCII_DATA']!=40:
-    data=offsets['ASCII_DATA'];extra=data-40
-    loader=loader.replace('40+length+1',f'{data}+length+1')
-    for obj in ('s','file','name'):
-        loader=loader.replace(obj+'+40',obj+'+'+str(data))
-    loader=loader.replace('s[40+',f's[{data}+')
-    loader=loader.replace('file[43]',f'file[{data+3}]')
-    loader=loader.replace('file[169]',f'file[{169+extra}]').replace('name[48]',f'name[{48+extra}]')
-    loader=loader.replace('mode==3?169:(mode==7?48:71),mode==3?104:(mode==7?44:24)',f'mode==3?{169+extra}:(mode==7?{48+extra}:{71+extra}),mode==3?{104+extra}:(mode==7?{44+extra}:24)')
-    loader=loader.replace('cold_split(name,48,44',f'cold_split(name,{48+extra},{44+extra}')
-if offsets['TSTATE_FRAME_INDIRECT']:
+"""
+type_helper = type_helper.replace(
+    "PYTHON_TEXT_ADDRESS", str(offsets["PYTHON_TEXT_ADDRESS"])
+).replace("CODE_TYPE_ADDRESS", address)
+loader = loader.replace("static uint64_t pte", type_helper + "static uint64_t pte")
+for literal, macro in [
+    (72, "TSTATE_FRAME"),
+    (56, "FRAME_INSTR"),
+    (68, "CODE_FIRSTLINE"),
+    (112, "CODE_FILENAME"),
+    (120, "CODE_NAME"),
+    (136, "CODE_LINETABLE"),
+]:
+    loader = loader.replace(f",{literal},", f",{offsets[macro]},")
+loader = loader.replace("+208", f'+{offsets["CODE_BYTECODE"]}')
+state_size = offsets["TSTATE_FRAME"] + 8
+frame_size = max(
+    offsets[k] + 8 for k in ("FRAME_CODE", "FRAME_PREVIOUS", "FRAME_INSTR")
+)
+if offsets["PYTHON_MINOR"] >= 11:
+    frame_size = max(frame_size, ((offsets["FRAME_OWNER"] + 8) // 8) * 8)
+code_size = max(
+    offsets[k] + 8 for k in ("CODE_FILENAME", "CODE_NAME", "CODE_LINETABLE")
+)
+loader = (
+    loader.replace("state[80]", f"state[{state_size}]")
+    .replace("frame[64]", f"frame[{frame_size}]")
+    .replace("code[144]", f"code[{code_size}]")
+)
+loader = loader.replace(
+    "cold_split(state,80,mode==4?76:72+mode-8",
+    f'cold_split(state,{state_size},mode==4?{offsets["TSTATE_FRAME"]+4}:{offsets["TSTATE_FRAME"]}+mode-8',
+)
+loader = loader.replace(
+    "cold_split(frame,64,32", f"cold_split(frame,{frame_size},{frame_size//2}"
+)
+loader = loader.replace(
+    "cold_split(code,144,mode==5?12:72",
+    f"cold_split(code,{code_size},mode==5?12:{code_size//2}",
+)
+loader = loader.replace("-72;", f'-{offsets["TSTATE_FRAME"]};')
+if offsets["FRAME_CODE"]:
+    loader = loader.replace("put64(frame,0,", f'put64(frame,{offsets["FRAME_CODE"]},')
+if offsets["PYTHON_MINOR"] == 10:
+    loader = re.sub(
+        r"put64\(frame,"
+        + str(offsets["FRAME_INSTR"])
+        + r",\(uint64_t\)code(ptr)?\+"
+        + str(offsets["CODE_BYTECODE"])
+        + r"\)",
+        f'put32(frame,{offsets["FRAME_INSTR"]},0)',
+        loader,
+    )
+    loader = loader.replace("table[32]=128", "table[32]=2")
+if offsets["ASCII_DATA"] != 40:
+    data = offsets["ASCII_DATA"]
+    extra = data - 40
+    loader = loader.replace("40+length+1", f"{data}+length+1")
+    for obj in ("s", "file", "name"):
+        loader = loader.replace(obj + "+40", obj + "+" + str(data))
+    loader = loader.replace("s[40+", f"s[{data}+")
+    loader = loader.replace("file[43]", f"file[{data+3}]")
+    loader = loader.replace("file[169]", f"file[{169+extra}]").replace(
+        "name[48]", f"name[{48+extra}]"
+    )
+    loader = loader.replace(
+        "mode==3?169:(mode==7?48:71),mode==3?104:(mode==7?44:24)",
+        f"mode==3?{169+extra}:(mode==7?{48+extra}:{71+extra}),mode==3?{104+extra}:(mode==7?{44+extra}:24)",
+    )
+    loader = loader.replace(
+        "cold_split(name,48,44", f"cold_split(name,{48+extra},{44+extra}"
+    )
+if offsets["TSTATE_FRAME_INDIRECT"]:
     helper = f"static unsigned char synthetic_cframe[{offsets['CFRAME_FRAME']+8}];\nstatic void put_root(void *state,uint64_t frame){{put64(synthetic_cframe,{offsets['CFRAME_FRAME']},frame);put64(state,{offsets['TSTATE_FRAME']},(uint64_t)synthetic_cframe);}}\n"
-    loader=loader.replace('static uint64_t pte',helper+'static uint64_t pte')
-    loader=loader.replace(f'put64(state,{offsets["TSTATE_FRAME"]},','put_root(state,')
+    loader = loader.replace("static uint64_t pte", helper + "static uint64_t pte")
+    loader = loader.replace(
+        f'put64(state,{offsets["TSTATE_FRAME"]},', "put_root(state,"
+    )
     # The helper itself must retain its direct pointer store.
-    loader=loader.replace('put_root(state,(uint64_t)synthetic_cframe)',f'put64(state,{offsets["TSTATE_FRAME"]},(uint64_t)synthetic_cframe)')
-(G/'strings.bpf.c').write_text(bpf);(G/'loader.c').write_text(loader);
-for n in ['reader.bpf.c','vmlinux.h','config.h','kernel_layout.h','python_layout.h','arch.h']:shutil.copy2(R/'evidence/build'/n,G/n)
-for i,cmd in enumerate([['clang','-O2','-g','-target','bpf','-mcpu=v3',*__import__('settings').BPF_INCLUDES,'-D__TARGET_ARCH_' + __import__('settings').ARCH,'-I.','-c','strings.bpf.c','-o','strings.bpf.o'],['gcc','-O2','-Wall','-Werror',*__import__('settings').BPF_INCLUDES,'loader.c',*__import__('settings').BPF_LIBS,'-o','loader'],['./loader']]):
- p=subprocess.run(cmd,cwd=G,capture_output=True,text=True,timeout=120);(E/f'step-{i}.log').write_text(p.stdout+p.stderr);assert p.returncode==0,p.stderr[-2000:];print(p.stdout,end='')
-for n in ['strings.bpf.c','strings.bpf.o','loader.c','loader','vmlinux.h']:shutil.copy2(G/n,E/n)
-report=dict(passed=True,real_kernel_capture=True,owned_synthetic_metadata=True,guard_page_cases=44, malformed_cases=11, partial_cold_cases=17, checks=['Exact200byte frame including zero tails','Short/exact-limit/over-limit filename and function','Embedded NUL and empty strings','Both string objects end immediately before PROT_NONE page','All15unused frames zero','Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65','Exactly8B file/function payloads and linetable bytes recover across cold page','Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames','Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in'],backend='module-free',artifacts={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in E.iterdir() if p.is_file() and p.name!='verification.json'},full_goal_complete=False)
-(E/'verification.json').write_text(json.dumps(report,indent=2)+'\n')
+    loader = loader.replace(
+        "put_root(state,(uint64_t)synthetic_cframe)",
+        f'put64(state,{offsets["TSTATE_FRAME"]},(uint64_t)synthetic_cframe)',
+    )
+(G / "strings.bpf.c").write_text(bpf)
+(G / "loader.c").write_text(loader)
+for n in [
+    "reader.bpf.c",
+    "vmlinux.h",
+    "config.h",
+    "kernel_layout.h",
+    "python_layout.h",
+    "arch.h",
+]:
+    shutil.copy2(R / "evidence/build" / n, G / n)
+for i, cmd in enumerate(
+    [
+        [
+            "clang",
+            "-O2",
+            "-g",
+            "-target",
+            "bpf",
+            "-mcpu=v3",
+            *__import__("settings").BPF_INCLUDES,
+            "-D__TARGET_ARCH_" + __import__("settings").ARCH,
+            "-I.",
+            "-c",
+            "strings.bpf.c",
+            "-o",
+            "strings.bpf.o",
+        ],
+        [
+            "gcc",
+            "-O2",
+            "-Wall",
+            "-Werror",
+            *__import__("settings").BPF_INCLUDES,
+            "loader.c",
+            *__import__("settings").BPF_LIBS,
+            "-o",
+            "loader",
+        ],
+        ["./loader"],
+    ]
+):
+    p = subprocess.run(cmd, cwd=G, capture_output=True, text=True, timeout=120)
+    (E / f"step-{i}.log").write_text(p.stdout + p.stderr)
+    assert p.returncode == 0, p.stderr[-2000:]
+    print(p.stdout, end="")
+for n in ["strings.bpf.c", "strings.bpf.o", "loader.c", "loader", "vmlinux.h"]:
+    shutil.copy2(G / n, E / n)
+report = dict(
+    passed=True,
+    real_kernel_capture=True,
+    owned_synthetic_metadata=True,
+    guard_page_cases=44,
+    malformed_cases=11,
+    partial_cold_cases=17,
+    checks=[
+        "Exact200byte frame including zero tails",
+        "Short/exact-limit/over-limit filename and function",
+        "Embedded NUL and empty strings",
+        "Both string objects end immediately before PROT_NONE page",
+        "All15unused frames zero",
+        "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+        "Exactly8B file/function payloads and linetable bytes recover across cold page",
+        "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+        "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in",
+    ],
+    backend="module-free",
+    artifacts={
+        p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in E.iterdir()
+        if p.is_file() and p.name != "verification.json"
+    },
+    full_goal_complete=False,
+)
+(E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")

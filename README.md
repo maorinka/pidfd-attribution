@@ -34,7 +34,7 @@ Native 64-bit x86_64 and arm64 have architecture adapters. Interpreter field off
 
 Python 3.11 and 3.13 also have layout adapters, but they are not release targets of the installer and must not be treated as tested configurations without a local validation run. Kernel 6.12 is a planned matrix target, not an existing test result. A version number alone does not guarantee compatibility: module loading, BTF, hook signatures, toolchain support, and BPF verifier acceptance are checked too.
 
-The current sources passed full functional validation on Ubuntu 22.04 / Python 3.10.12 / kernel 6.8.0-138 on arm64, and Ubuntu 24.04 / Python 3.12.3 / kernel 6.8.0-142 on emulated x86_64. A further full run passed on Ubuntu 26.04 / Python 3.14.4 / kernel 7.0.0-34 on emulated x86_64. All three runs observed all 951 monitored workload writes; their independent oracles checked 999 records and 16,035 frames. Reports: [`ubuntu22-hwe-arm64.json`](validation/ubuntu22-hwe-arm64.json) [`ubuntu24-x86_64.json`](validation/ubuntu24-x86_64.json), and [`ubuntu26-x86_64-current.json`](validation/ubuntu26-x86_64-current.json). Ubuntu 22.04 x86_64 has an adapter but has not been validated in this matrix.
+Earlier revisions passed full functional validation on Ubuntu 22.04 / Python 3.10.12 / kernel 6.8.0-138 on arm64, and Ubuntu 24.04 / Python 3.12.3 / kernel 6.8.0-142 on emulated x86_64. A further full run passed on Ubuntu 26.04 / Python 3.14.4 / kernel 7.0.0-34 on emulated x86_64. All three runs observed all 951 monitored workload writes; their independent oracles checked 999 records and 16,035 frames. Reports: [`ubuntu22-hwe-arm64.json`](validation/ubuntu22-hwe-arm64.json) [`ubuntu24-x86_64.json`](validation/ubuntu24-x86_64.json), and [`ubuntu26-x86_64-current.json`](validation/ubuntu26-x86_64-current.json). Ubuntu 22.04 x86_64 has an adapter but has not been validated in this matrix.
 
 ## Install and see it working
 
@@ -90,7 +90,9 @@ sudo ./run.sh run --fixture "$PWD/fixtures/history_fixture.py"
 cat evidence/fixture.log
 ```
 
-`WRITE_HISTORY_CONTROL` should report `"closed_while_blocked": true`. Custom fixture records use the compact binary collector and are stored in `evidence/fixture.bin`; the decoder is `events()` in `measure_collector_path_guest.py`. The text stacks above come from the regression fixture.
+`WRITE_HISTORY_CONTROL` should report `"closed_while_blocked": true`. Custom fixture records use the compact binary collector and are stored in `evidence/fixture.bin`; the decoder is `events()` in `shared/collector_records.py`. The text stacks above come from the regression fixture.
+
+The backends share architecture/layout helpers, the installer, and wire-v1 validation code through [`shared/`](shared/README.md). Keep the full checkout when building a backend. Decoder and regression checks use imports and explicit runtime/map-count parameters.
 
 ## What validation establishes
 
@@ -100,6 +102,8 @@ Numeric descriptor reuse is controlled. Actual kernel file-pointer reuse is allo
 
 The final audit requires the helper to be unloaded and the exact initial set of BPF program IDs to be restored. Run on a quiet test machine; unrelated changes to that set fail the audit. An Ubuntu 26.04 attempt failed when the firmware-update daemon added a BPF program; that [failure is retained](validation/ubuntu26-background-drift.json). The passing retry paused scheduled jobs in the disposable test VM and [restored them afterward](validation/ubuntu26-timer-control.json); the audit was not relaxed. Generated inputs go in `generated/`, results in `evidence/`, and previous attempts in `evidence-runs/`; these are ignored by Git.
 
+The review fixes passed a fresh Ubuntu 24.04 / kernel 6.8 / Python 3.12 run: [`review-fixes-ubuntu24.json`](validation/review-fixes-ubuntu24.json). It records driver and shared-verifier hashes as well as production sources. Its QEMU CPU screen did not meet the historical overhead target; functional success is separate from CPU acceptance.
+
 `validation/` holds retained runtime reports with their machine configurations and source hashes. Historical reports describe earlier commits, not automatically the current source. `reviews/` holds advisory code reviews; these are not runtime validation. Credits and original hashes are in `provenance.json`.
 
 The optional [GitHub Actions workflow](.github/workflows/compatibility.yml) runs the three distribution targets on dedicated self-hosted test VMs. It is manually dispatched and requires runners with the listed labels and passwordless sudo. No hosted-runner compatibility or successful CI matrix run is claimed. Use disposable VMs; this workflow loads a native kernel module.
@@ -107,6 +111,8 @@ The optional [GitHub Actions workflow](.github/workflows/compatibility.yml) runs
 ## Collector and performance
 
 The collector keeps the mapped ring buffer, batched `writev` output of up to 128 buffers, 1 MiB output preallocation, and one final CPU snapshot after draining. Its wire format retains the three actor histories.
+
+The BPF hooks fire systemwide, including a tracking-map lookup on each `kmem_cache_free` event even for unmonitored processes. This kernel cost is not included in the application/collector CPU figure.
 
 Validation includes an alternating raw/monitored CPU screen. It counts added application and collector CPU over the monitored application's wall time; setup/shutdown and unaccounted kernel/deferred work are outside that figure. QEMU results establish functionality under emulation, **not physical Intel performance**. No physical Intel benchmark is currently claimed.
 

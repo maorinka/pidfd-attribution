@@ -95,7 +95,11 @@ sudo systemctl reload iosec-endpoint  # Rotate output; retain the tracking sessi
 sudo systemctl stop iosec-endpoint
 ```
 
+Retained files whose owner, mode, link count, or type has changed are preserved and logged as `RETENTION_SKIP`. The `retention_skipped` health counter counts these encounters, including repeated encounters with the same file. These unmanaged files are outside the managed segment quota; an administrator must manage their space. Failures writing the active output still fail the sensor.
+
 `health.json` is replaced atomically. It reports state, session/boot identity, attachments, event/byte counts, retention activity, ring drops, state errors, cleanup fallback, and allocation fallback. `status` exits unsuccessfully for stale/stopped/failed health or reported history gaps. Healthy means the collector is recently reporting with no detected collection loss; it does not assert complete EDR coverage or complete Python metadata. RSS describes the userspace collector, not total BPF/kernel memory.
+
+Each drain pass processes at most 1,024 records. If committed backlog remains, the collector checks health, rotation, and signals, then immediately drains again; it sleeps only when caught up or the next producer record is busy.
 
 Ring exhaustion and tracking-capacity failures latch `history_gaps` for the current session; they are not silently treated as complete history. Restarting changes the session and resets counters and history. A stale health file after a crash becomes unhealthy within the freshness window. Unpinned links/maps disappear when their owning collector exits. The service has watchdog supervision, restart backoff/rate limits, and no module-loading capability.
 
@@ -103,7 +107,7 @@ Kernel/BTF changes require a rebuild and reinstall. Source mode also checks the 
 
 ## Validation
 
-Retained reports are in `validation/ubuntu24-x86_64.json` and `validation/storage.json`. Tests exercised integrity lockdown, `modules_disabled=1`, and collection without `CAP_SYS_MODULE`:
+Earlier results are retained in `validation/ubuntu24-x86_64.json` and `validation/storage.json`. The review fixes have fresh results in [`review-fixes-ubuntu24.json`](validation/review-fixes-ubuntu24.json), including the hardened unit, backlog/busy-record behavior, and preservation of admin-modified files. Tests exercised integrity lockdown, `modules_disabled=1`, and collection without `CAP_SYS_MODULE`:
 
 - 29 identity-mode hooks and 35 source-mode hooks.
 - An independent native process started before the sensor, plus a surviving sibling after main-thread exit: five accepted writes each.
@@ -124,6 +128,12 @@ python3 tests/check_storage.py
 ```
 
 `tests/integration_guest.py` and `tests/systemd_guest.py` are for owned disposable Linux VMs. The systemd test installs the service, refuses an existing installation/configuration, and leaves its test service stopped and disabled.
+
+## Whole-system CPU screen
+
+All hooks run systemwide; even excluded processes pay the early filtering cost, including a map lookup on each `kmem_cache_free`. Collector RSS and process CPU do not measure that cost. After building, run `sudo python3 benchmarks/system_cpu_guest.py` in a quiet disposable VM. It rotates three trials each of no sensor, endpoint-wide identity collection, and an attached sensor that excludes the workload. It measures aggregate `/proc/stat` user/system/IRQ/softirq CPU and native filesystem-churn throughput, with equal settle windows. Startup and loading are excluded. In this QEMU run, median churn throughput fell 34.2% with endpoint-wide collection and 19.1% even when the workload was excluded. Aggregate CPU per iteration increased by 98.6 µs and 42.9 µs respectively. These results expose material systemwide cost in this workload; they do not estimate physical-hardware fleet overhead.
+
+[`validation/system-cpu-qemu.json`](validation/system-cpu-qemu.json) retains the QEMU screen. It is screening evidence only: short runs, background noise, and guest CPU accounting prevent a physical Intel or sustained fleet overhead claim.
 
 ## Remaining coverage limits
 

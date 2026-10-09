@@ -1,0 +1,308 @@
+{
+  "passed": true,
+  "backend": "module-free",
+  "scope": "Bounded fixture attribution and independent source oracle",
+  "third_party_module_loaded": false,
+  "module_set_unchanged": true,
+  "lockdown": "none [integrity] confidentiality",
+  "bpf_program_ids_restored": true,
+  "pins": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python_binary": "/usr/bin/python3.12",
+    "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+    "python_version": "(3, 12, 3)",
+    "offsets": {
+      "TSTATE_FRAME": 56,
+      "CFRAME_FRAME": 0,
+      "TSTATE_FRAME_INDIRECT": 1,
+      "FRAME_CODE": 0,
+      "FRAME_INSTR": 56,
+      "FRAME_PREVIOUS": 8,
+      "FRAME_OWNER": 70,
+      "CODE_FILENAME": 112,
+      "CODE_NAME": 120,
+      "CODE_FIRSTLINE": 68,
+      "CODE_LINETABLE": 136,
+      "CODE_BYTECODE": 192,
+      "BYTES_SIZE": 16,
+      "BYTES_DATA": 32,
+      "UNICODE_STATE": 32,
+      "UNICODE_LENGTH": 16,
+      "ASCII_DATA": 40,
+      "OBJECT_TYPE": 8,
+      "PYTHON_MINOR": 12,
+      "CODE_TYPE_ADDRESS": 10670688,
+      "PYTHON_TEXT_ADDRESS": 4325376,
+      "IOSEC_COMPAT_MASK": 2
+    },
+    "kernel_hooks": {
+      "do_filp_open": {
+        "id": 79611,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 739,
+        "vlen": 3,
+        "params": [
+          {
+            "name": "dfd",
+            "type_id": 12
+          },
+          {
+            "name": "pathname",
+            "type_id": 4751
+          },
+          {
+            "name": "op",
+            "type_id": 20581
+          }
+        ]
+      },
+      "dup_fd": {
+        "id": 30648,
+        "kind": "FUNC_PROTO",
+        "name": "(anon)",
+        "ret_type_id": 601,
+        "vlen": 2,
+        "params": [
+          {
+            "name": "oldf",
+            "type_id": 601
+          },
+          {
+            "name": "punch_hole",
+            "type_id": 20606
+          }
+        ]
+      }
+    },
+    "fixture_inputs": {
+      "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+      "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+      "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+      "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+      "workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+      "deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0"
+    },
+    "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+  },
+  "modules_disabled": "1",
+  "effective_capabilities": "000001fffffeffff",
+  "CAP_SYS_MODULE_present": false,
+  "production_sha256": {
+    "reader.bpf.c": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509",
+    "loader.c": "cfa6b874c09037447f207568544ad205edd7389a1c19c92c16130be932c18215",
+    "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+    "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77"
+  },
+  "driver_sha256": {
+    "fixture_guest.py": "0d7e6274dbe56d539aa6db8afed33496f05762bc3df6d4eb9f9d950e224e741b",
+    "measure_collector_path_guest.py": "b54a3c5a30fbabbbb33882f9a8bbaf39da75ee6e505e7661252cd158964d12cd",
+    "compat_guest.py": "ad07ebe5478d311e10b72b6d8941a4c5312afb765d00016067b8c01903897336",
+    "run_collector_path_guest.py": "83908dd1047dfdd16ee373aa50b7a3cc48c9faa76b870277903dd53ecab89aed",
+    "history_guest.py": "10e009dae0ad42c9461214bead4b7dc928d115be6c2e5552c9641fb4df8e949a",
+    "smoke_guest.py": "64dfad774419309f5012d762bfc663717f22fca13de18ade780db4f58bcb3c2f",
+    "encoder_guest.py": "6f352fe4a9968a28312edd62b5c4613a6be9f3e782cd83540df6b06536815849",
+    "oracle_collector_path_guest.py": "d7e1d463bd419c03818ef9ddd460f6239138fe63f4e3f629381fdfaa2fb4c600",
+    "held_collector_path_guest.py": "65bb58add4e595feb4f926f73b08600fcd27c641257b423c6fd2766cc7a48090",
+    "verify_deep_collector_path_guest.py": "7fba4314eae3bbb520686f861c804f9503a504ff549480a8b95a9aecc838dc76",
+    "validate_guest.py": "2ec23400bce0023edcba11cd17954b6a47134bcc894e88f51d8a5936b27272b2",
+    "strings_collector_path_guest.py": "3cac513614c4e792555f36447b4e2a35d65cc52429c4f1daabda9311a2963123",
+    "settings.py": "9df3b939765e34ea15efbfb6fb225ae88603ff17c5975e9998ff2b5ad00ee844",
+    "doctor_guest.py": "9d984df5f5d70bdb722aed686836a3f5a1cd1666215bb36c03e45457215fdef2",
+    "prepare_guest.py": "566359805493b413277e86b6fe745f66e34c6fcc2dbf159cc16610a9ee06c522"
+  },
+  "support_sha256": {
+    "support/run_guest_base.py": "03168c8e8e29c69f87e8213378f38d2dd14f00846e434715004a98b82fba1868",
+    "support/python_layout.py": "cff27a256230502e1b2979a3a1a447bfcb23cec118291fd670792035b67a69e2",
+    "support/collector_benchmark.py": "72fd3326a1e628d620010b2a094575be59b966f3efd662ed7b940322488e861d",
+    "support/__init__.py": "2cdc9f402263cb0cbcfba17d20bf538cc5c17e5043f3d8fb0cc832016da22559",
+    "support/bytecode_oracle_guest.py": "9567ff194c9bcbd65d191a8b048687d6f6351364b386930193e26ece35836b69",
+    "support/collector_records.py": "ff4e2510710a15d13ffbcb0da62da9d1b9459e8d14f27c91397b4d625d092790"
+  },
+  "regression_checker_sha256": "3fa56622bb41921247f27e297a462aa2afcd5db8f185d63a55cc44a2c682988e",
+  "completed_at": "2026-10-09T15:48:28.081866+00:00",
+  "cleanup": {
+    "bpf_program_ids_restored": true,
+    "module_set_unchanged": true,
+    "baseline_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ],
+    "remaining_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ]
+  },
+  "oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "records": 649,
+    "stacks": 1291,
+    "frames": 5655,
+    "source_sha256": {
+      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/compat_fixture.py": "961c2526241e56a6772bc7dcf8275c1cc2f8adc2159b17c470763abc84a83a72",
+      "/var/tmp/pidfd-module-free/deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
+      "/var/tmp/pidfd-module-free-held/held_fixture.py": "01c4fd3f24edeffdaa7a95a3f61fbec6325548df9c174847fbc42bbd0ca41372",
+      "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b",
+      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
+      "/var/tmp/pidfd-module-free/regression/fixture.py": "dc40a3e815540f9ec2449228ac7c9e6faab0106f18b0f168e9e1a6dd2e4c581d",
+      "/var/tmp/pidfd-module-free/regression/exec_control.py": "8cefcda9e581310d5756ea597b1581a0ad88c51814aff25e1b824eebc832a34c",
+      "/var/tmp/pidfd-module-free/workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811"
+    },
+    "input_sha256": {
+      "compat-control-records.bin": "173ac1520becf3caf2b71d77176590436ee4361fbc1cdd9becc1bed4f31295af",
+      "deep-10.log.bin": "6596f269ab24af214d22d3cbead35f40f9e0c749d7e69f2a62994cc0bae1227c",
+      "deep-11.log.bin": "2db298ed562564a64f68ccc08f5c9c91323b844b3c1e54beb3a266e6ea00ffc9",
+      "deep-4.log.bin": "93b02de4ccff1e357de9e6be40447e89d94666a482cdbef9ab5c26a55dd3fa33",
+      "held-baseline-serial.bin": "2831baba7397f53ada59a18ebcf0b798a58013d3be0452acb8683c17e673e194",
+      "held-baseline-threads.bin": "7bcd1c12f0053e56943e897510e930d1f42e10fd62d3aa01aa5b68e4eda779a3",
+      "history-control-candidate-records.bin": "a0aadbeab9e610bb2810614d382dcae9434b7cf165400037becb3c4f2b73bb76",
+      "regression-evidence-pidfd-source-controls.log.bin": "6b49a91a6e150568db7cdacb0b71838887fcf62e5c45827804658c2052baf91f",
+      "regression-evidence-pidfd-source-direct.log.bin": "6ce9efa771f1b1314834ee4227a1599b0dc6a11ad7c0ad0f5a2a5ec26dc2ccbd",
+      "regression-evidence-pidfd-source-lifetime.log.bin": "90c017cb3709ff3e93d5e64f069ec59a399b62cb0b6c6aba5223d0264339bc03",
+      "regression-evidence-pidfd-source-native.log.bin": "6613a0814d9c20d697fc011d7a8e69e50ff14266f72235fda6b868547cba00d8",
+      "regression-evidence-pidfd-source-pressure.log.bin": "62db4dbd115ace3f2cfeba61e9020fe0dc081863483d2894cde8452f3d8bff9e",
+      "workload-controls-serial.bin": "3558e90d8b55df90d870bb861a5a77460413c391ce600892d7af1744c1b4d7df",
+      "workload-controls-threads.bin": "67c9d4689f4a02614f08ea59d36de1c267367c2ccbf9a2eeae0f829fa3f53bc5"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "controls": {
+    "strings": {
+      "passed": true,
+      "real_kernel_capture": true,
+      "owned_synthetic_metadata": true,
+      "guard_page_cases": 44,
+      "malformed_cases": 11,
+      "partial_cold_cases": 17,
+      "checks": [
+        "Exact200byte frame including zero tails",
+        "Short/exact-limit/over-limit filename and function",
+        "Embedded NUL and empty strings",
+        "Both string objects end immediately before PROT_NONE page",
+        "All15unused frames zero",
+        "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+        "Exactly8B file/function payloads and linetable bytes recover across cold page",
+        "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+        "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+      ],
+      "backend": "module-free",
+      "artifacts": {
+        "loader.c": "d7e5b892713e9bd69abb93a7c013123e853cc8f0d9f3f39963b153210f3b9151",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "strings.bpf.c": "830d2d62ed60cb768074d2416d8f2344418bc44aef1e984bfff7d5d871903a13",
+        "loader": "ed7bb4e6c6ebd064b0b74642f578316052931c4670226021d44a7b561570887a",
+        "step-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "strings.bpf.o": "9c92f3bdcc64d0bb3489d283a3541ddb07e7a60ad858a9225fc2c786e9cd3406",
+        "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174"
+      },
+      "full_goal_complete": false
+    },
+    "compat": {
+      "passed": true,
+      "application": {
+        "compat_calls": 3,
+        "native_getfd": 1,
+        "writes": 1
+      },
+      "native_getfd_records": 1,
+      "native_write_records": 1,
+      "compat_calls_create_no_native_records": true
+    },
+    "history": {
+      "passed": true,
+      "application": {
+        "tid": 3490,
+        "closed_while_blocked": true,
+        "written": 4096,
+        "pid": 3488,
+        "target": 3489,
+        "fd": 7,
+        "inode": 528035
+      },
+      "actors": {
+        "opener": {
+          "pid_tid": 14985140899233,
+          "birth": 2160844320890,
+          "count": 1,
+          "flags": 0
+        },
+        "acquirer": {
+          "pid_tid": 14980845931936,
+          "birth": 2160445262099,
+          "count": 1,
+          "flags": 0
+        },
+        "live": {
+          "pid_tid": 14980845931938,
+          "birth": 2160859270421,
+          "count": 4,
+          "flags": 0
+        }
+      },
+      "raw_sha256": "aa80117cfe4a919d2978b059f8df4f560383245e9f16d233c01db2a5cc929b1f",
+      "fixture_sha256": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417"
+    },
+    "encoder": {
+      "passed": true,
+      "record_lengths": 49,
+      "byte_comparison_cases": 147,
+      "invalid_count_cases": 3,
+      "wire_version": 1,
+      "maximum_frames": 48,
+      "source_sha256": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509"
+    },
+    "workload": {
+      "passed": true,
+      "test": "Normal os.write releases GIL; serial and threaded attribution",
+      "profiles": [
+        {
+          "profile": "serial",
+          "complete_writes": 3,
+          "expected_writes": 3
+        },
+        {
+          "profile": "threads",
+          "complete_writes": 13,
+          "expected_writes": 13
+        }
+      ]
+    }
+  },
+  "environment": {
+    "ubuntu": "24.04",
+    "virtualization": "Lima QEMU on Apple Silicon",
+    "physical_intel": false,
+    "firmware_secure_boot_tested": false
+  }
+}

@@ -220,6 +220,10 @@ static int direct_commit(struct direct_ring *r, struct iovec *iov, int count,
   steady_events += writes;
   return 0;
 }
+/* -1: failure; 0: drained or waiting on an unfinished producer; 1: budget
+ * exhausted with backlog. Callers must service health/signals, then retry a
+ * positive result without sleeping. A busy first record returns zero so a
+ * stalled producer cannot make the collector spin. */
 static int direct_consume(struct direct_ring *r) {
   struct iovec iov[DIRECT_IOVS];
   int count = 0;
@@ -269,7 +273,7 @@ static int direct_consume(struct direct_ring *r) {
       count = 0;
       writes = 0;
       if (++batches == 8)
-        return 0;
+        return __atomic_load_n(r->producer, __ATOMIC_ACQUIRE) != cons;
     }
   }
   if (end != __atomic_load_n(r->consumer, __ATOMIC_ACQUIRE) &&

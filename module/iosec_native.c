@@ -1,73 +1,10 @@
-/* Codex compact syscall-entry history copy; fresh native source capture
- * unchanged. */
-/* THIS revision: actual Muse next-reduction fused table-length prefix over the
- * typed-entry base (reader/loader/collector/config/encoder byte-identical).
- * The per-frame 8-byte table-length read at table+16 is a byte-subset of a
- * 96-byte header+prefix read at table+0 (32-byte bytes header + first 64 data
- * bytes). Hot path issues ONE prefix read supplying length; amount<=64 uses
- * data from the same bytes (saves one user read), amount>64 copies the prefix
- * and issues one remainder read (same read count for large tables). On
- * prefix-read fault, falls back to the standalone length read plus the legacy
- * full data read, preserving header/bounds/decode flag order and wrap faults.
- * Stable-heap output/flags identical; racy prefetches data before the two
- * unicode-header reads with use after bounds (documented non-atomic).
- * Historical authors below. */
-/* THIS revision: actual Muse measured-reduction fused code probe over the
- * preallocated-output base (module/reader byte-identical to the direct-emit
- * producer). The per-frame standalone 8-byte type read is a byte-subset of
- * the 144-byte code_layout read at the same base. Hot path (count<16) now
- * issues ONE full read and checks type from the same bytes, with a
- * standalone type fallback on full-read fault (preserves the non-code
- * sentinel) and a confirmatory type read on full-readable non-code
- * (preserves racy-heap strictness); count>=16 keeps legacy type-first so
- * truncation reports flag 32 before any faultable full read. Saves one user
- * read per populated code frame. All kfuncs, bounds, flags, wire, collector,
- * BPF, cadence and fallback semantics unchanged. Historical authors below. */
-/* THIS revision: actual Muse native emit-pack serializer over the Codex
- * native-scalar base (exact 8-byte get_user read, nofault-first/full-fault
- * retry otherwise, mapcopy/mapzero helpers, current-task-stack guards all
- * unchanged). Adds ONE non-sleepable kfunc, iosec_emit_pack, which packs the
- * exact compact wire record (176-byte header + only populated 200-byte
- * frames) directly into a verifier-bounded destination in a single C call.
- * BPF emit() passes the live event plus a reserved ring slice obtained via
- * bpf_dynptr_data (preferred) or, under IOSEC_EMIT_VIA_SCRATCH, the existing
- * wire_scratch record followed by one bpf_ringbuf_output bulk copy. The
- * serializer enforces exact source 9760 / destination size-match <= 9776,
- * per-actor counts <= 16, total <= 48, offset/overflow/nonoverlap and
- * current-task-stack rejection before any byte is read or written. No
- * sleepable behavior, no user copy, no cache, no history change: all
- * begin-time snapshots and fresh live capture are preserved.
- * Historical authors below (preserved). */
-/* THIS revision: Codex exact scalar user read; Muse native-reader base and
- * Codex resident-first/direct-ring preserved below. */
-/* Codex native-resident revision. Native reader body and map APIs from
- * actual Muse native-reader base; native_read now uses nofault-first,
- * whole-read fault retry. Direct-ring collector from Codex ring_iov.
- * All source/line/depth/wire/bounds and syscall cadence preserved. */
 // SPDX-License-Identifier: GPL-2.0
-/* Muse native-reader revision over actual-Muse mapcopy base.
- * THIS revision: implemented by actual Muse CLI. Fresh native user-memory
- * read batching and string copying: compact ASCII header (length+state)
- * plus exact bounded bulk data reads replace per-character strncpy_from_user.
- * Duplicate 8-byte code-type read is KEPT (not removed): removing it would
- * fault full 144-byte code reads for non-code frames with inaccessible tails
- * where the current sentinel path silently skips; that changes type-sentinel
- * and fault semantics, so the concrete reduction selected is the string path
- * instead. All kfuncs, module name, registration, map APIs, bounds, flags,
- * wire, and BPF fallback semantics unchanged. Historical authors below. */
-/* Muse mapcopy revision: add non-sleepable verifier-bounded kernel-memory
- * copy kfunc iosec_map_copy for known live BPF map-to-map copies over
- * initialized writable map buffers, plus iosec_map_zero for bounded zeroing.
- * THIS revision: implemented by actual Muse CLI (mapcopy + mapzero repair,
- * plus runtime current-task-stack exclusion guard).
- * Historical authors below (preserved). */
-/* Codex native-copy revision: use one fault-capable copy_from_user operation
- * in this KF_SLEEPABLE helper instead of nofault-then-fault retry.
- * Historical authors below. */
-/* Codex: sleepable native bounded CPython reader; Muse09/Muse129 architecture,
- * Codex130 original; actual Muse fused design; Codex callback/binding base.
- * Native capture uses verifier-bounded output/scratch and current-user copies;
- * read8 supports owned capability controls. */
+/* Bounded memory and CPython capture helpers for the module-backed sensor.
+ * Validate sizes, offset arithmetic, overlap, and current-task stack exclusion
+ * before copying bytes. Fault-capable user reads are registered as sleepable;
+ * nonsleepable helpers only operate on validated live buffers. Capture
+ * preserves explicit unknown/error/truncation flags and the compact wire-v1
+ * bounds. Provenance: ../provenance.json and git history. */
 #include <linux/bpf.h>
 #include <linux/btf.h>
 #include <linux/btf_ids.h>

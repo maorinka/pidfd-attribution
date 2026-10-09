@@ -29,5 +29,6 @@
     "Python metadata is mutable and unattested",
     "No physical Intel performance claim",
     "Confidentiality lockdown unsupported"
-  ]
+  ],
+  "review_fixes": "Canonical architecture/layout/install helpers; readable harness and shared parameterized verifier where applicable. Fresh runtime evidence: validation/review-fixes-ubuntu24.json."
 }

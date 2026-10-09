@@ -1,44 +1,15 @@
-/* THIS deferred-snapshot revision: actual Muse CLI over the Codex compact-write
- * loader below (preallocated direct mapped-ring vector output). Change:
- * intermediate per-batch steady_end getrusage snapshots are deferred to ONE
- * final snapshot after the last 20ms drain. Intermediate values were never read
- * (steady_end is consumed only by the final STEADY_COLLECTOR print); the final
- * snapshot still follows ALL batch output/flush/consumer-release, so every
- * remaining work item stays inside the measured window. steady_start,
- * 100ms+5x20ms cadence, writev output, fflush-before-end ordering, release
- * ordering, wire bytes, exit codes and getrusage-error tolerance (errors
- * ignored, as before) are unchanged. Native/BPF/ring/encoder byte-identical. */
+/* Fixture collector for compact v1 opener/acquirer/writer records.
+ * Attach all required hooks, observe one owned process tree, and audit cleanup.
+ * Binary output uses mapped-ring batched writev; release follows full output.
+ * CPU snapshots cover the observed steady collection window only.
+ * Historical contributions are recorded in provenance.json and git history. */
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
-/* THIS collector revision implemented by Codex: direct mapped-ring vector
- * output. Historical authors below. */
-/* Actual-Muse collector-batched loader over Codex callback-walk base.
- * THIS revision: actual Muse CLI. Base callback-walk loader Codex; fused base
- * actual Muse; architecture Muse09/Muse129, original reader Codex130.
- * Historical authors preserved. Wire/probe ABI unchanged (wire header 176).
- * Change: explicit 64KiB binary FILE buffer; fflush after EVERY
- * ring_buffer__consume batch (steady 100ms loop and 5x20ms drain) BEFORE the
- * matching steady_end getrusage, so flush CPU stays inside the steady window
- * and no per-record kernel write is needed. Same records, same bytes, same
- * cadence; every fwrite/fflush error fails; final fclose validated. */
-/* Codex callback-walk loader, unchanged wire/probe ABI over actualMuse. */
-/* Fused capture loader: 19 transient maps, 36 programs. */
-/* Loader for the actual-Muse fused sleepable-capture candidate.
- * Base: Codex paired EvalFrame binding loader (Muse09 architecture, Muse129
- * pidfd design, Codex130 original, Codex compact, actual-Muse native
- * fentry/fexit, Codex cleanup indexes, Codex paired binding over Codex actual
- * syscall capability). THIS loader revision: actual Muse (repurposes warm_tmp
- * as the fused line-byte buffer; adds fused_opener and fused_lineval checks;
- * 19 maps total; 36 programs with 4 sleepable fused entries and 2 openat
- * fused-cleanup tracepoints).
- * Fixture behavior, 100ms collector cadence, wire codec and exit codes are
- * unchanged. Adds per-program attach diagnostics plus an `attach-check` mode
- * that reports ATTACH_OK/ATTACH_FAIL for every program (fentry/fexit
- * including sleepable fentry.s, tracepoints, uprobes) without fixtures. */
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,7 +102,9 @@ static int sample(void *ctx, void *data, size_t size) {
       rc = -1;
   } else {
     struct event e = {0};
-    memcpy(&e.file, &h->file, 88);
+    memcpy(&e.file, &h->file,
+           offsetof(struct wire_header, actors) -
+               offsetof(struct wire_header, file));
     struct source_event *actors[] = {&e.opener, &e.acquirer, &e.live};
     const unsigned char *payload = (const unsigned char *)data + sizeof(*h);
     for (int i = 0; i < 3; i++) {
@@ -181,13 +154,18 @@ int main(int argc, char **argv) {
   int count = 0, failures = 0;
   struct bpf_program *p;
   bpf_object__for_each_program(p, obj) {
+    if ((size_t)count >= sizeof(links) / sizeof(links[0])) {
+      fprintf(stderr, "Too many BPF programs for the attachment array\n");
+      for (int i = 0; i < count; i++)
+        bpf_link__destroy(links[i]);
+      bpf_object__close(obj);
+      return 2;
+    }
     if (!strcmp(bpf_program__name(p), "seed_thread") ||
         !strcmp(bpf_program__name(p), "eval_return")) {
       struct bpf_uprobe_opts o = {
           .sz = sizeof(o),
-          .func_name = !strcmp(bpf_program__name(p), "eval_return")
-                           ? "_PyEval_EvalFrameDefault"
-                           : "_PyEval_EvalFrameDefault",
+          .func_name = "_PyEval_EvalFrameDefault",
           .retprobe = !strcmp(bpf_program__name(p), "eval_return")};
       links[count] =
           bpf_program__attach_uprobe_opts(p, -1, IOSEC_PYTHON_BINARY, 0, &o);

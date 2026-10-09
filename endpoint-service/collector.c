@@ -48,6 +48,7 @@ static struct configuration cfg = {.state_dir = "/var/lib/iosec-endpoint",
 static int directory_fd = -1, lock_fd = -1;
 static char session[33], active_segment[96], boot_id[40];
 static unsigned long long segment_number, session_bytes, deleted_segments;
+static unsigned long long retention_skipped;
 static unsigned long long ring_drops, state_errors, start_ns, start_real_ns;
 static unsigned int attachment_count, cleanup_bits;
 static volatile sig_atomic_t stopping, rotate_requested;
@@ -124,6 +125,12 @@ static bool segment_name(const char *name) {
 static int compare_names(const void *a, const void *b) {
   return strcmp(*(const char *const *)a, *(const char *const *)b);
 }
+static void skip_retained(const char *name, int error) {
+  retention_skipped++;
+  fprintf(stderr,
+          "RETENTION_SKIP file=%s errno=%d; preserving unmanaged file\n", name,
+          error);
+}
 /* The directory is private, and only files with the sensor's exact naming
  * grammar may be pruned. Prune before creating a new segment to bound count. */
 static int prune_segments(void) {
@@ -137,10 +144,28 @@ static int prune_segments(void) {
   char **names = NULL;
   size_t count = 0;
   struct dirent *entry;
-  errno = 0;
-  while ((entry = readdir(directory))) {
+  for (;;) {
+    errno = 0;
+    entry = readdir(directory);
+    if (!entry) {
+      if (errno)
+        goto fail;
+      break;
+    }
     if (!segment_name(entry->d_name))
       continue;
+    /* O_PATH neither follows a symlink nor blocks on a FIFO. Administrative
+     * changes make this file unmanaged; never chmod, truncate, or delete it. */
+    int fd =
+        openat(directory_fd, entry->d_name, O_PATH | O_CLOEXEC | O_NOFOLLOW);
+    if (fd < 0 || secure_file(fd)) {
+      int error = errno;
+      if (fd >= 0)
+        close(fd);
+      skip_retained(entry->d_name, error);
+      continue;
+    }
+    close(fd);
     if (count >= 65536) {
       errno = EOVERFLOW;
       goto fail;
@@ -153,21 +178,20 @@ static int prune_segments(void) {
     if (!names[count])
       goto fail;
     count++;
-    errno = 0;
   }
-  if (errno)
-    goto fail;
   closedir(directory);
   directory = NULL;
   qsort(names, count, sizeof(*names), compare_names);
   size_t remove_count =
       count >= cfg.max_segments ? count - cfg.max_segments + 1 : 0;
   for (size_t i = 0; i < remove_count; i++) {
-    int fd = openat(directory_fd, names[i], O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+    int fd = openat(directory_fd, names[i], O_PATH | O_CLOEXEC | O_NOFOLLOW);
     if (fd < 0 || secure_file(fd)) {
+      int error = errno;
       if (fd >= 0)
         close(fd);
-      goto fail;
+      skip_retained(names[i], error);
+      continue;
     }
     close(fd);
     if (unlinkat(directory_fd, names[i], 0))
@@ -275,6 +299,7 @@ static int write_health(const char *state, int error) {
           "\"attachments\":%u,\"capture_python\":%s,\"records\":%llu,"
           "\"session_bytes\":%llu,\"active_segment\":\"%s\","
           "\"segments_created\":%llu,\"segments_deleted\":%llu,"
+          "\"retention_skipped\":%llu,"
           "\"ring_drops\":%llu,\"state_errors\":%llu,\"cleanup_fallback\":%u,"
           "\"history_gaps\":%s,\"errno\":%d,\"reservation_state\":%d,"
           "\"reservation_errno\":%d,\"max_rss_kib\":%ld,"
@@ -283,8 +308,9 @@ static int write_health(const char *state, int error) {
           now_ns(CLOCK_REALTIME), attachment_count,
           cfg.policy.capture_python ? "true" : "false", output_records,
           session_bytes + (binary ? direct_written : 0), active_segment,
-          segment_number, deleted_segments, ring_drops, state_errors,
-          cleanup_bits, ring_drops || state_errors ? "true" : "false", error,
+          segment_number, deleted_segments, retention_skipped, ring_drops,
+          state_errors, cleanup_bits,
+          ring_drops || state_errors ? "true" : "false", error,
           direct_reserve_state, direct_reserve_errno, usage.ru_maxrss);
   int rc = fflush(out);
   if (!rc)
@@ -506,7 +532,8 @@ int main(int argc, char **argv) {
   unsigned long long last_health = now_ns(CLOCK_MONOTONIC),
                      last_sync = last_health;
   while (!stopping) {
-    if (direct_consume(&ring))
+    int drain = direct_consume(&ring);
+    if (drain < 0)
       goto cleanup;
     unsigned long long now = now_ns(CLOCK_MONOTONIC);
     if (rotate_requested) {
@@ -525,6 +552,8 @@ int main(int argc, char **argv) {
       notify_systemd("WATCHDOG=1");
       last_health = now;
     }
+    if (drain > 0)
+      continue;
     struct timespec delay = {.tv_sec = cfg.poll_ms / 1000,
                              .tv_nsec = (cfg.poll_ms % 1000) * 1000000L};
     nanosleep(&delay, NULL);
@@ -547,7 +576,7 @@ cleanup:
     unsigned long long deadline = now_ns(CLOCK_MONOTONIC) + 5000000000ULL;
     while (__atomic_load_n(ring.consumer, __ATOMIC_ACQUIRE) !=
            __atomic_load_n(ring.producer, __ATOMIC_ACQUIRE)) {
-      if (direct_consume(&ring) || now_ns(CLOCK_MONOTONIC) >= deadline) {
+      if (direct_consume(&ring) < 0 || now_ns(CLOCK_MONOTONIC) >= deadline) {
         result = 1;
         break;
       }

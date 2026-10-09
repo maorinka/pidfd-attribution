@@ -6,6 +6,7 @@
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
 #include <signal.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +99,9 @@ static int sample(void *ctx, void *data, size_t size) {
       rc = -1;
   } else {
     struct event e = {0};
-    memcpy(&e.file, &h->file, 88);
+    memcpy(&e.file, &h->file,
+           offsetof(struct wire_header, actors) -
+               offsetof(struct wire_header, file));
     struct source_event *actors[] = {&e.opener, &e.acquirer, &e.live};
     const unsigned char *payload = (const unsigned char *)data + sizeof(*h);
     for (int i = 0; i < 3; i++) {
@@ -148,13 +151,18 @@ int main(int argc, char **argv) {
   int count = 0, failures = 0;
   struct bpf_program *p;
   bpf_object__for_each_program(p, obj) {
+    if ((size_t)count >= sizeof(links) / sizeof(links[0])) {
+      fprintf(stderr, "Too many BPF programs for the attachment array\n");
+      for (int i = 0; i < count; i++)
+        bpf_link__destroy(links[i]);
+      bpf_object__close(obj);
+      return 2;
+    }
     if (!strcmp(bpf_program__name(p), "seed_thread") ||
         !strcmp(bpf_program__name(p), "eval_return")) {
       struct bpf_uprobe_opts o = {
           .sz = sizeof(o),
-          .func_name = !strcmp(bpf_program__name(p), "eval_return")
-                           ? "_PyEval_EvalFrameDefault"
-                           : "_PyEval_EvalFrameDefault",
+          .func_name = "_PyEval_EvalFrameDefault",
           .retprobe = !strcmp(bpf_program__name(p), "eval_return")};
       links[count] =
           bpf_program__attach_uprobe_opts(p, -1, IOSEC_PYTHON_BINARY, 0, &o);
