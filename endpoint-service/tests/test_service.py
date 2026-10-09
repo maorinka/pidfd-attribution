@@ -96,6 +96,11 @@ class ConfigurationTests(unittest.TestCase):
         self.assertIn("--capture-python", command)
         self.assertEqual(command[command.index("--path-prefix") + 1], "/var/tmp/test-")
 
+    def test_state_capacity_leaves_unit_memory_headroom(self):
+        self.assertEqual(self.config({"state_entries": 2048})["state_entries"], 2048)
+        with self.assertRaises(ValueError):
+            self.config({"state_entries": 8192})
+
 
 class AdmissionTests(unittest.TestCase):
     def test_exact_empty_cgroup_and_unsupported_or_unknown_ids(self):

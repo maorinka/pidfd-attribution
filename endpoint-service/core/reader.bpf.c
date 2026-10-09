@@ -51,24 +51,7 @@ struct {
   __uint(max_entries, IOSEC_RING_BYTES);
 } events SEC(".maps");
 
-struct {
-  __uint(type, BPF_MAP_TYPE_ARRAY);
-  __uint(max_entries, IOSEC_DIAG_COUNT);
-  __type(key, unsigned int);
-  __type(value, unsigned long long);
-} diagnostics SEC(".maps");
-static __always_inline void increment_diagnostic(unsigned int key) {
-  unsigned long long *n = bpf_map_lookup_elem(&diagnostics, &key);
-  if (n)
-    __sync_fetch_and_add(n, 1);
-}
-#define UPDATE(map, key, value, flags)                                         \
-  ({                                                                           \
-    long update_rc = bpf_map_update_elem(map, key, value, flags);              \
-    if (update_rc)                                                             \
-      increment_diagnostic(1);                                                 \
-    update_rc;                                                                 \
-  })
+#include "diagnostics.bpf.h"
 /* Upstream helpers only. These reads copy known map-owned buffers; lockdown
  * confidentiality may restrict the helper, so that mode is rejected explicitly.
  */
@@ -419,12 +402,12 @@ static long walk_frame(unsigned int slot, void *opaque) {
         increment_diagnostic(1);
       } else {
         unsigned long long one = 1;
-        if (!UPDATE(&warmed_mms, &key.mm, &one, BPF_ANY)) {
+        if (!UPDATE_SOURCE(&warmed_mms, &key.mm, &one, BPF_ANY)) {
           /* Values remain immutable until mm retirement. EEXIST is a benign
            * concurrent insert. */
           long rc = bpf_map_update_elem(&lines, &key, value, BPF_NOEXIST);
           if (rc && rc != -17)
-            increment_diagnostic(1);
+            increment_diagnostic(IOSEC_DIAG_CACHE_PRESSURE);
         }
       }
     }
@@ -488,7 +471,7 @@ static __always_inline int capture_python_source(struct source_event *e) {
     e->flags = IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
-  unsigned long long epoch = state->epoch;
+  unsigned long long epoch = current_capture_epoch();
   struct walk_context walk = {.event = e};
   int failed = read_u64(state->state + TSTATE_FRAME, &walk.frame);
 #if TSTATE_FRAME_INDIRECT
@@ -613,7 +596,7 @@ static __always_inline int ensure_fused_scratch(unsigned long long tid,
     unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
     if (!zero)
       return -1;
-    UPDATE(&warm_tmp, &tid, zero, BPF_NOEXIST);
+    UPDATE_SOURCE(&warm_tmp, &tid, zero, BPF_NOEXIST);
     if (!bpf_map_lookup_elem(&warm_tmp, &tid))
       return -1;
   }
@@ -622,7 +605,7 @@ static __always_inline int ensure_fused_scratch(unsigned long long tid,
     unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
     if (!zero)
       return -1;
-    UPDATE(&fused_lineval, &tid, zero, BPF_NOEXIST);
+    UPDATE_SOURCE(&fused_lineval, &tid, zero, BPF_NOEXIST);
     if (!bpf_map_lookup_elem(&fused_lineval, &tid))
       return -1;
   }
@@ -793,10 +776,10 @@ static long fused_frame_step(unsigned int step, void *opaque) {
         increment_diagnostic(1);
       } else {
         unsigned long long one = 1;
-        if (!UPDATE(&warmed_mms, &mm, &one, BPF_ANY)) {
+        if (!UPDATE_SOURCE(&warmed_mms, &mm, &one, BPF_ANY)) {
           long rc = bpf_map_update_elem(&lines, &key, line_val, BPF_NOEXIST);
           if (rc && rc != -17)
-            increment_diagnostic(1);
+            increment_diagnostic(IOSEC_DIAG_CACHE_PRESSURE);
         }
       }
     }
@@ -858,7 +841,7 @@ static __always_inline int fused_capture_source(struct source_event *out,
                                                 struct line_value *line_val) {
   struct python_binding *state = lookup_python_binding(tid);
   if (state) {
-    unsigned long long epoch = state->epoch;
+    unsigned long long epoch = current_capture_epoch();
     int rc = capture_state(out, state->state, line_buf, line_val);
     if (epoch != current_capture_epoch() || !capture_enabled()) {
       out->count = 0;
@@ -906,49 +889,7 @@ struct {
   __type(key, struct pidfd_slot);
   __type(value, struct event);
 } slots SEC(".maps");
-#ifndef CLEANUP_INDEX_CAPACITY
-#define CLEANUP_INDEX_CAPACITY 4096
-#endif
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, CLEANUP_INDEX_CAPACITY);
-  __type(key, unsigned long long);
-  __type(value, unsigned long long);
-} tracked_tables SEC(".maps");
-struct {
-  __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, CLEANUP_INDEX_CAPACITY);
-  __type(key, unsigned long long);
-  __type(value, unsigned long long);
-} tracked_files SEC(".maps");
-struct {
-  __uint(type, BPF_MAP_TYPE_ARRAY);
-  __uint(max_entries, 1);
-  __type(key, unsigned int);
-  __type(value, unsigned int);
-} cleanup_fallback SEC(".maps");
-static __always_inline void index_object(void *map, unsigned long long address,
-                                         unsigned int bit) {
-  unsigned long long one = 1;
-  if (!bpf_map_lookup_elem(map, &address) &&
-      bpf_map_update_elem(map, &address, &one, BPF_ANY)) {
-    unsigned int zero = 0;
-    unsigned int *fallback = bpf_map_lookup_elem(&cleanup_fallback, &zero);
-    if (fallback)
-      __sync_fetch_and_or(fallback, bit);
-  }
-}
-static __always_inline void index_slot(unsigned long long files,
-                                       unsigned long long file) {
-  index_object(&tracked_tables, files, 1);
-  index_object(&tracked_files, file, 2);
-}
-static __always_inline int needs_scan(void *map, unsigned long long address,
-                                      unsigned int bit) {
-  unsigned int zero = 0;
-  unsigned int *fallback = bpf_map_lookup_elem(&cleanup_fallback, &zero);
-  return !fallback || (*fallback & bit) || bpf_map_lookup_elem(map, &address);
-}
+#include "cleanup_index.bpf.h"
 
 struct {
   __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
@@ -1210,7 +1151,7 @@ static __always_inline void fused_open_entry(void) {
     unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
     if (!zero)
       return;
-    UPDATE(&fused_opener, &tid, zero, BPF_NOEXIST);
+    UPDATE_SOURCE(&fused_opener, &tid, zero, BPF_NOEXIST);
   }
   struct captured_source *snapshot = bpf_map_lookup_elem(&fused_opener, &tid);
   struct source_event *snap = snapshot ? &snapshot->source : 0;
@@ -1418,8 +1359,9 @@ int BPF_PROG(installed, unsigned int fd, struct file *file) {
     e->fd = fd;
     e->generation = next_generation();
     struct pidfd_slot s = {.files = e->files, .fd = e->fd};
-    index_slot(e->files, e->file);
-    long rc = UPDATE(&slots, &s, e, BPF_ANY);
+    long rc = index_slot(e->files, e->file);
+    if (!rc)
+      rc = UPDATE(&slots, &s, e, BPF_ANY);
     if (rc)
       e->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
     e->label_count = 0; /* No endpoint-wide O(n) scan on each install. */
@@ -1711,9 +1653,14 @@ static long clone_slot(void *map, const struct pidfd_slot *s, struct event *e,
       n->fd = s->fd;
       n->generation = next_generation();
       struct pidfd_slot key = {.files = c->child, .fd = s->fd};
-      index_slot(n->files, n->file);
-      UPDATE(map, &key, n, BPF_ANY);
-      emit(n, IOSEC_STAGE_TABLE_COPY, 0);
+      long error = index_slot(n->files, n->file);
+      if (!error)
+        error = UPDATE(map, &key, n, BPF_ANY);
+      if (error) {
+        n->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
+        bpf_map_delete_elem(map, &key);
+      }
+      emit(n, IOSEC_STAGE_TABLE_COPY, error);
     }
   }
   return 0;
@@ -1761,15 +1708,13 @@ int forked(struct bpf_raw_tracepoint_args *ctx) {
      * call chain. Exec retires the copy; fresh interpreter entries overwrite
      * it. Native thread creation receives no inherited Python pointer. */
     unsigned long long child_birth = BPF_CORE_READ(c, start_time);
-    if (state && state->birth == BPF_CORE_READ(p, start_time) &&
-        state->epoch == current_capture_epoch()) {
+    if (state && state->birth == BPF_CORE_READ(p, start_time)) {
       struct python_binding inherited = *state;
       inherited.birth = child_birth;
-      UPDATE(&threads, &ck, &inherited, BPF_ANY);
+      UPDATE_SOURCE(&threads, &ck, &inherited, BPF_ANY);
     }
-    if (shadow && shadow->birth == BPF_CORE_READ(p, start_time) &&
-        shadow->epoch == current_capture_epoch()) {
-      UPDATE(&shadows, &ck, shadow, BPF_ANY);
+    if (shadow && shadow->birth == BPF_CORE_READ(p, start_time)) {
+      UPDATE_SOURCE(&shadows, &ck, shadow, BPF_ANY);
       struct eval_shadow *inherited = bpf_map_lookup_elem(&shadows, &ck);
       if (inherited)
         inherited->birth = child_birth;
@@ -1806,24 +1751,7 @@ int BPF_PROG(exec_close_done, struct files_struct *files_arg) {
   }
   return 0;
 }
-static long retire_slot(void *map, const struct pidfd_slot *s, struct event *e,
-                        unsigned long long *f) {
-  if (e->file == *f)
-    bpf_map_delete_elem(map, s);
-  return 0;
-}
-SEC("fentry/__fput") int BPF_PROG(file_released, struct file *file) {
-  unsigned long long f = (unsigned long long)file;
-  struct event *e = bpf_map_lookup_elem(&origins, &f);
-  if (e) {
-    emit(e, IOSEC_STAGE_FILE_RELEASE, 0);
-    bpf_map_delete_elem(&origins, &f);
-  }
-  if (needs_scan(&tracked_files, f, 2))
-    bpf_for_each_map_elem(&slots, retire_slot, &f, 0);
-  bpf_map_delete_elem(&tracked_files, &f);
-  return 0;
-}
+#include "cleanup_retirement.bpf.h"
 SEC("tracepoint/sched/sched_process_exec") int executed(void *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   bpf_map_delete_elem(&shadows, &tid);
@@ -1855,23 +1783,6 @@ SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {
   bpf_map_delete_elem(&closing, &tid);
   bpf_map_delete_elem(&duplicating, &tid);
   bpf_map_delete_elem(&execclosing, &tid);
-  return 0;
-}
-
-static long retire_table_slot(void *map, const struct pidfd_slot *s,
-                              struct event *e, unsigned long long *table) {
-  if (s->files == *table) {
-    emit(e, IOSEC_STAGE_TABLE_RELEASE, 0);
-    bpf_map_delete_elem(map, s);
-  }
-  return 0;
-}
-SEC("tracepoint/kmem/kmem_cache_free")
-int table_physically_freed(struct trace_event_raw_kmem_cache_free *ctx) {
-  unsigned long long ptr = (unsigned long long)ctx->ptr;
-  if (needs_scan(&tracked_tables, ptr, 1))
-    bpf_for_each_map_elem(&slots, retire_table_slot, &ptr, 0);
-  bpf_map_delete_elem(&tracked_tables, &ptr);
   return 0;
 }
 

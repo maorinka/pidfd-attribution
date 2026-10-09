@@ -383,6 +383,8 @@ static int write_health(const char *state, int error) {
       "\"capture_epoch\":%llu,\"capture_transitions\":%llu,"
       "\"degraded_ns\":%llu,\"ring_backlog_bytes\":%llu,"
       "\"uprobe_missed_callbacks\":null,"
+      "\"cache_pressure\":%llu,\"cleanup_index_failures\":%llu,"
+      "\"source_state_errors\":%llu,\"cleanup_scans\":%llu,"
       "\"python_entries\":%llu,\"python_returns\":%llu,"
       "\"binding_invalidations\":%llu,\"return_depth_overflow\":%llu,"
       "\"binding_unavailable\":%llu,\"bpf_stats_enabled\":%s,"
@@ -401,7 +403,11 @@ static int write_health(const char *state, int error) {
                            (capture.degraded_since_ns
                                 ? observed_ns - capture.degraded_since_ns
                                 : 0)),
-      ring_backlog, diagnostic_counts[IOSEC_DIAG_PYTHON_ENTRIES],
+      ring_backlog, diagnostic_counts[IOSEC_DIAG_CACHE_PRESSURE],
+      diagnostic_counts[IOSEC_DIAG_CLEANUP_INDEX_FAILURES],
+      diagnostic_counts[IOSEC_DIAG_SOURCE_STATE_ERRORS],
+      diagnostic_counts[IOSEC_DIAG_CLEANUP_SCANS],
+      diagnostic_counts[IOSEC_DIAG_PYTHON_ENTRIES],
       diagnostic_counts[IOSEC_DIAG_PYTHON_RETURNS],
       diagnostic_counts[IOSEC_DIAG_BINDING_INVALIDATIONS],
       diagnostic_counts[IOSEC_DIAG_RETURN_DEPTH_OVERFLOW],
@@ -459,10 +465,9 @@ static int read_diagnostics(struct bpf_object *obj) {
   }
   ring_drops = diagnostic_counts[IOSEC_DIAG_RING_DROPS];
   state_errors = diagnostic_counts[IOSEC_DIAG_STATE_ERRORS];
-  key = 0;
-  return bpf_map_lookup_elem(
-      bpf_object__find_map_fd_by_name(obj, "cleanup_fallback"), &key,
-      &cleanup_bits);
+  cleanup_bits =
+      0; /* Retained health field; global scan fallback was removed. */
+  return 0;
 }
 static unsigned long long number(const char *value) {
   char *end;
@@ -543,7 +548,7 @@ static int parse_options(int argc, char **argv) {
                  cfg.poll_ms < 1 || cfg.poll_ms > 1000 || cfg.health_ms < 100 ||
                  cfg.health_ms > 5000 || cfg.sync_ms < 100 ||
                  cfg.sync_ms > 60000 || cfg.state_entries < 128 ||
-                 cfg.state_entries > 8192 ||
+                 cfg.state_entries > 2048 ||
                  (cfg.policy.prefix_length && cfg.policy.path_prefix[0] != '/')
              ? -1
              : 0;
@@ -553,15 +558,50 @@ static int configure_maps(struct bpf_object *obj) {
       "origins",        "opening",       "acquiring",   "writing", "aliasing",
       "closing",        "duplicating",   "execclosing", "slots",   "warm_tmp",
       "fused_opener",   "fused_lineval", "threads",     "shadows", "warmed_mms",
-      "tracked_tables", "tracked_files"};
+      "tracked_tables", "tracked_files", "lines"};
   for (unsigned int i = 0; i < sizeof(state_maps) / sizeof(state_maps[0]);
        i++) {
     struct bpf_map *map = bpf_object__find_map_by_name(obj, state_maps[i]);
     if (!map || bpf_map__set_max_entries(map, cfg.state_entries))
       return -1;
   }
+  int possible_cpus = libbpf_num_possible_cpus();
+  if (possible_cpus < 1) {
+    errno = EINVAL;
+    return -1;
+  }
+  unsigned long long map_bytes = 0;
+  struct bpf_map *map;
+  bpf_object__for_each_map(map, obj) {
+    unsigned long long entries = bpf_map__max_entries(map);
+    unsigned long long value = (bpf_map__value_size(map) + 7ULL) & ~7ULL;
+    enum bpf_map_type type = bpf_map__type(map);
+    if (type == BPF_MAP_TYPE_RINGBUF) {
+      map_bytes += entries * 2 + 8192;
+      continue;
+    }
+    if (type == BPF_MAP_TYPE_PERCPU_ARRAY || type == BPF_MAP_TYPE_PERCPU_HASH)
+      value *= (unsigned long long)possible_cpus;
+    map_bytes += entries * (value + bpf_map__key_size(map) + 128ULL) + 4096;
+  }
+  if (map_bytes > 256ULL * 1024 * 1024) {
+    fprintf(stderr,
+            "Map memory estimate %llu exceeds the 256 MiB sensor budget; "
+            "reduce state_entries.\n",
+            map_bytes);
+    errno = ENOMEM;
+    return -1;
+  }
   return 0;
 }
+#define CHECK_SENSOR(operation)                                                \
+  do {                                                                         \
+    errno = 0;                                                                 \
+    if (operation) {                                                           \
+      failure_errno = errno ? errno : EIO;                                     \
+      goto cleanup;                                                            \
+    }                                                                          \
+  } while (0)
 int main(int argc, char **argv) {
   if (parse_options(argc, argv)) {
     fprintf(
@@ -606,15 +646,43 @@ int main(int argc, char **argv) {
   struct bpf_link *links[64] = {0};
   struct direct_ring ring = {0};
   int result = 1, failure_errno = 0, policy_fd = -1;
-  if (write_health("starting", 0))
-    goto cleanup;
+  CHECK_SENSOR(write_health("starting", 0));
   if (cfg.bpf_stats) {
+    errno = 0;
     stats_fd = bpf_enable_stats(BPF_STATS_RUN_TIME);
-    if (stats_fd < 0)
+    if (stats_fd < 0) {
+      failure_errno = errno ? errno : -stats_fd;
       goto cleanup;
+    }
   }
-  obj = bpf_object__open_file("reader.bpf.o", NULL);
+  char object_path[PATH_MAX], executable_path[PATH_MAX];
+  ssize_t executable_length =
+      readlink("/proc/self/exe", executable_path, sizeof(executable_path) - 1);
+  if (executable_length < 0) {
+    failure_errno = errno ? errno : EIO;
+    goto cleanup;
+  }
+  if ((size_t)executable_length >= sizeof(executable_path) - 1) {
+    failure_errno = ENAMETOOLONG;
+    goto cleanup;
+  }
+  executable_path[executable_length] = 0;
+  char *separator = strrchr(executable_path, '/');
+  if (!separator) {
+    failure_errno = EINVAL;
+    goto cleanup;
+  }
+  *separator = 0;
+  int path_length = snprintf(object_path, sizeof(object_path),
+                             "%s/reader.bpf.o", executable_path);
+  if (path_length < 0 || (size_t)path_length >= sizeof(object_path)) {
+    failure_errno = ENAMETOOLONG;
+    goto cleanup;
+  }
+  errno = 0;
+  obj = bpf_object__open_file(object_path, NULL);
   if (libbpf_get_error(obj)) {
+    failure_errno = (int)-libbpf_get_error(obj);
     obj = NULL;
     goto cleanup;
   }
@@ -626,23 +694,32 @@ int main(int argc, char **argv) {
          strstr(name, "_fused_entry")))
       bpf_program__set_autoload(program, false);
   }
-  if (configure_maps(obj) || bpf_object__load(obj) ||
-      bpf_map_freeze(bpf_object__find_map_fd_by_name(obj, "zero_bytes")))
+  errno = 0;
+  int load_error = configure_maps(obj);
+  if (!load_error)
+    load_error = bpf_object__load(obj);
+  if (load_error) {
+    failure_errno = errno ? errno : (load_error < 0 ? -load_error : EIO);
     goto cleanup;
+  }
+  CHECK_SENSOR(
+      bpf_map_freeze(bpf_object__find_map_fd_by_name(obj, "zero_bytes")));
   stats_object = obj;
   policy_fd = bpf_object__find_map_fd_by_name(obj, "policy");
   capture_fd = bpf_object__find_map_fd_by_name(obj, "capture_control");
   unsigned int key = 0;
   cfg.policy.excluded_tgid = getpid();
   cfg.policy.enabled = 0;
-  if (bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
-      direct_open(&ring, bpf_object__find_map_fd_by_name(obj, "events")))
-    goto cleanup;
+  CHECK_SENSOR(
+      bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
+      direct_open(&ring, bpf_object__find_map_fd_by_name(obj, "events")));
   bpf_object__for_each_program(program, obj) {
     if (!bpf_program__autoload(program))
       continue;
-    if (attachment_count == 64)
+    if (attachment_count == 64) {
+      failure_errno = E2BIG;
       goto cleanup;
+    }
     const char *name = bpf_program__name(program);
     struct bpf_link *link;
     if (!strcmp(name, "seed_thread") || !strcmp(name, "eval_return")) {
@@ -656,17 +733,16 @@ int main(int argc, char **argv) {
       link = bpf_program__attach(program);
     }
     if (libbpf_get_error(link)) {
+      failure_errno = (int)-libbpf_get_error(link);
       fprintf(stderr, "ATTACH_FAIL %s: %ld\n", name, libbpf_get_error(link));
       goto cleanup;
     }
     links[attachment_count++] = link;
   }
-  if (new_segment() || apply_capture_mode())
-    goto cleanup;
+  CHECK_SENSOR(new_segment() || apply_capture_mode());
   cfg.policy.enabled = 1;
-  if (bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
-      read_diagnostics(obj) || write_health("running", 0))
-    goto cleanup;
+  CHECK_SENSOR(bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
+               read_diagnostics(obj) || write_health("running", 0));
   printf("READY session=%s attachments=%u capture_python=%u\n", session,
          attachment_count, cfg.policy.capture_python);
   fflush(stdout);
@@ -679,30 +755,28 @@ int main(int argc, char **argv) {
                    __atomic_load_n(ring.consumer, __ATOMIC_ACQUIRE);
     if (capture.requested &&
         before_drain - capture.last_sample_ns >= CAPTURE_SAMPLE_NS) {
-      if (read_diagnostics(obj))
-        goto cleanup;
-      if (capture_controller_sample(&capture, before_drain, ring_drops,
-                                    ring_backlog, IOSEC_RING_BYTES) &&
-          apply_capture_mode())
-        goto cleanup;
+      CHECK_SENSOR(read_diagnostics(obj));
+      CHECK_SENSOR(capture_controller_sample(&capture, before_drain, ring_drops,
+                                             ring_backlog, IOSEC_RING_BYTES) &&
+                   apply_capture_mode());
     }
+    errno = 0;
     int drain = direct_consume(&ring);
-    if (drain < 0)
+    if (drain < 0) {
+      failure_errno = errno ? errno : EIO;
       goto cleanup;
+    }
     unsigned long long now = now_ns(CLOCK_MONOTONIC);
     if (rotate_requested) {
       rotate_requested = 0;
-      if (new_segment())
-        goto cleanup;
+      CHECK_SENSOR(new_segment());
     }
     if (now - last_sync >= (unsigned long long)cfg.sync_ms * 1000000) {
-      if (fdatasync(fileno(binary)))
-        goto cleanup;
+      CHECK_SENSOR(fdatasync(fileno(binary)));
       last_sync = now;
     }
     if (now - last_health >= (unsigned long long)cfg.health_ms * 1000000) {
-      if (read_diagnostics(obj) || write_health("running", 0))
-        goto cleanup;
+      CHECK_SENSOR(read_diagnostics(obj) || write_health("running", 0));
       notify_systemd("WATCHDOG=1");
       last_health = now;
     }
@@ -714,7 +788,10 @@ int main(int argc, char **argv) {
   }
   result = 0;
 cleanup:
-  failure_errno = result ? (errno ? errno : EIO) : 0;
+  if (result && !failure_errno)
+    failure_errno = errno ? errno : EIO;
+  if (!result)
+    failure_errno = 0;
   notify_systemd("STOPPING=1");
   if (policy_fd >= 0) {
     unsigned int zero = 0;

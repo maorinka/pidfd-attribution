@@ -194,6 +194,9 @@ for n in [
     "source_protocol.h",
     "bpf_task_helpers.h",
     "python_binding.bpf.h",
+    "cleanup_index.bpf.h",
+    "diagnostics.bpf.h",
+    "cleanup_retirement.bpf.h",
 ]:
     shutil.copy2(ROOT / "evidence/build" / n, RUNTIME_DIR / n)
 for i, cmd in enumerate(

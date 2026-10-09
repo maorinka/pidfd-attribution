@@ -68,6 +68,9 @@ def build():
         "source_protocol.h",
         "bpf_task_helpers.h",
         "python_binding.bpf.h",
+        "cleanup_index.bpf.h",
+        "diagnostics.bpf.h",
+        "cleanup_retirement.bpf.h",
     ]:
         shutil.copy2(SOURCE_DIR / "core" / n, B / n)
     cc = [
@@ -116,6 +119,9 @@ def build():
         "source_protocol.h",
         "bpf_task_helpers.h",
         "python_binding.bpf.h",
+        "cleanup_index.bpf.h",
+        "diagnostics.bpf.h",
+        "cleanup_retirement.bpf.h",
     ]
     for n in names:
         shutil.copy2(B / n, b / n)
@@ -181,6 +187,9 @@ def regression():
         "source_protocol.h",
         "bpf_task_helpers.h",
         "python_binding.bpf.h",
+        "cleanup_index.bpf.h",
+        "diagnostics.bpf.h",
+        "cleanup_retirement.bpf.h",
     ]:
         shutil.copy2(RUNTIME_DIR / n, tree / "build" / n)
     g = RUNTIME_DIR / "regression"

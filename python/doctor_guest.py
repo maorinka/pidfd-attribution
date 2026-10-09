@@ -3,6 +3,7 @@
 from pathlib import Path
 import json, os, re, shutil, subprocess
 from settings import ARCH, PYTHON, PYTHON_CONFIG
+from kernel_admission import validate_preemption
 
 
 def doctor():
@@ -10,6 +11,11 @@ def doctor():
 
     def check(name, passed, detail):
         checks.append(dict(check=name, passed=bool(passed), detail=detail))
+
+    try:
+        check("scratch preemption model", True, validate_preemption())
+    except (OSError, ValueError) as error:
+        check("scratch preemption model", False, str(error))
 
     check("architecture", ARCH in ("x86", "arm64"), os.uname().machine)
     status = Path("/proc/self/status").read_text()

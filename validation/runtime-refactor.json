@@ -1,0 +1,397 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "created_utc": "2026-10-09T21:01:36.652074+00:00",
+  "base_commit": "ab96bde",
+  "target": {
+    "os": "Ubuntu 24.04",
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+    "preemption": "voluntary",
+    "cleanup_hook": "indexed kmem_cache_free fallback; close_files absent from target BTF"
+  },
+  "source_snapshot": {
+    "files": 176,
+    "host_guest_equal": true,
+    "sha256": "3d8031e112176d53fa3dfeba551b0bf395b282384f8fa420ed9a24b397d578f4",
+    "algorithm": "SHA256 of sorted compact JSON mapping all git-tracked .c/.h/.py/.sh paths to file-content SHA256, following symlinks"
+  },
+  "offline": {
+    "root_tests": 11,
+    "endpoint_tests": 14,
+    "python_versions": [
+      "3.12.3 on Ubuntu24",
+      "3.14 on macOS"
+    ],
+    "formatting": "Black 24.2.0 and clang-format 18.1.3; shell syntax passed"
+  },
+  "fixture_correctness": {
+    "native": "attach, regression, deep, held-GIL and exact cleanup passed",
+    "module_free": "attach, regression, deep, held-GIL and exact cleanup passed"
+  },
+  "encoder": {
+    "passed": true,
+    "record_lengths": 49,
+    "byte_comparison_cases": 147,
+    "invalid_count_cases": 3,
+    "wire_version": 1,
+    "maximum_frames": 48,
+    "source_sha256": "5635712dca4028ef1a14827adb9b59bbaa2f59ca69e120374054e2e449e3495e"
+  },
+  "source_binding_controls": {
+    "native": {
+      "passed": true,
+      "cleanup_ok": true,
+      "trials": [
+        {
+          "mode": "normal",
+          "return_probe_attached": true,
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 65,
+          "incomplete_source_writes": 0,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 57
+        },
+        {
+          "mode": "missing-returns",
+          "return_probe_attached": false,
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 1,
+          "incomplete_source_writes": 64,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 57
+        }
+      ],
+      "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata."
+    },
+    "module_free": {
+      "passed": true,
+      "cleanup_ok": true,
+      "trials": [
+        {
+          "mode": "normal",
+          "return_probe_attached": true,
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 65,
+          "incomplete_source_writes": 0,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 57
+        },
+        {
+          "mode": "missing-returns",
+          "return_probe_attached": false,
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 1,
+          "incomplete_source_writes": 64,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 57
+        }
+      ],
+      "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata."
+    }
+  },
+  "endpoint": {
+    "passed": true,
+    "cleanup_ok": true,
+    "cache_pressure": {
+      "filled_entries": 118,
+      "cache_pressure": 864,
+      "history_gaps": false,
+      "complete_source_writes": 3
+    },
+    "cleanup_index_pressure": {
+      "filled_entries": 128,
+      "rejected_admission": true,
+      "explicit_history_gap": true,
+      "global_scan_fallback": false,
+      "observed_cleanup_scans": 0
+    },
+    "outermost_return": {
+      "binding_present_during_eval": true,
+      "binding_retired_before_task_exit": true,
+      "empty_shadow": true
+    },
+    "continuous_loop_recovery": {
+      "binding_survives_epoch_change": true,
+      "recovered_source_before_new_eval_entry": true,
+      "oracle_checked_writes": 2
+    },
+    "ring_pressure": {
+      "explicit_history_gap": true,
+      "ring_drops": 36729
+    }
+  },
+  "storage": {
+    "passed": true,
+    "input_records": 38400,
+    "record_boundaries_preserved": true,
+    "failed_write_does_not_release_ring": true,
+    "admin_modified_segments_preserved": true,
+    "bounded_consumer_backlog_retry": true,
+    "busy_record_no_spin": true
+  },
+  "systemd": {
+    "passed": true,
+    "cleanup_ok": true,
+    "source_writes": 3,
+    "attachments": 35,
+    "cap_sys_module": false,
+    "watchdog_notification": true,
+    "reload_rotates": true,
+    "automatic_restart": true,
+    "hardening": {
+      "SystemCallArchitectures": "native",
+      "RestrictNamespaces": "yes",
+      "RestrictSUIDSGID": "yes",
+      "PrivateDevices": "yes",
+      "ProtectProc": "invisible"
+    }
+  },
+  "installed_doctor": {
+    "passed": true,
+    "runtime_checks": 10,
+    "build_toolchain_required": false
+  },
+  "restoration": {
+    "previous_installation_restored": true
+  },
+  "bpf_runtime_samples": [
+    {
+      "name": "seed_thread",
+      "delta_run_time_ns": 2949479,
+      "delta_run_cnt": 1756,
+      "mean_run_time_ns": 1679
+    },
+    {
+      "name": "eval_return",
+      "delta_run_time_ns": 3858640,
+      "delta_run_cnt": 1757,
+      "mean_run_time_ns": 2196
+    },
+    {
+      "name": "write_fused_entry",
+      "delta_run_time_ns": 2001,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "acquire_fused_entry",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "openat_fused_entry",
+      "delta_run_time_ns": 2000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 2000
+    },
+    {
+      "name": "openat2_fused_entry",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "open_begin",
+      "delta_run_time_ns": 2000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 2000
+    },
+    {
+      "name": "openat_fused_cleanup",
+      "delta_run_time_ns": 1000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "openat2_fused_cleanup",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "open_bound",
+      "delta_run_time_ns": 2000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 2000
+    },
+    {
+      "name": "target_bound",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "reference_bound",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "receive_bound",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "installed",
+      "delta_run_time_ns": 6001,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 6001
+    },
+    {
+      "name": "receive_return",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "acquire_finish",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "syscall_begin",
+      "delta_run_time_ns": 152025,
+      "delta_run_cnt": 948,
+      "mean_run_time_ns": 160
+    },
+    {
+      "name": "write_file",
+      "delta_run_time_ns": 2001,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "write_inner",
+      "delta_run_time_ns": 2000,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "write_finish",
+      "delta_run_time_ns": 2001,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "alias_begin",
+      "delta_run_time_ns": 1000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "alias_file",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "alias_finish",
+      "delta_run_time_ns": 1000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 1000
+    },
+    {
+      "name": "slot_close_begin",
+      "delta_run_time_ns": 7002,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 3501
+    },
+    {
+      "name": "slot_close_done",
+      "delta_run_time_ns": 5002,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 2501
+    },
+    {
+      "name": "table_duplicate_begin",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "table_duplicate_done",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "forked",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "exec_close_begin",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "exec_close_done",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "file_released",
+      "delta_run_time_ns": 10002,
+      "delta_run_cnt": 2,
+      "mean_run_time_ns": 5001
+    },
+    {
+      "name": "table_physically_freed",
+      "delta_run_time_ns": 65012,
+      "delta_run_cnt": 63,
+      "mean_run_time_ns": 1031
+    },
+    {
+      "name": "executed",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "exited",
+      "delta_run_time_ns": 0,
+      "delta_run_cnt": 0,
+      "mean_run_time_ns": 0
+    },
+    {
+      "name": "warm_mm_retired",
+      "delta_run_time_ns": 1000,
+      "delta_run_cnt": 1,
+      "mean_run_time_ns": 1000
+    }
+  ],
+  "log_sha256": {
+    "offline-root.log": "fb98e0c23d88f6600ec1f2b70c934756c92869505d7868cb4b6c894b5d963c2f",
+    "offline-endpoint.log": "4b634f573c162043a072915e68ef6fabb7e0c6f9492f373555511abc8b384fdc",
+    "root-build.log": "0628a6ff789274566666a9823053c0b61165fb42538e7f84d81e696b527e915d",
+    "root-correctness.log": "09f5f61b30301a13d48c127d5915e4915dd3ea0b27fd52d09092c644b14d5535",
+    "module-free-build.log": "9566ed48e9d267f13b2fa568f8255acf22661bc11e4ea28fd9303895b9655d7d",
+    "module-free-correctness.log": "09f5f61b30301a13d48c127d5915e4915dd3ea0b27fd52d09092c644b14d5535",
+    "module-free-encoder.log": "80f5858abce5e73a3763c8adf878282d971378552d6cb4be90b9fefbbf3edeb2",
+    "endpoint-build.log": "e86052669893b66be226cdc659e90ca1a0b79c5dbf79daec85cdcac1923da8cb",
+    "endpoint-storage.log": "c49344cfa47c065aad469eb9791ffb837e1dfd9104336413f65b965b90929c12",
+    "endpoint-integration.log": "322ef24ca75febaf5a2421e11e7703b614e707554a1ffca25117c224ff8f3280",
+    "endpoint-systemd.log": "8b4a5257ec1b2827f4211456808a65c0c75cfe0b94194207c22bc9d7c769ad5f",
+    "installed-doctor.json": "39e0e7209b5a14753b4e6fcd09c53c5f51d8025e7302499b7e6b1e645fd532b8",
+    "module-free-source-binding.log": "8e85d831cf2aef1eb370f26101d4d2fa85715057ce562fa1cde5a59d5e409506",
+    "root-source-binding.log": "4eca38caf97d3248ad1384d3e07cb004392586131753d8af0348c136b7310280"
+  },
+  "limitations": [
+    "Only the indexed slab fallback was live-tested; close_files attachment branch was not exercised.",
+    "Line cache remains an immutable HASH: safe cache pressure uses direct decoding; LRU map-value lifetime safety has not been established.",
+    "Full/RT or unverifiable dynamic preemption is refused; this is not a proof against all nested scratch use.",
+    "Controlled missed-return tests do not prove correctness under arbitrary callback loss or mutable Python metadata.",
+    "Write/path/cgroup coverage limits and global hook/uprobe cost remain as described in README.",
+    "No new fleet CPU benchmark or production qualification; the earlier CPU target remains unfulfilled.",
+    "Hosted Python 3.10/3.12/3.14 CI is configured; its first remote run is separate from these local/live results."
+  ]
+}

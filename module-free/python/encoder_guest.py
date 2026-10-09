@@ -11,18 +11,9 @@ EVIDENCE_DIR = ROOT / "evidence/encoder-controls"
 RUNTIME_DIR = Path("/var/tmp/pidfd-module-free-encoder")
 EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 RUNTIME_DIR.mkdir(mode=0o700, exist_ok=True)
-for name in (
-    "reader.bpf.c",
-    "arch.h",
-    "source_protocol.h",
-    "bpf_task_helpers.h",
-    "python_binding.bpf.h",
-    "config.h",
-    "kernel_layout.h",
-    "python_layout.h",
-    "vmlinux.h",
-):
-    shutil.copy2(ROOT / "evidence/build" / name, RUNTIME_DIR / name)
+build_dir = ROOT / "evidence/build"
+for source in (*build_dir.glob("*.h"), build_dir / "reader.bpf.c"):
+    shutil.copy2(source, RUNTIME_DIR / source.name)
 shutil.copy2(ROOT / "tests/encoder.c", RUNTIME_DIR / "encoder.c")
 text = (
     (ROOT / "tests/encoder.bpf.c")

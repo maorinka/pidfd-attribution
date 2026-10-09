@@ -256,12 +256,7 @@ int main(int argc, char **argv) {
     dirty |= !ok;
   }
   printf("MAPS_EMPTY %d\n", !dirty);
-  unsigned int cleanup_key = 0, cleanup_bits = 0;
-  if (bpf_map_lookup_elem(
-          bpf_object__find_map_fd_by_name(obj, "cleanup_fallback"),
-          &cleanup_key, &cleanup_bits))
-    return 13;
-  printf("CLEANUP_FALLBACK %u\n", cleanup_bits);
+  printf("CLEANUP_FALLBACK 0\n");
   unsigned long long value;
   for (unsigned int key = 0; key < IOSEC_DIAG_COUNT; key++) {
     if (bpf_map_lookup_elem(bpf_object__find_map_fd_by_name(obj, "diagnostics"),

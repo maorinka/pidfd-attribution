@@ -3,9 +3,10 @@
 from pathlib import Path
 import json, os, re, shutil, subprocess
 from settings import ARCH, PYTHON, PYTHON_CONFIG
+from kernel_admission import validate_preemption
 
 
-def doctor(config=None):
+def doctor(config=None, runtime=False):
     checks = []
 
     def check(name, passed, detail):
@@ -18,6 +19,11 @@ def doctor(config=None):
         check("cgroup admission", True, resolved)
     except (OSError, ValueError) as error:
         check("cgroup admission", False, str(error))
+
+    try:
+        check("scratch preemption model", True, validate_preemption())
+    except (OSError, ValueError) as error:
+        check("scratch preemption model", False, str(error))
 
     check("architecture", ARCH in ("x86", "arm64"), os.uname().machine)
     status = Path("/proc/self/status").read_text()
@@ -40,19 +46,20 @@ def doctor(config=None):
         version >= (6, 8),
         "This collection path requires Linux 6.8 or newer; Ubuntu 22.04 needs its HWE kernel",
     )
-    for tool in (
-        "gcc",
-        "clang",
-        "make",
-        "bpftool",
-        "readelf",
-        "nm",
-        "objcopy",
-        str(PYTHON_CONFIG),
-    ):
-        check(tool, shutil.which(tool), "Install with sudo ./install-ubuntu.sh")
-    headers = Path("/lib/modules") / os.uname().release / "build"
-    check("matching kernel headers", headers.is_dir(), str(headers))
+    if not runtime:
+        for tool in (
+            "gcc",
+            "clang",
+            "make",
+            "bpftool",
+            "readelf",
+            "nm",
+            "objcopy",
+            str(PYTHON_CONFIG),
+        ):
+            check(tool, shutil.which(tool), "Install with sudo ./install-ubuntu.sh")
+        headers = Path("/lib/modules") / os.uname().release / "build"
+        check("matching kernel headers", headers.is_dir(), str(headers))
     check(
         "kernel BTF",
         Path("/sys/kernel/btf/vmlinux").is_file(),

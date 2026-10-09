@@ -20,6 +20,15 @@
     },
     {
       "file": "core/python_binding.bpf.h"
+    },
+    {
+      "file": "core/cleanup_index.bpf.h"
+    },
+    {
+      "file": "core/diagnostics.bpf.h"
+    },
+    {
+      "file": "core/cleanup_retirement.bpf.h"
     }
   ]
 }

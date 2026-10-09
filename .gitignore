@@ -14,5 +14,5 @@ __pycache__/
 Module.symvers
 modules.order
 
-# Repository documentation is not tracked.
+# Markdown is ignored; the operational README uses plain text.
 *.[mM][dD]

@@ -1,0 +1,84 @@
+pidfd-attribution
+=================
+
+This research sensor records descriptor opener, pidfd_getfd acquirer, and
+writer identities. Optional CPython frames describe the source observed at
+those operations. Captured Python metadata is not independently attested.
+
+Backends
+--------
+endpoint-service/  Continuous, module-free systemd collector. Start here for
+                   endpoints that prohibit third-party kernel modules.
+module-free/       Bounded fixture validation using upstream BPF helpers.
+repository root    Bounded fixture validation with an out-of-tree helper module.
+                   Requires module loading and lockdown=none.
+
+Each backend keeps native sources in core/ and Python drivers in python/.
+Canonical shared implementations live in shared/core/ and shared/python/;
+backend symlinks are required. Clone the whole repository with symlinks intact.
+
+Requirements
+------------
+Ubuntu 22.04 with HWE Linux 6.8+, Ubuntu 24.04, or Ubuntu 26.04; x86_64 or
+arm64. CPython 3.10-3.14 release builds with a supported, on-target-generated
+layout. Preflight and real BPF load/attachment decide support, not release names.
+Recent live endpoint validation used Ubuntu 24.04/x86_64/Linux 6.8/Python 3.12.
+Build-only evidence does not establish attachment support on another target.
+
+The current attachment configuration requires CAP_SYS_ADMIN. Confidentiality
+lockdown is unsupported. Full/RT preemption is refused: the current collector
+uses per-CPU scratch. Dynamic kernels must expose their selected mode through
+/sys/kernel/debug/sched/preempt. The selected mode must remain none or voluntary
+while the sensor runs; a boot configuration fixed to that mode is preferable.
+
+Endpoint quick start
+--------------------
+cd endpoint-service
+sudo ./install-ubuntu.sh
+sudo ./run.sh doctor
+sudo ./run.sh build
+sudo ./run.sh install --config config.example.json
+sudo systemctl enable --now iosec-endpoint
+sudo ./run.sh status --config /etc/iosec-endpoint.json
+sudo ./run.sh events --config /etc/iosec-endpoint.json --follow --writes-only
+
+The installed CLI is /opt/iosec-endpoint/python/service.py. Its doctor command
+checks runtime admission without requiring the build toolchain. Rebuild and
+reinstall after kernel changes or a change of the monitored Python binary.
+Installation preserves existing policy and refuses to replace an existing /opt
+installation. Stop the service and move the old installation before replacing it.
+
+Configuration and coverage
+--------------------------
+config.example.json lists supported options. capture_python=false collects
+identity records only. state_entries is bounded to 128-2048, with an additional
+256 MiB conservative map-memory admission budget inside the collector. The
+unit allows 512 MiB total; retained event data and workloads still need sizing.
+
+Write attribution currently covers write(2), not writev, pwrite, sendfile,
+copy_file_range, io_uring, or mmap writes. path_prefix matches the raw opening
+name, not a canonical path: relative names, symlinks, and alternate names can
+bypass it. cgroup_id selects one exact cgroup v2 ID, not descendants. Global
+uprobes impose breakpoint overhead on every process mapping the selected
+Python executable, even when policy excludes it. Adaptive degradation keeps
+lifecycle bookkeeping attached while skipping Python stack decoding.
+
+Descriptor-state loss and ring drops mark history gaps. Optional source-cache
+pressure is reported separately. Missing interpreter callbacks remain a source
+attribution limitation. Recovery preserves continuously observed live bindings;
+source snapshots from an earlier capture epoch are rejected. Cleanup only scans
+for indexed objects, including under index pressure. Kernels without an attachable
+close_files hook retain the indexed kmem_cache_free hook and its host-wide cost.
+
+Checks and evidence
+-------------------
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 endpoint-service/tests/test_service.py
+python3 tools/check_style.py  (requires Black 24.2.0 and clang-format 18.1.3)
+
+Hosted CI runs offline checks on every push and pull request. The opt-in VM
+workflows perform kernel validation. sudo ./run.sh validate in a fixture backend
+runs its owned controls. Validation JSONs under validation/ record both passing
+and rejected runs; historical reports pin historical source hashes. QEMU CPU
+screens are not fleet benchmarks. This remains a research sensor, not a general
+endpoint EDR or a production qualification claim.

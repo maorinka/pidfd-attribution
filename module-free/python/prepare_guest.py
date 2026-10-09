@@ -4,6 +4,7 @@ from pathlib import Path
 import hashlib, json, os, re, shutil, subprocess, sys
 from settings import ROOT, PREPARED, ARCH, PYTHON, PYTHON_CONFIG
 from support.python_layout import layout_header
+from kernel_admission import validate_preemption
 
 
 def sha256_file(path):
@@ -14,6 +15,7 @@ def sha256_file(path):
 def prepare():
     if sys.platform != "linux" or os.geteuid() != 0:
         raise RuntimeError("Use sudo ./run.sh prepare on Linux")
+    validate_preemption()
     kernel_version = tuple(
         int(v) for v in os.uname().release.split("-")[0].split(".")[:2]
     )
@@ -182,7 +184,8 @@ def prepare():
         if any(t["kind"] == "STRUCT" and t["name"] == "__filename_head" for t in types)
         else "filename"
     )
-    kernel_config = f'#define IOSEC_FILE_OPEN "{open_hook}"\n#define IOSEC_FILENAME_HEAD {filename_type}\n#define IOSEC_DUP_FD_ARGS {functions["dup_fd"]["vlen"]}\n'
+    has_close_files = int(functions.get("close_files", {}).get("vlen") == 1)
+    kernel_config = f'#define IOSEC_FILE_OPEN "{open_hook}"\n#define IOSEC_FILENAME_HEAD {filename_type}\n#define IOSEC_DUP_FD_ARGS {functions["dup_fd"]["vlen"]}\n#define IOSEC_HAVE_CLOSE_FILES {has_close_files}\n'
     (PREPARED / "kernel_layout.h").write_text(kernel_config)
     for name in ("workload.py", "deep_fixture.py"):
         shutil.copy2(ROOT / "fixtures/prerequisites" / name, PREPARED / name)

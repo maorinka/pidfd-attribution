@@ -4,6 +4,10 @@ Validates a real always-on collector against independent, already-running
 processes, then optional interpreter capture, rotation, crashes, and cleanup.
 """
 
+import ctypes
+import ctypes.util
+import errno
+import select
 import hashlib
 import json
 import os
@@ -88,7 +92,7 @@ def start_sensor(name, capture=False, prefix=None, **overrides):
             "--ambient-caps=-sys_module",
             *collector_command(config),
         ],
-        cwd=ROOT / "build",
+        cwd=BASE,
         stdout=log,
         stderr=log,
     )
@@ -230,6 +234,72 @@ def oracle(events):
                 checked += 1
     assert checked > 0
     return checked
+
+
+def named_map(name):
+    maps = json.loads(subprocess.check_output(["bpftool", "-j", "map", "show"]))
+    found = [row for row in maps if row["name"] == name]
+    assert len(found) == 1, found
+    return found[0]
+
+
+def map_library():
+    library = ctypes.CDLL(ctypes.util.find_library("bpf"), use_errno=True)
+    library.bpf_map_get_fd_by_id.argtypes = [ctypes.c_uint]
+    library.bpf_map_get_fd_by_id.restype = ctypes.c_int
+    library.bpf_map_lookup_elem.argtypes = [
+        ctypes.c_int,
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+    ]
+    library.bpf_map_update_elem.argtypes = [
+        ctypes.c_int,
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+        ctypes.c_ulonglong,
+    ]
+    return library
+
+
+def map_value(name, key):
+    row = named_map(name)
+    library = map_library()
+    fd = library.bpf_map_get_fd_by_id(row["id"])
+    assert fd >= 0
+    value = ctypes.create_string_buffer(row["bytes_value"])
+    try:
+        if library.bpf_map_lookup_elem(fd, ctypes.create_string_buffer(key), value):
+            assert ctypes.get_errno() == errno.ENOENT
+            return None
+        return value.raw
+    finally:
+        os.close(fd)
+
+
+def fill_map(name):
+    row = named_map(name)
+    library = map_library()
+    fd = library.bpf_map_get_fd_by_id(row["id"])
+    assert fd >= 0
+    value = ctypes.create_string_buffer(row["bytes_value"])
+    inserted = 0
+    try:
+        for index in range(row["max_entries"]):
+            key = struct.pack("<Q", index + 1) + bytes(row["bytes_key"] - 8)
+            if library.bpf_map_update_elem(
+                fd, ctypes.create_string_buffer(key), value, 1
+            ):
+                assert ctypes.get_errno() == errno.E2BIG
+                break
+            inserted += 1
+    finally:
+        os.close(fd)
+    return inserted
+
+
+def pipe_marker(fd, marker):
+    assert select.select([fd], [], [], 30)[0], "native checkpoint timed out"
+    assert os.read(fd, 1) == marker
 
 
 baseline_programs = programs()
@@ -382,6 +452,98 @@ try:
     result["capacity"] = dict(
         explicit_history_gap=True, state_errors=stopped["state_errors"]
     )
+    process, state, _ = start_sensor(
+        "line-cache-pressure", capture=True, state_entries=128
+    )
+    filled = fill_map("lines")
+    application = demo("cache-pressure")
+    verify_writes(state, application, source=True)
+    stopped = stop(process, state)
+    assert stopped["cache_pressure"] > 0 and stopped["state_errors"] == 0
+    result["cache_pressure"] = dict(
+        filled_entries=filled,
+        cache_pressure=stopped["cache_pressure"],
+        history_gaps=False,
+        complete_source_writes=3,
+    )
+
+    process, state, _ = start_sensor("cleanup-index-pressure", state_entries=128)
+    filled = fill_map("tracked_tables")
+    demo("index-pressure")
+    time.sleep(0.2)
+    stopped = stop(process, state, expect_gaps=True)
+    assert stopped["cleanup_index_failures"] > 0
+    assert stopped["cleanup_scans"] == 0
+    installs = [event for event in read_events(state) if event["stage"] == 4]
+    assert installs and all(
+        event["actors"]["acquirer"]["source_flags"] & 128 for event in installs
+    )
+    result["cleanup_index_pressure"] = dict(
+        filled_entries=filled,
+        rejected_admission=True,
+        explicit_history_gap=True,
+        global_scan_fallback=False,
+        observed_cleanup_scans=stopped["cleanup_scans"],
+    )
+
+    library = BASE / "return-lifecycle.so"
+    subprocess.run(
+        [
+            "gcc",
+            "-shared",
+            "-fPIC",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            str(ROOT / "tests/return_lifecycle.c"),
+            "-o",
+            str(library),
+        ],
+        check=True,
+    )
+    process, state, _ = start_sensor("outer-return", capture=True)
+    notify_read, notify_write = os.pipe()
+    release_read, release_write = os.pipe()
+    env = dict(
+        os.environ,
+        PIDFD_RETURN_NOTIFY_FD=str(notify_write),
+        PIDFD_RETURN_RELEASE_FD=str(release_read),
+    )
+    fixture = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import ctypes,sys; ctypes.CDLL(sys.argv[1])",
+            str(library),
+        ],
+        env=env,
+        pass_fds=(notify_write, release_read),
+    )
+    active.append(fixture)
+    os.close(notify_write)
+    os.close(release_read)
+    key = struct.pack("<Q", (fixture.pid << 32) | fixture.pid)
+    try:
+        pipe_marker(notify_read, b"I")
+        assert map_value("threads", key) is not None
+        os.write(release_write, b"x")
+        pipe_marker(notify_read, b"R")
+        assert map_value("threads", key) is None
+        shadow = map_value("shadows", key)
+        assert shadow is not None and not any(shadow[: 64 * 8 + 4])
+        os.write(release_write, b"x")
+        assert fixture.wait(timeout=30) == 0
+        active.remove(fixture)
+    finally:
+        os.close(notify_read)
+        os.close(release_write)
+    stop(process, state)
+    result["outermost_return"] = dict(
+        binding_present_during_eval=True,
+        binding_retired_before_task_exit=True,
+        empty_shadow=True,
+    )
+
     process, state, _ = start_sensor("birth-mismatch", capture=True, bpf_stats=True)
     birth_result = BASE / "birth-result.json"
     env = dict(
@@ -484,6 +646,25 @@ try:
     # Stop the consumer while producers continue. Ring exhaustion is an
     # observable loss condition, even when all attribution state fits.
     process, state, _ = start_sensor("ring-pressure", capture=True, bpf_stats=True)
+    loop_result = BASE / "recovery-loop.json"
+    env = dict(
+        os.environ,
+        PIDFD_DEMO_ROOT=str(BASE / "files/recovery-loop"),
+        PIDFD_RESULT=str(loop_result),
+        PIDFD_WRITES="3",
+    )
+    loop_fixture = subprocess.Popen(
+        [sys.executable, str(ROOT / "tests/birth_fixture.py")],
+        env=env,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    active.append(loop_fixture)
+    loop_pid = json.loads(loop_fixture.stdout.readline())["pid"]
+    loop_key = struct.pack("<Q", (loop_pid << 32) | loop_pid)
+    loop_binding = map_value("threads", loop_key)
+    assert loop_binding is not None
     process.send_signal(signal.SIGSTOP)
     subprocess.run(
         [
@@ -503,6 +684,28 @@ try:
     wait_for(lambda: health(state).get("effective_capture_python") is True, timeout=60)
     recovered_writes = verify_writes(state, demo("recovered-source"), source=True)
     recovered_health = health(state)
+    assert map_value("threads", loop_key) == loop_binding
+    loop_fixture.stdin.write("x")
+    loop_fixture.stdin.flush()
+    loop_fixture.communicate(timeout=30)
+    assert loop_fixture.returncode == 0
+    active.remove(loop_fixture)
+    time.sleep(0.2)
+    loop_application = json.loads(loop_result.read_text())
+    loop_writes = [
+        event
+        for event in read_events(state)
+        if event["stage"] == 9 and event["inode"] == loop_application["inode"]
+    ]
+    assert len(loop_writes) >= 2 and all(
+        event["source_complete"] for event in loop_writes[-2:]
+    )
+    oracle(loop_writes[-2:])
+    result["continuous_loop_recovery"] = dict(
+        binding_survives_epoch_change=True,
+        recovered_source_before_new_eval_entry=True,
+        oracle_checked_writes=2,
+    )
     assert recovered_health["history_gaps"]
     assert recovered_health["capture_epoch"] > degraded_health["capture_epoch"]
     assert recovered_health["python_entries"] > 0

@@ -1,9 +1,9 @@
 #ifndef IOSEC_PYTHON_BINDING_BPF_H
 #define IOSEC_PYTHON_BINDING_BPF_H
-/* Exact lifecycle state: eviction must never resurrect an older return binding.
- * Task birth guards task reuse; interpreter reuse within one task still needs
- * observed interpreter callbacks and fails unknown when no binding is
- * available.
+/* Observed interpreter lifecycle state: eviction must never resurrect an older
+ * return binding. Task birth guards task reuse; interpreter reuse within one
+ * task still needs observed interpreter callbacks and fails unknown when no
+ * binding is available.
  */
 struct python_binding {
   unsigned long long state, birth, epoch;
@@ -27,17 +27,20 @@ lookup_python_binding(unsigned long long tid) {
     increment_diagnostic(IOSEC_DIAG_BINDING_UNAVAILABLE);
     return 0;
   }
-  if (binding->birth != current_task_birth() ||
-      binding->epoch != current_capture_epoch()) {
+  if (binding->birth != current_task_birth()) {
     increment_diagnostic(IOSEC_DIAG_BINDING_INVALIDATIONS);
     bpf_map_delete_elem(&threads, &tid);
     return 0;
   }
   return binding;
 }
-/* kernel pending-return depth is authoritative; skipped instances must
- * not inflate a software counter. Capacity matches tested kernel64 limit.
- * Other probe consumers/failed registrations/state swaps remain full gates. */
+/* Entry observes depth before registration; return observes it before removal.
+ * Return processing subtracts its own pending instance before restoring
+ * callers. Lifecycle callbacks continue during capture degradation; snapshot
+ * epochs still prevent source data from crossing mode transitions. kernel
+ * pending-return depth is authoritative; skipped instances must not inflate a
+ * software counter. Capacity matches tested kernel64 limit. Other probe
+ * consumers/failed registrations/state swaps remain full gates. */
 struct eval_shadow {
   unsigned long long states[IOSEC_RETURN_DEPTH];
   unsigned int depth;
@@ -51,7 +54,7 @@ struct {
 } shadows SEC(".maps");
 
 SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
-  if (!task_is_monitored() || !capture_enabled())
+  if (!task_is_monitored())
     return 0;
   unsigned long long key = bpf_get_current_pid_tgid(),
                      state = PT_REGS_PARM1(ctx);
@@ -60,13 +63,13 @@ SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
                      epoch = current_capture_epoch();
   struct eval_shadow *s = bpf_map_lookup_elem(&shadows, &key);
   increment_diagnostic(IOSEC_DIAG_PYTHON_ENTRIES);
-  if (!s || s->birth != birth || s->epoch != epoch) {
+  if (!s || s->birth != birth) {
     if (s)
       increment_diagnostic(IOSEC_DIAG_BINDING_INVALIDATIONS);
     unsigned int z = 0;
     unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
     if (zero)
-      UPDATE(&shadows, &key, zero, BPF_ANY);
+      UPDATE_SOURCE(&shadows, &key, zero, BPF_ANY);
     s = bpf_map_lookup_elem(&shadows, &key);
   }
   if (!s) {
@@ -82,20 +85,20 @@ SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
    * cannot install another return instance. Later registered returns resync. */
   struct python_binding binding = {
       .state = state, .birth = birth, .epoch = epoch};
-  UPDATE(&threads, &key, &binding, BPF_ANY);
+  UPDATE_SOURCE(&threads, &key, &binding, BPF_ANY);
   return 0;
 }
 SEC("uretprobe") int eval_return(struct pt_regs *ctx) {
-  if (!task_is_monitored() || !capture_enabled())
+  if (!task_is_monitored())
     return 0;
   unsigned long long key = bpf_get_current_pid_tgid();
-  unsigned int depth = pending_depth();
+  unsigned int return_depth = pending_depth();
+  unsigned int depth = return_depth ? return_depth - 1 : IOSEC_RETURN_DEPTH + 1;
   struct eval_shadow *s = bpf_map_lookup_elem(&shadows, &key);
   increment_diagnostic(IOSEC_DIAG_PYTHON_RETURNS);
   if (depth > IOSEC_RETURN_DEPTH)
     increment_diagnostic(IOSEC_DIAG_RETURN_DEPTH_OVERFLOW);
-  if (!s || depth > IOSEC_RETURN_DEPTH || s->birth != current_task_birth() ||
-      s->epoch != current_capture_epoch()) {
+  if (!s || depth > IOSEC_RETURN_DEPTH || s->birth != current_task_birth()) {
     increment_diagnostic(IOSEC_DIAG_BINDING_INVALIDATIONS);
     bpf_map_delete_elem(&threads, &key);
     return 0;
@@ -128,7 +131,7 @@ SEC("uretprobe") int eval_return(struct pt_regs *ctx) {
   if (state) {
     struct python_binding binding = {
         .state = state, .birth = s->birth, .epoch = s->epoch};
-    UPDATE(&threads, &key, &binding, BPF_ANY);
+    UPDATE_SOURCE(&threads, &key, &binding, BPF_ANY);
   } else
     bpf_map_delete_elem(&threads, &key);
   return 0;

@@ -38,6 +38,9 @@ PRODUCTION = (
     "source_protocol.h",
     "bpf_task_helpers.h",
     "python_binding.bpf.h",
+    "cleanup_index.bpf.h",
+    "diagnostics.bpf.h",
+    "cleanup_retirement.bpf.h",
     "policy.h",
     "capture_controller.h",
     "protocol.h",
@@ -80,7 +83,7 @@ def configuration(path=None):
         poll_ms=(1, 1000),
         health_ms=(100, 5000),
         sync_ms=(100, 60000),
-        state_entries=(128, 8192),
+        state_entries=(128, 2048),
     )
     for name, (minimum, maximum) in bounds.items():
         value = result[name]
@@ -274,6 +277,9 @@ def verify_build(config):
 
 def run(config):
     linux_root()
+    from kernel_admission import validate_preemption
+
+    validate_preemption()
     validate_cgroup(config)
     # Runtime needs permissions and matching artifacts, not build tools/headers.
     lockdown = Path("/sys/kernel/security/lockdown")
@@ -331,7 +337,13 @@ def install(config_path):
         for name in ("collector", "reader.bpf.o", "manifest.json"):
             shutil.copy2(ROOT / "build" / name, staging / "build" / name)
         (staging / "python").mkdir()
-        for name in ("service.py", "wire.py"):
+        for name in (
+            "service.py",
+            "wire.py",
+            "doctor_guest.py",
+            "settings.py",
+            "kernel_admission.py",
+        ):
             shutil.copy2(SCRIPTS / name, staging / "python" / name)
         for path in staging.rglob("*"):
             path.chmod(0o755 if path.is_dir() or path.name == "collector" else 0o644)
@@ -499,7 +511,9 @@ def main():
     if args.command == "doctor":
         from doctor_guest import doctor
 
-        return doctor(configuration(args.config))
+        return doctor(
+            configuration(args.config), runtime=ROOT == Path("/opt/iosec-endpoint")
+        )
     if args.command == "build":
         build()
     elif args.command == "install":

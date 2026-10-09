@@ -1,0 +1,19 @@
+{
+  "passed": false,
+  "phase": "module-free encoder build",
+  "reason": "The encoder staging list omitted newly shared BPF headers",
+  "log": "In file included from encoder.bpf.c:2:\n./reader.bpf.c:22:10: fatal error: 'diagnostics.bpf.h' file not found\n   22 | #include \"diagnostics.bpf.h\"\n      |          ^~~~~~~~~~~~~~~~~~~\n1 error generated.\n",
+  "correction": "Stage all generated and production headers from the actual build directory",
+  "subsequent_failures": [
+    {
+      "phase": "endpoint pressure test",
+      "reason": "Test indexed flags instead of decoded source_flags",
+      "correction": "Use the published decoded field name"
+    },
+    {
+      "phase": "continuous-frame recovery",
+      "reason": "Capture compared current epoch with retained binding epoch and marked recovered source unknown",
+      "correction": "Snapshot the current capture epoch at capture entry and verify it again after decoding; retain task-birth binding validation"
+    }
+  ]
+}
