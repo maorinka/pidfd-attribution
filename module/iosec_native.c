@@ -4,7 +4,8 @@
  * before copying bytes. Fault-capable user reads are registered as sleepable;
  * nonsleepable helpers only operate on validated live buffers. Capture
  * preserves explicit unknown/error/truncation flags and the compact wire-v1
- * bounds. Provenance: ../provenance.json and git history. */
+ * bounds. */
+#include "source_protocol.h"
 #include <linux/bpf.h>
 #include <linux/btf.h>
 #include <linux/btf_ids.h>
@@ -23,29 +24,15 @@
 #define BTF_KFUNCS_START(name) BTF_SET8_START(name)
 #define BTF_KFUNCS_END(name) BTF_SET8_END(name)
 #endif
-/* Next-reduction fused table prefix (native-only; config.h untouched so BPF
- * stays byte-identical to base). Length at table+16 is inside table+0..95. */
+/* Bounded line-table prefix copied before decoding. Length at table+16 is
+ * inside table+0..95. */
 #define IOSEC_TABLE_PREFIX_DATA 64
 #define IOSEC_TABLE_PREFIX_SIZE (BYTES_DATA + IOSEC_TABLE_PREFIX_DATA)
-struct source_frame {
-  char file[128], function[64];
-  int line, bytecode;
-};
-struct source_event {
-  u64 pid_tid;
-  u32 count, flags;
-  struct source_frame frames[16];
-  u64 birth;
-};
 /* Compact wire v1 (byte-identical to BPF reader + loader + direct_ring.h).
  * Header 176 bytes: 16-byte magic/version/size/reserved, 88-byte
  * object-binding tail (file..coverage, same field order as struct event),
  * three 24-byte actor descriptors. Frames follow contiguously, 200 bytes
  * each, only populated frames, opener then acquirer then live. */
-struct wire_actor {
-  u64 pid_tid, birth;
-  u32 count, flags;
-};
 struct event_tail {
   u64 file, files, generation, target, targetbirth, inode;
   s64 result, inner;
@@ -61,7 +48,7 @@ struct wire_header {
     };
     struct event_tail tail;
   };
-  struct wire_actor actors[3];
+  struct wire_actor actors[IOSEC_ACTOR_COUNT];
 };
 struct full_event {
   struct source_event opener, acquirer, live;
@@ -80,10 +67,10 @@ struct unicode_ascii_header {
   u8 unused[8];
   u32 state;
 } __attribute__((packed));
-static_assert(sizeof(struct source_event) == 3224);
-static_assert(sizeof(struct source_frame) == 200);
-static_assert(sizeof(struct full_event) == 9760);
-static_assert(sizeof(struct wire_header) == 176);
+static_assert(sizeof(struct source_event) == IOSEC_SOURCE_BYTES);
+static_assert(sizeof(struct source_frame) == IOSEC_FRAME_BYTES);
+static_assert(sizeof(struct full_event) == IOSEC_EVENT_BYTES);
+static_assert(sizeof(struct wire_header) == IOSEC_WIRE_V1_BYTES);
 static_assert(sizeof(struct wire_actor) == 24);
 static_assert(sizeof(struct event_tail) == 88);
 static_assert(offsetof(struct wire_header, file) == 16);
@@ -113,7 +100,7 @@ static u64 python_code_type(void) {
 }
 static int native_read(void *out, u32 size, u64 address) {
   const void __user *from = (const void __user *)(unsigned long)address;
-  /* Codex scalar revision: exact eight-byte reads use the architecture's
+  /* exact eight-byte reads use the architecture's
    * fault-capable, access-checked get_user helper. It recovers cold pages
    * and reports an unmapped/invalid address as EFAULT. Keep byte-buffer
    * destinations unaligned-safe through memcpy. No persistent cache or
@@ -126,7 +113,7 @@ static int native_read(void *out, u32 size, u64 address) {
     memcpy(out, &value, sizeof(value));
     return 0;
   }
-  /* Codex resident-first revision: nofault copy succeeds on resident
+  /* nofault copy succeeds on resident
    * current-user bytes. Any nofault failure retries the WHOLE read with
    * fault-capable copy_from_user, overwriting a partial first copy.
    * No cache, skipped read or success on a partial read is introduced.
@@ -324,12 +311,12 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
   e->pid_tid = ((u64)current->tgid << 32) | (u32)current->pid;
   e->birth = current->start_time;
   if (native_read(&frame, sizeof(frame), state + TSTATE_FRAME)) {
-    e->flags = 1 | 64;
+    e->flags = IOSEC_SOURCE_READ_ERROR | IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
 #if TSTATE_FRAME_INDIRECT
   if (!frame || native_read(&frame, sizeof(frame), frame + CFRAME_FRAME)) {
-    e->flags = 1 | 64;
+    e->flags = IOSEC_SOURCE_READ_ERROR | IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
 #endif
@@ -342,7 +329,7 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
     int target, line;
     long flen, nlen;
     if (native_read(&f, sizeof(f), frame)) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     frame = f.previous;
@@ -356,58 +343,56 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
      * type read is a byte-subset of the 144-byte code_layout read at the
      * same base, so issuing both is redundant. Two paths preserve the
      * exact predecessor flag/sentinel order:
-     * - count>=16 (rare truncation path): legacy type-first. Non-code
-     *   frames continue silently without a full read; code frames report
+     * - count>=IOSEC_SOURCE_FRAMES (rare truncation path): legacy type-first.
+     * Non-code frames continue silently without a full read; code frames report
      *   flag 32 before any full read that could fault (flag 1).
-     * - count<16 (hot path): ONE full read, type checked from the same
-     *   bytes. Code frames with accessible tails save one user read.
-     *   On full-read fault, fall back to the standalone type read: type
-     *   readable + non-code continues silently (preserves the sentinel
-     *   for tails with inaccessible bytes); type unreadable, or
-     *   type==CODE with an unreadable tail, reports flag 1 (same as the
-     *   predecessor's code-read fault). A full-readable non-code object
-     *   is confirmed with one type read to preserve the predecessor's
-     *   racy-heap strictness (type==CODE then full-type!=CODE flagged
-     *   1); stable non-code still skips silently. Null code still
-     *   reports flag 1 (not a silent skip), as before. Racy heaps:
-     *   predecessor order was type-then-full, fused order is
-     *   full-then-type-on-fault; stable-heap decisions are identical and
-     *   snapshots are documented non-atomic. Wrap: a code base near
-     *   U64_MAX fails the full read in copy_from_user access checks and
-     *   falls back to the same wrapped type probe as before. */
+     * - count<IOSEC_SOURCE_FRAMES (hot path): ONE full read, type checked from
+     * the same bytes. Code frames with accessible tails save one user read. On
+     * full-read fault, fall back to the standalone type read: type readable +
+     * non-code continues silently (preserves the sentinel for tails with
+     * inaccessible bytes); type unreadable, or type==CODE with an unreadable
+     * tail, reports flag 1 (same as the predecessor's code-read fault). A
+     * full-readable non-code object is confirmed with one type read to preserve
+     * the predecessor's racy-heap strictness (type==CODE then full-type!=CODE
+     * flagged 1); stable non-code still skips silently. Null code still reports
+     * flag 1 (not a silent skip), as before. Racy heaps: predecessor order was
+     * type-then-full, fused order is full-then-type-on-fault; stable-heap
+     * decisions are identical and snapshots are documented non-atomic. Wrap: a
+     * code base near U64_MAX fails the full read in copy_from_user access
+     * checks and falls back to the same wrapped type probe as before. */
     /* FUSED-PROBE-BEGIN */
     if (!code) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
-    if (count >= 16) {
+    if (count >= IOSEC_SOURCE_FRAMES) {
       if (native_read(&type, sizeof(type), code + OBJECT_TYPE)) {
-        e->flags |= 1;
+        e->flags |= IOSEC_SOURCE_READ_ERROR;
         break;
       }
       if (type != code_type)
         continue;
-      e->flags |= 32;
+      e->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
       break;
     }
     if (native_read(&m, sizeof(m), code)) {
       if (native_read(&type, sizeof(type), code + OBJECT_TYPE)) {
-        e->flags |= 1;
+        e->flags |= IOSEC_SOURCE_READ_ERROR;
         break;
       }
       if (type != code_type)
         continue;
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     if (m.type != code_type) {
       if (native_read(&type, sizeof(type), code + OBJECT_TYPE)) {
-        e->flags |= 1;
+        e->flags |= IOSEC_SOURCE_READ_ERROR;
         break;
       }
       if (type != code_type)
         continue;
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     /* FUSED-PROBE-END */
@@ -423,7 +408,7 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
       thave = true;
     } else {
       if (native_read(&length, sizeof(length), m.table + BYTES_SIZE)) {
-        e->flags |= 1;
+        e->flags |= IOSEC_SOURCE_READ_ERROR;
         break;
       }
       thave = false;
@@ -431,16 +416,16 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
     /* FUSED-TABLE-LENGTH-END */
     if (native_unicode_header(m.filename, &flen_meta, &fs) ||
         native_unicode_header(m.name, &nlen_meta, &ns)) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     if ((fs & 96) != 96 || (ns & 96) != 96) {
-      e->flags |= 2;
+      e->flags |= IOSEC_SOURCE_UNSUPPORTED_STRING;
       break;
     }
     if (flen_meta < 0 || flen_meta > 1048576 || nlen_meta < 0 ||
         nlen_meta > 1048576) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     /* Overflow-safe instruction bound (matches both BPF walkers):
@@ -448,21 +433,21 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
      * difference>=CODE_BYTECODE, then the bounded offset. */
 #if PYTHON_MINOR == 10
     if (f.instr < 0 || f.instr > 524288 || length > 1048576) {
-      e->flags |= 4;
+      e->flags |= IOSEC_SOURCE_INVALID_BOUNDS;
       break;
     }
     target = f.instr;
 #else
     if (f.instr < code || f.instr - code < CODE_BYTECODE ||
         f.instr - code - CODE_BYTECODE > 1048576 || length > 1048576) {
-      e->flags |= 4;
+      e->flags |= IOSEC_SOURCE_INVALID_BOUNDS;
       break;
     }
     target = (f.instr - code - CODE_BYTECODE) / 2;
 #endif
     u32 amount = length > 4096 ? 4096 : (u32)length;
     if (!amount) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     if (thave) {
@@ -473,19 +458,19 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
         if (native_read((u8 *)bytes + IOSEC_TABLE_PREFIX_DATA,
                         amount - IOSEC_TABLE_PREFIX_DATA,
                         m.table + BYTES_DATA + IOSEC_TABLE_PREFIX_DATA)) {
-          e->flags |= 1;
+          e->flags |= IOSEC_SOURCE_READ_ERROR;
           break;
         }
       }
     } else {
       if (native_read(bytes, amount, m.table + BYTES_DATA)) {
-        e->flags |= 1;
+        e->flags |= IOSEC_SOURCE_READ_ERROR;
         break;
       }
     }
     /* FUSED-TABLE-END */
     if (native_line(bytes, amount, target, m.firstline, &line)) {
-      e->flags |= 8;
+      e->flags |= IOSEC_SOURCE_LINE_ERROR;
       break;
     }
     struct source_frame *dst = &e->frames[count];
@@ -494,20 +479,20 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
     nlen = native_unicode_string(dst->function, sizeof(dst->function), m.name,
                                  nlen_meta);
     if (flen < 0 || nlen < 0) {
-      e->flags |= 1;
+      e->flags |= IOSEC_SOURCE_READ_ERROR;
       break;
     }
     if (flen == sizeof(dst->file) || nlen == sizeof(dst->function))
-      e->flags |= 16;
+      e->flags |= IOSEC_SOURCE_STRING_TRUNCATED;
     dst->line = line;
     dst->bytecode = target * 2;
     count++;
   }
   e->count = count;
   if (frame)
-    e->flags |= 32;
+    e->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
   if (!count)
-    e->flags |= 64;
+    e->flags |= IOSEC_SOURCE_UNKNOWN;
   return 0;
 }
 /* Current-task-stack exclusion for the map-only helpers. Production callers
@@ -518,10 +503,8 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
  * for the map helpers, <=9776 for the emit packer); both bounds are below
  * THREAD_SIZE, so checking the first and last byte detects any overlap.
  * Pointer arithmetic is overflow-safe: a wrapped end rejects.
- * Emit revision note: the cap moved 9760 -> 9776 ONLY to admit the packer's
- * exact wire-record destination (176 + 48*200). The map helpers still
- * pre-validate <=9760 before calling, so their accepted range and behavior
- * are unchanged. */
+ * Map helpers validate the event-size limit before the larger wire-size bound.
+ */
 static bool iosec_on_current_stack(const void *ptr, u32 size) {
   const char *start = (const char *)ptr;
   const char *last;
@@ -532,7 +515,7 @@ static bool iosec_on_current_stack(const void *ptr, u32 size) {
     return true;
   return object_is_on_stack(start) || object_is_on_stack(last);
 }
-/* Muse mapcopy: non-sleepable verifier-bounded kernel-memory copy for known
+/* mapcopy: non-sleepable verifier-bounded kernel-memory copy for known
  * live BPF map-to-map copies over initialized writable map buffers only. No
  * scalar kernel-address interface, no arbitrary user/kernel pointer
  * dereference, no fault or capacity semantics: the BPF verifier bounds both
@@ -569,7 +552,7 @@ __bpf_kfunc int iosec_map_copy(void *to, u32 to__sz, const void *from,
   memmove(to, from, to__sz);
   return 0;
 }
-/* Muse mapzero: non-sleepable verifier-bounded zeroing for known live BPF
+/* mapzero: non-sleepable verifier-bounded zeroing for known live BPF
  * map buffers only (clear_source 3224, fresh 9760). The frozen zero array
  * is all zero, so memset(to, 0, to__sz) is byte-identical to copying from
  * it, without passing a readonly source the verifier rejects. Bounded
@@ -587,7 +570,7 @@ __bpf_kfunc int iosec_map_zero(void *to, u32 to__sz) {
   memset(to, 0, to__sz);
   return 0;
 }
-/* Actual-Muse native emit serializer: pack the exact compact wire record in
+/* Actual-native emit serializer: pack the exact compact wire record in
  * one non-sleepable C call. Replaces the BPF-side 88-byte mapcopy, ~15 BPF
  * actor-field stores and four bpf_dynptr_write calls (header + three frame
  * arrays) with a single bounded pack into a verifier-bounded destination:
@@ -690,7 +673,7 @@ __bpf_kfunc int iosec_emit_pack(void *dst, u32 dst__sz, const void *src,
   return 0;
 }
 
-/* Codex compact historical snapshot. Initialized writable map buffers only;
+/* compact historical snapshot. Initialized writable map buffers only;
  * validates both whole event ranges before touching bytes. History is copied
  * at syscall entry, never joined after close. Only populated frame bytes are
  * copied; unused map frames are private and never serialized. Count locals

@@ -1,15 +1,1 @@
-#define TSTATE_FRAME 72
-#define FRAME_CODE 0
-#define FRAME_PREVIOUS 8
-#define FRAME_INSTR 56
-#define CODE_FILENAME 112
-#define CODE_NAME 120
-#define CODE_FIRSTLINE 68
-#define CODE_LINETABLE 136
-#define CODE_BYTECODE 208
-#define BYTES_SIZE 16
-#define BYTES_DATA 32
-#define UNICODE_STATE 32
-#define ASCII_DATA 40
-#define OBJECT_TYPE 8
-#define CODE_TYPE_ADDRESS 11213488
+../../fixtures/prerequisites/config.h

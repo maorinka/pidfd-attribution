@@ -1,13 +1,13 @@
-"""Codex real kernel capture test of owned synthetic ASCII objects at guard pages."""
+"""real kernel capture test of owned synthetic ASCII objects at guard pages."""
 
 from pathlib import Path
 import subprocess, hashlib, json, shutil
 
-R = __import__("settings").ROOT
-E = R / "evidence/string-controls"
-G = Path("/var/tmp/pidfd-standalone-strings")
-E.mkdir(parents=True, exist_ok=True)
-G.mkdir(exist_ok=True)
+ROOT = __import__("settings").ROOT
+EVIDENCE_DIR = ROOT / "evidence/string-controls"
+RUNTIME_DIR = Path("/var/tmp/pidfd-standalone-strings")
+EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+RUNTIME_DIR.mkdir(exist_ok=True)
 bpf = r"""#include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
@@ -186,9 +186,9 @@ if offsets["TSTATE_FRAME_INDIRECT"]:
         "put_root(state,(uint64_t)synthetic_cframe)",
         f'put64(state,{offsets["TSTATE_FRAME"]},(uint64_t)synthetic_cframe)',
     )
-(G / "strings.bpf.c").write_text(bpf)
-(G / "loader.c").write_text(loader)
-shutil.copy2(R / "evidence/build/vmlinux.h", G / "vmlinux.h")
+(RUNTIME_DIR / "strings.bpf.c").write_text(bpf)
+(RUNTIME_DIR / "loader.c").write_text(loader)
+shutil.copy2(ROOT / "evidence/build/vmlinux.h", RUNTIME_DIR / "vmlinux.h")
 for i, cmd in enumerate(
     [
         [
@@ -220,12 +220,14 @@ for i, cmd in enumerate(
         ["./loader"],
     ]
 ):
-    p = subprocess.run(cmd, cwd=G, capture_output=True, text=True, timeout=120)
-    (E / f"step-{i}.log").write_text(p.stdout + p.stderr)
+    p = subprocess.run(
+        cmd, cwd=RUNTIME_DIR, capture_output=True, text=True, timeout=120
+    )
+    (EVIDENCE_DIR / f"step-{i}.log").write_text(p.stdout + p.stderr)
     assert p.returncode == 0, p.stderr[-2000:]
     print(p.stdout, end="")
 for n in ["strings.bpf.c", "strings.bpf.o", "loader.c", "loader", "vmlinux.h"]:
-    shutil.copy2(G / n, E / n)
+    shutil.copy2(RUNTIME_DIR / n, EVIDENCE_DIR / n)
 report = dict(
     passed=True,
     real_kernel_capture=True,
@@ -245,13 +247,13 @@ report = dict(
         "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in",
     ],
     module_sha256=hashlib.sha256(
-        (R / "evidence/build/iosec_native.ko").read_bytes()
+        (ROOT / "evidence/build/iosec_native.ko").read_bytes()
     ).hexdigest(),
     artifacts={
         p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in E.iterdir()
+        for p in EVIDENCE_DIR.iterdir()
         if p.is_file() and p.name != "verification.json"
     },
     full_goal_complete=False,
 )
-(E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+(EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")

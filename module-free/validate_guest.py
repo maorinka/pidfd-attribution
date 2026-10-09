@@ -3,10 +3,16 @@
 from pathlib import Path
 import argparse, datetime, fcntl, hashlib, json, os, shutil, stat, statistics, subprocess, sys
 
-S = Path(__file__).resolve().parent
-R = S
-E = R / "evidence"
-sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+SOURCE_DIR = Path(__file__).resolve().parent
+ROOT = SOURCE_DIR
+EVIDENCE_DIR = ROOT / "evidence"
+
+
+def sha256_file(path):
+    p = path
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument(
     "action",
@@ -65,9 +71,10 @@ from prepare_guest import prepare
 pins = prepare()
 if args.action == "prepare":
     sys.exit(0)
-provenance = json.loads((S / "provenance.json").read_text())
+source_manifest = json.loads((SOURCE_DIR / "source_manifest.json").read_text())
 protected = {
-    str(S / row["file"]): sha(S / row["file"]) for row in provenance["production_files"]
+    str(SOURCE_DIR / row["file"]): sha256_file(SOURCE_DIR / row["file"])
+    for row in source_manifest["production_files"]
 }
 
 
@@ -92,26 +99,30 @@ baseline_ids = {
     p["id"]
     for p in json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
 }
-if E.exists():
+if EVIDENCE_DIR.exists():
     archive = (
-        R
+        ROOT
         / "evidence-runs"
         / datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     )
     archive.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(E), str(archive))
-E.mkdir(parents=True)
-(E / "pins.json").write_text(json.dumps(pins, indent=2) + "\n")
-(E / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
+    shutil.move(str(EVIDENCE_DIR), str(archive))
+EVIDENCE_DIR.mkdir(parents=True)
+(EVIDENCE_DIR / "pins.json").write_text(json.dumps(pins, indent=2) + "\n")
+(EVIDENCE_DIR / "source_manifest.json").write_text(
+    json.dumps(source_manifest, indent=2) + "\n"
+)
 
 
 def step(name, driver, *arguments):
     command = [sys.executable]
-    command.extend([str(S / driver), *map(str, arguments)])
+    command.extend([str(SOURCE_DIR / driver), *map(str, arguments)])
     print(name + " running", flush=True)
-    with (E / (name + ".log")).open("w") as output:
+    with (EVIDENCE_DIR / (name + ".log")).open("w") as output:
         result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT)
-    assert result.returncode == 0, f'{name} failed; see {E / (name + ".log")}'
+    assert (
+        result.returncode == 0
+    ), f'{name} failed; see {EVIDENCE_DIR / (name + ".log")}'
     print(name + " passed", flush=True)
 
 
@@ -122,13 +133,13 @@ try:
 
         pipeline.preflight()
         pipeline.build()
-        print("Built artifacts: " + str(E / "build"))
+        print("Built artifacts: " + str(EVIDENCE_DIR / "build"))
         sys.exit(0)
     step("correctness", "run_collector_path_guest.py")
     if args.action == "run":
         assert args.fixture and args.fixture.is_file(), "run requires --fixture PATH"
         step("fixture", "fixture_guest.py", args.fixture.resolve())
-        print("Fixture output: " + str(E / "fixture.log"))
+        print("Fixture output: " + str(EVIDENCE_DIR / "fixture.log"))
         sys.exit(0)
     step("strings", "strings_collector_path_guest.py")
     step("encoder", "encoder_guest.py")
@@ -136,10 +147,10 @@ try:
     step("history", "history_guest.py")
     step("compat", "compat_guest.py")
     if args.action == "benchmark":
-        step("cpu", "measure_collector_path_guest.py", E / "cpu")
+        step("cpu", "measure_collector_path_guest.py", EVIDENCE_DIR / "cpu")
     step("source-oracle", "oracle_collector_path_guest.py")
     for path, digest in protected.items():
-        assert sha(Path(path)) == digest, "Original changed: " + path
+        assert sha256_file(Path(path)) == digest, "Original changed: " + path
     assert modules() == baseline_modules, "Kernel module set changed"
     remaining = json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
     assert {p["id"] for p in remaining} == baseline_ids, "BPF program set changed"
@@ -156,22 +167,24 @@ try:
         effective_capabilities=cap_eff,
         CAP_SYS_MODULE_present=bool(int(cap_eff, 16) & (1 << 16)),
         production_sha256={
-            row["file"]: sha(S / row["file"]) for row in provenance["production_files"]
+            row["file"]: sha256_file(SOURCE_DIR / row["file"])
+            for row in source_manifest["production_files"]
         },
-        driver_sha256={p.name: sha(p) for p in S.glob("*.py")},
+        driver_sha256={p.name: sha256_file(p) for p in SOURCE_DIR.glob("*.py")},
         support_sha256={
-            str(p.relative_to(S)): sha(p) for p in (S / "support").glob("*.py")
+            str(p.relative_to(SOURCE_DIR)): sha256_file(p)
+            for p in (SOURCE_DIR / "support").glob("*.py")
         },
-        regression_checker_sha256=sha(
-            S / "fixtures/regression/scripts/verify_pidfd_source.py"
+        regression_checker_sha256=sha256_file(
+            SOURCE_DIR / "fixtures/regression/scripts/verify_pidfd_source.py"
         ),
         completed_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),
     )
-    (E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+    (EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 except BaseException as error:
     if not isinstance(error, SystemExit) or error.code:
-        (E / "failure.json").write_text(
+        (EVIDENCE_DIR / "failure.json").write_text(
             json.dumps(dict(passed=False, error=repr(error)), indent=2) + "\n"
         )
     raise
@@ -183,7 +196,7 @@ finally:
         baseline_bpf_ids=sorted(baseline_ids),
         remaining_bpf_ids=sorted(p["id"] for p in remaining),
     )
-    (E / "cleanup.json").write_text(json.dumps(cleanup, indent=2) + "\n")
+    (EVIDENCE_DIR / "cleanup.json").write_text(json.dumps(cleanup, indent=2) + "\n")
     if not all(
         cleanup[k] for k in ("bpf_program_ids_restored", "module_set_unchanged")
     ):

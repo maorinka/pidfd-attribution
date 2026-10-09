@@ -13,3 +13,6 @@ __pycache__/
 *.cmd
 Module.symvers
 modules.order
+
+# Repository documentation is not tracked.
+*.[mM][dD]

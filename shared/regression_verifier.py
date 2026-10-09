@@ -369,10 +369,6 @@ def verify(root, runtime, expected_empty_maps=19):
     )
     result = {
         "passed": True,
-        "proposed_by": "Muse (129)",
-        "adapted_by": "Codex (130)",
-        "implemented_by": "Codex (130)",
-        "validated_by": "Codex (130)",
         "profiles": profiles,
         "kernel_records": sum(p["kernel_records"] for p in profiles.values()),
         "exact_source_ASTs_and_file_reference_install_write_identity": True,

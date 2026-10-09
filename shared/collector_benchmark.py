@@ -1,7 +1,7 @@
 """Alternating raw/monitored CPU screen with imported record/source checks.
 
 The denominator and fixture cadence are unchanged; this screen is not a
-whole-endpoint performance benchmark. See the backend README for exclusions.
+whole-endpoint performance benchmark. Excludes global kernel and deferred work outside the collection window.
 """
 
 import hashlib
@@ -113,7 +113,7 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
                     [".bin"] if mode != "raw" else []
                 ):
                     shutil.copy2(TIMED / (tag + suffix), RUN / (tag + suffix))
-                # Codex: untimed cleanup only after full output and exact archive proof.
+                # untimed cleanup only after full output and exact archive proof.
                 if mode != "raw":
                     tmp_binary, archived_binary = TIMED / (tag + ".bin"), RUN / (
                         tag + ".bin"
@@ -147,7 +147,7 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
             four_vcpu_pair_range=[min(one) / 4, max(one) / 4],
             all_five_pairs_below_target_four_vcpu=all(0 < x / 4 < 0.05 for x in one),
         ),
-        candidate="actual Muse deferred steady-end snapshot; Codex compact-write native/BPF/ring/encoder byte-identical; workload, cadence and output bytes unchanged; final collector stop is after all drains, includes extra empty-drain work.",
+        candidate="Final CPU snapshot follows all drains, including empty-drain work.",
         scope="Actual four worker threads plus parent; serial50writes/s CPU. Other shared-table races and leader-first exit remain unproven.",
         bpf_source_sha256=hashlib.sha256(
             (LOCAL / "reader.bpf.c").read_bytes()

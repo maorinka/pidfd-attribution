@@ -8,16 +8,16 @@ from pathlib import Path
 import sys
 
 ROOT = __import__("settings").ROOT
-LOCAL = Path("/var/tmp/pidfd-standalone")
+RUNTIME_DIR = Path("/var/tmp/pidfd-standalone")
 import re
 
-fixture = LOCAL / "deep_fixture.py"
+fixture = RUNTIME_DIR / "deep_fixture.py"
 tree = ast.parse(fixture.read_text())
 functions = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
 results = []
 for depth in [4, 10, 11]:
-    text = (LOCAL / f"deep-{depth}.log").read_text()
-    app = json.loads((LOCAL / f"deep-{depth}.json").read_text())
+    text = (RUNTIME_DIR / f"deep-{depth}.log").read_text()
+    app = json.loads((RUNTIME_DIR / f"deep-{depth}.json").read_text())
     assert text.count("MAP_EMPTY ") == 19 and "MAPS_EMPTY 1" in text
     assert dict(re.findall(r"DIAGNOSTIC (\d+) (\d+)", text)) == {"0": "0", "1": "0"}
     rows = text_events(text)
@@ -90,7 +90,9 @@ result = dict(
     status="passed",
     results=results,
     fixture_sha256=hashlib.sha256(fixture.read_bytes()).hexdigest(),
-    bpf_source_sha256=hashlib.sha256((LOCAL / "reader.bpf.c").read_bytes()).hexdigest(),
+    bpf_source_sha256=hashlib.sha256(
+        (RUNTIME_DIR / "reader.bpf.c").read_bytes()
+    ).hexdigest(),
 )
 output = (
     Path(sys.argv[2])

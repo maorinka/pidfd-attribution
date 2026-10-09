@@ -1,0 +1,395 @@
+{
+  "passed": true,
+  "integration": {
+    "passed": true,
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "base": "/var/tmp/pidfd-service-test-g16kt9wi",
+    "baseline_bpf_ids": [
+      2,
+      18,
+      2052,
+      2053,
+      2054,
+      2055,
+      2056,
+      2057,
+      2058,
+      2059,
+      2060,
+      2061,
+      2062,
+      2063,
+      2064
+    ],
+    "lockdown": "none [integrity] confidentiality",
+    "modules_disabled": "1",
+    "no_cap_sys_module": true,
+    "identity": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 3609,
+        "session": "358da0e1c1b535b1a7059a8983dae5ce",
+        "boot_id": "1ff49b97-9455-4788-91be-0812aa621775",
+        "start_monotonic_ns": 2047557837301,
+        "updated_monotonic_ns": 2053730003877,
+        "updated_realtime_ns": 1791568158071034170,
+        "attachments": 29,
+        "capture_python": false,
+        "records": 18,
+        "session_bytes": 4032,
+        "active_segment": "events-01791568151898882594-358da0e1c1b535b1a7059a8983dae5ce-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19348,
+        "restart_resets_history": true
+      },
+      "independent_existing_process_writes": 5,
+      "pidfd_writes": 3,
+      "duplicate_rejected": true
+    },
+    "source": {
+      "health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 3631,
+        "session": "cbc10ec63254a52e864d4caeacb6c55d",
+        "boot_id": "1ff49b97-9455-4788-91be-0812aa621775",
+        "start_monotonic_ns": 2053942412793,
+        "updated_monotonic_ns": 2063261139794,
+        "updated_realtime_ns": 1791568167602171088,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 50,
+        "session_bytes": 118600,
+        "active_segment": "events-01791568158283462089-cbc10ec63254a52e864d4caeacb6c55d-0000000005.bin",
+        "segments_created": 6,
+        "segments_deleted": 3,
+        "retention_skipped": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 19196,
+        "restart_resets_history": true
+      },
+      "serial_writes": 3,
+      "threaded_writes": 13,
+      "oracle_frames": 279,
+      "leader_first_exit_writes": 5,
+      "rotation_keeps_session": true,
+      "bounded_segments": true
+    },
+    "restart": {
+      "new_session": true,
+      "crash_cleanup": true,
+      "subsequent_writes": 3
+    },
+    "global": {
+      "empty_prefix": true,
+      "pidfd_writes": 3
+    },
+    "capacity": {
+      "explicit_history_gap": true,
+      "state_errors": 22
+    },
+    "ring_pressure": {
+      "explicit_history_gap": true,
+      "ring_drops": 13845
+    },
+    "cgroup": {
+      "exact_id": 4464,
+      "matching_writes": 3,
+      "excluded_records": 0,
+      "unknown_id_rejected": true,
+      "empty_group_accepted": true
+    },
+    "final_bpf_ids": [
+      2,
+      18,
+      2052,
+      2053,
+      2054,
+      2055,
+      2056,
+      2057,
+      2058,
+      2059,
+      2060,
+      2061,
+      2062,
+      2063,
+      2064
+    ],
+    "modules_unchanged": true,
+    "cleanup_ok": true,
+    "sources": {
+      "reader.bpf.c": "f5bdd5150a51324e1c10f789f084db268d9a0b3099a0355a860ac1c8eaf3290f",
+      "collector.c": "fda51efd2f431322f6cb5a6a5c5d0582825a769a3227a660ab664deb53b4f8b5",
+      "direct_ring.h": "cd9bff4b0d5f0c401d900900ed3216871ed99414985af828cd1e379852822a7d",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f"
+    }
+  },
+  "systemd": {
+    "passed": true,
+    "base": "/var/tmp/pidfd-systemd-test-4lpzpscq",
+    "installation_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      35,
+      36,
+      37,
+      38
+    ],
+    "hardening": {
+      "SystemCallArchitectures": "native",
+      "RestrictNamespaces": "yes",
+      "RestrictSUIDSGID": "yes",
+      "PrivateDevices": "yes",
+      "ProtectProc": "invisible"
+    },
+    "source_writes": 3,
+    "attachments": 35,
+    "effective_capabilities": "0xc001200004",
+    "cap_sys_module": false,
+    "watchdog_notification": true,
+    "reload_rotates": true,
+    "automatic_restart": true,
+    "old_session": "199c922a480f5a24adfdb96a7340c046",
+    "new_session": "68f010a25550d63e13d2bc338bb2e753",
+    "active_health": {
+      "schema_version": 1,
+      "state": "running",
+      "pid": 3443,
+      "session": "68f010a25550d63e13d2bc338bb2e753",
+      "boot_id": "1ff49b97-9455-4788-91be-0812aa621775",
+      "start_monotonic_ns": 1537484425483,
+      "updated_monotonic_ns": 1541321040362,
+      "updated_realtime_ns": 1791567646271843113,
+      "attachments": 35,
+      "capture_python": true,
+      "records": 0,
+      "session_bytes": 0,
+      "active_segment": "events-01791567642435228234-68f010a25550d63e13d2bc338bb2e753-0000000000.bin",
+      "segments_created": 1,
+      "segments_deleted": 1,
+      "retention_skipped": 0,
+      "ring_drops": 0,
+      "state_errors": 0,
+      "cleanup_fallback": 0,
+      "history_gaps": false,
+      "errno": 0,
+      "reservation_state": 1,
+      "reservation_errno": 0,
+      "max_rss_kib": 26960,
+      "restart_resets_history": true
+    },
+    "final_health": {
+      "schema_version": 1,
+      "state": "stopped",
+      "pid": 3443,
+      "session": "68f010a25550d63e13d2bc338bb2e753",
+      "boot_id": "1ff49b97-9455-4788-91be-0812aa621775",
+      "start_monotonic_ns": 1537484425483,
+      "updated_monotonic_ns": 1544242449238,
+      "updated_realtime_ns": 1791567649193251990,
+      "attachments": 35,
+      "capture_python": true,
+      "records": 0,
+      "session_bytes": 0,
+      "active_segment": "events-01791567642435228234-68f010a25550d63e13d2bc338bb2e753-0000000000.bin",
+      "segments_created": 1,
+      "segments_deleted": 1,
+      "retention_skipped": 0,
+      "ring_drops": 0,
+      "state_errors": 0,
+      "cleanup_fallback": 0,
+      "history_gaps": false,
+      "errno": 0,
+      "reservation_state": 1,
+      "reservation_errno": 0,
+      "max_rss_kib": 26960,
+      "restart_resets_history": true
+    },
+    "final_bpf_ids": [
+      2,
+      18,
+      2052,
+      2053,
+      2054,
+      2055,
+      2056,
+      2057,
+      2058,
+      2059,
+      2060,
+      2061,
+      2062,
+      2063,
+      2064
+    ],
+    "baseline_bpf_ids": [
+      2,
+      18,
+      2052,
+      2053,
+      2054,
+      2055,
+      2056,
+      2057,
+      2058,
+      2059,
+      2060,
+      2061,
+      2062,
+      2063,
+      2064
+    ],
+    "cleanup_ok": true
+  },
+  "storage": {
+    "passed": true,
+    "rotations": 5,
+    "retained_segments": 3,
+    "input_records": 38400,
+    "decoded_retained_records": 1024,
+    "record_boundaries_preserved": true,
+    "no_preallocated_zero_tail": true,
+    "failed_write_does_not_release_ring": true,
+    "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+    "admin_modified_segments_preserved": true,
+    "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+    "bounded_consumer_backlog_retry": true,
+    "busy_record_no_spin": true,
+    "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1"
+  },
+  "build": {
+    "schema_version": 1,
+    "upstream_only": true,
+    "pins": {
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "python_binary": "/usr/bin/python3.12",
+      "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+      "python_version": "(3, 12, 3)",
+      "offsets": {
+        "TSTATE_FRAME": 56,
+        "CFRAME_FRAME": 0,
+        "TSTATE_FRAME_INDIRECT": 1,
+        "FRAME_CODE": 0,
+        "FRAME_INSTR": 56,
+        "FRAME_PREVIOUS": 8,
+        "FRAME_OWNER": 70,
+        "CODE_FILENAME": 112,
+        "CODE_NAME": 120,
+        "CODE_FIRSTLINE": 68,
+        "CODE_LINETABLE": 136,
+        "CODE_BYTECODE": 192,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 40,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 12,
+        "CODE_TYPE_ADDRESS": 10670688,
+        "PYTHON_TEXT_ADDRESS": 4325376,
+        "IOSEC_COMPAT_MASK": 2
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 79611,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 739,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 12
+            },
+            {
+              "name": "pathname",
+              "type_id": 4751
+            },
+            {
+              "name": "op",
+              "type_id": 20581
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 30648,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 601,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 601
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 20606
+            }
+          ]
+        }
+      },
+      "target_inputs": {
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754"
+      },
+      "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+    },
+    "sources": {
+      "reader.bpf.c": "f5bdd5150a51324e1c10f789f084db268d9a0b3099a0355a860ac1c8eaf3290f",
+      "collector.c": "fda51efd2f431322f6cb5a6a5c5d0582825a769a3227a660ab664deb53b4f8b5",
+      "direct_ring.h": "cd9bff4b0d5f0c401d900900ed3216871ed99414985af828cd1e379852822a7d",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "source_protocol.h": "b2ebc050eed71e021fafa5b2ddf435644d89df86ee6e12d0af00993b0cf0de62",
+      "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411"
+    },
+    "artifacts": {
+      "collector": "9a2d1d1e1669a0b5c753c7d4ed932724c776762823eea9570f2d4c36feb9afab",
+      "reader.bpf.o": "04dd2e36511f8c1e23a10f53b5b877aef1c79c36667d10f61405ae1ff0d64349"
+    }
+  },
+  "source_sha256": {
+    "service.py": "4f77d357bc63d87e6f77380b0214ff6b2859730e2f84e21f125887f203ebe2fa",
+    "wire.py": "66293f6d660550a7130c86c9d820d37356663220b1e77b0f07e90309328dced0",
+    "settings.py": "9df3b939765e34ea15efbfb6fb225ae88603ff17c5975e9998ff2b5ad00ee844",
+    "demo.py": "a5e7d117a5b957c9ea6a06881ec8cef374a1b35eec7a50be33ca189befb20e50",
+    "doctor_guest.py": "7abd11df3a0d8fcef580f32e0a214c8863b74a14b526801458bf9e5aea275d8d",
+    "prepare_guest.py": "3effb07f88f14e1ca17ec09b255930f3b0a395654cbc353b0d713b9616e50be0"
+  },
+  "systemd_phase": "Unit, collector binary and numeric wire behavior tested before the final enum identifier rename; final BPF integration and CO-RE equivalence verified after rename"
+}

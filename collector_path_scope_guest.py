@@ -3,9 +3,9 @@
 from pathlib import Path
 import hashlib, json, os, subprocess, sys, time
 
-R = __import__("settings").ROOT
-E = R / "evidence"
-module = E / "build/iosec_native.ko"
+ROOT = __import__("settings").ROOT
+EVIDENCE_DIR = ROOT / "evidence"
+module = EVIDENCE_DIR / "build/iosec_native.ko"
 script = Path(sys.argv[1])
 assert script.is_file()
 allowed = {
@@ -23,7 +23,7 @@ assert not Path("/sys/module/iosec_native").exists()
 lockdown = Path("/sys/kernel/security/lockdown")
 assert not lockdown.exists() or lockdown.read_text().startswith("[none]")
 assert Path("/proc/sys/kernel/modules_disabled").read_text().strip() == "0"
-scopes = E / "scopes"
+scopes = EVIDENCE_DIR / "scopes"
 scopes.mkdir(exist_ok=True)
 report = dict(
     baseline_bpf_ids=sorted(baseline_ids),

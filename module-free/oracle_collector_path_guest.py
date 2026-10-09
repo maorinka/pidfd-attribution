@@ -48,7 +48,7 @@ subprocess.run(
     check=True,
 )
 
-# Codex offline source-position check for the independent concurrent-close gate.
+# offline source-position check for the independent concurrent-close gate.
 for name in ("candidate",):
     raw = e / "history-control" / name / "records.bin"
     dest = e / "history-control" / name / "expanded"

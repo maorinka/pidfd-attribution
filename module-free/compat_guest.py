@@ -5,15 +5,15 @@ from pathlib import Path
 import json, os, re, shutil, subprocess, sys
 from settings import ROOT, ARCH
 
-E = ROOT / "evidence/compat-control"
-E.mkdir(exist_ok=True)
+EVIDENCE_DIR = ROOT / "evidence/compat-control"
+EVIDENCE_DIR.mkdir(exist_ok=True)
 if ARCH != "x86":
-    (E / "verification.json").write_text(
+    (EVIDENCE_DIR / "verification.json").write_text(
         json.dumps(dict(status="not-applicable", architecture=ARCH)) + "\n"
     )
     sys.exit(0)
-G = Path("/var/tmp/pidfd-module-free-compat")
-G.mkdir(exist_ok=True)
+RUNTIME_DIR = Path("/var/tmp/pidfd-module-free-compat")
+RUNTIME_DIR.mkdir(exist_ok=True)
 subprocess.run(
     [
         "gcc",
@@ -24,34 +24,34 @@ subprocess.run(
         "-fPIC",
         str(ROOT / "fixtures/compat_control.c"),
         "-o",
-        str(G / "compat.so"),
+        str(RUNTIME_DIR / "compat.so"),
     ],
     check=True,
 )
 for name in ("loader", "reader.bpf.o"):
-    shutil.copy2(ROOT / "evidence/build" / name, G / name)
+    shutil.copy2(ROOT / "evidence/build" / name, RUNTIME_DIR / name)
 env = dict(
     os.environ,
-    PIDFD_COMPAT_LIBRARY=str(G / "compat.so"),
+    PIDFD_COMPAT_LIBRARY=str(RUNTIME_DIR / "compat.so"),
     PIDFD_FIXTURE=str(ROOT / "fixtures/compat_fixture.py"),
-    PIDFD_BINARY=str(E / "records.bin"),
+    PIDFD_BINARY=str(EVIDENCE_DIR / "records.bin"),
 )
 p = subprocess.run(
-    ["./loader"], cwd=G, env=env, capture_output=True, text=True, timeout=45
+    ["./loader"], cwd=RUNTIME_DIR, env=env, capture_output=True, text=True, timeout=45
 )
-(E / "run.log").write_text(p.stdout)
-(E / "stderr.log").write_text(p.stderr)
+(EVIDENCE_DIR / "run.log").write_text(p.stdout)
+(EVIDENCE_DIR / "stderr.log").write_text(p.stderr)
 assert p.returncode == 0, p.stderr[-2000:]
 assert "MAPS_EMPTY 1" in p.stdout
 match = re.search(r"^COMPAT_CONTROL (.+)$", p.stdout, re.M)
 assert match
-rows = events(E / "records.bin")
+rows = events(EVIDENCE_DIR / "records.bin")
 acquired = [x for x in rows if x.stage == 6]
 writes = [x for x in rows if x.stage == 9]
 assert len(acquired) == len(writes) == 1, (len(acquired), len(writes))
 assert acquired[0].accepted == acquired[0].complete == 1
 assert writes[0].accepted == writes[0].complete == 1 and writes[0].result == 1
-expanded = E / "expanded"
+expanded = EVIDENCE_DIR / "expanded"
 expanded.mkdir(exist_ok=True)
 (expanded / "records.bin").write_bytes(b"".join(bytes(x) for x in rows))
 subprocess.run(
@@ -65,5 +65,5 @@ report = dict(
     native_write_records=len(writes),
     compat_calls_create_no_native_records=True,
 )
-(E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+(EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

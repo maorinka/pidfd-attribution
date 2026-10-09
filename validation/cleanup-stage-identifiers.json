@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "change": "Rename stage constants to match target/receive/getfd/close hooks; numeric values and all other source bytes unchanged",
+  "renames": {
+    "IOSEC_STAGE_ACQUIRE_ENTRY": "IOSEC_STAGE_TARGET_RESOLVED",
+    "IOSEC_STAGE_ACQUIRE_FILE": "IOSEC_STAGE_RECEIVE",
+    "IOSEC_STAGE_ACQUIRE_EXIT": "IOSEC_STAGE_RECEIVE_RETURN",
+    "IOSEC_STAGE_CLOSE": "IOSEC_STAGE_PIDFD_GETFD",
+    "IOSEC_STAGE_TABLE_COPY_SLOT": "IOSEC_STAGE_CLOSE",
+    "IOSEC_STAGE_DUPLICATE": "IOSEC_STAGE_FCNTL_DUPLICATION"
+  },
+  "source_sha256": {
+    "shared/source_protocol.h": {
+      "before_sha256": "3f6aea0399ccb3a93663759aa4bafa05357dbbdee9cfa2f1e56185534650e951",
+      "after_sha256": "b2ebc050eed71e021fafa5b2ddf435644d89df86ee6e12d0af00993b0cf0de62"
+    },
+    "reader.bpf.c": {
+      "before_sha256": "47853871afb6bf586a945a82f2a10fa03328476e19b2a56b53bc9ab6d57fd350",
+      "after_sha256": "e2d156d45f9272f87f14e11538c5a00b1bb60ca73fe3078cfefb21b982e25330"
+    },
+    "module-free/reader.bpf.c": {
+      "before_sha256": "1e07402fe881e0a39fb17799293ac8a194e819a1513d2f661dfb78a4967957b1",
+      "after_sha256": "a36cf4a5b3a02abdc65bc8a1612cf2b58a261fd85d6e0ac1184c6668d4e955cc"
+    },
+    "endpoint-service/reader.bpf.c": {
+      "before_sha256": "ce81661cefa1518c0193856aa004bfbe72fcf18c9948a4f9d2dd1bce57374309",
+      "after_sha256": "f5bdd5150a51324e1c10f789f084db268d9a0b3099a0355a860ac1c8eaf3290f"
+    }
+  }
+}

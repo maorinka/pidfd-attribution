@@ -11,7 +11,7 @@
 #define BYTES_DATA 32
 #define UNICODE_STATE 32
 #define ASCII_DATA 40
-/* Native-reader revision (actual Muse): compact ASCII length word offset.
+/* Pinned CPython layout: compact ASCII length word offset.
  * Known pinned CPython 3.14.4 layout: length at +16, state at +32, data
  * at +40. Length is Py_ssize_t (s64); state is u32 bitfield. */
 #define UNICODE_LENGTH 16

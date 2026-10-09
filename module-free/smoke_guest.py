@@ -8,26 +8,26 @@ import subprocess
 import sys
 from settings import ROOT, PYTHON
 
-E = ROOT / "evidence/workload-controls"
-G = Path("/var/tmp/pidfd-module-free")
-E.mkdir(parents=True, exist_ok=True)
+EVIDENCE_DIR = ROOT / "evidence/workload-controls"
+RUNTIME_DIR = Path("/var/tmp/pidfd-module-free")
+EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 profiles = []
 for profile in ("serial", "threads"):
-    binary = E / (profile + ".bin")
-    result = E / (profile + ".json")
+    binary = EVIDENCE_DIR / (profile + ".bin")
+    result = EVIDENCE_DIR / (profile + ".json")
     environment = dict(
         os.environ,
-        PIDFD_FIXTURE=str(G / "workload.py"),
+        PIDFD_FIXTURE=str(RUNTIME_DIR / "workload.py"),
         PIDFD_PROFILE=profile,
         PIDFD_WRITES="3",
         PIDFD_RATE="0",
         PIDFD_BINARY=str(binary),
         PIDFD_RESULT=str(result),
     )
-    with (E / (profile + ".log")).open("w") as output:
+    with (EVIDENCE_DIR / (profile + ".log")).open("w") as output:
         subprocess.run(
             ["./loader"],
-            cwd=G,
+            cwd=RUNTIME_DIR,
             env=environment,
             stdout=output,
             stderr=subprocess.STDOUT,
@@ -63,5 +63,5 @@ report = dict(
     test="Normal os.write releases GIL; serial and threaded attribution",
     profiles=profiles,
 )
-(E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+(EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))

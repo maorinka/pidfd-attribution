@@ -1,3 +1,4 @@
+from support.fixture_transform import held_gil_workload
 from support.collector_records import events, stack, text_events, callee
 from pathlib import Path
 import shutil, subprocess, os, json, sys
@@ -7,15 +8,7 @@ g = Path("/var/tmp/pidfd-module-free-held")
 g.mkdir(exist_ok=True)
 e = r / "evidence/held-baseline"
 e.mkdir(exist_ok=True)
-s = (
-    (r / "fixtures/prerequisites/workload.py")
-    .read_text()
-    .replace(
-        "libc.syscall.restype = ctypes.c_long",
-        "libc.syscall.restype = ctypes.c_long\ngil_libc = ctypes.PyDLL(None, use_errno=True)\ngil_libc.write.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_size_t]\ngil_libc.write.restype = ctypes.c_ssize_t",
-    )
-    .replace("return os.write(fd, b'x')", "return gil_libc.write(fd, b'x', 1)")
-)
+s = held_gil_workload((r / "fixtures/prerequisites/workload.py").read_text())
 (g / "held_fixture.py").write_text(s)
 (e / "held_fixture.py").write_text(s)
 for n in ["reader.bpf.o", "loader"]:
@@ -59,7 +52,7 @@ subprocess.run(
     json.dumps(
         {
             "passed": True,
-            "test": "ctypes.PyDLLwrite retainsGIL; collector-batch candidate (actual Muse)",
+            "test": "ctypes.PyDLL write retains the GIL",
             "profiles": checks,
         },
         indent=2,

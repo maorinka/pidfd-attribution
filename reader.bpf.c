@@ -4,59 +4,34 @@
  * Current-task user reads may fault only in sleepable hooks. Nonsleepable
  * fallbacks preserve explicit unknown/error/truncation flags. The native module
  * checks helper buffer bounds; wire v1 is 176 bytes plus populated frames.
- * Provenance: provenance.json and git history. */
+
+*/
 #include "arch.h"
+#include "bpf_task_helpers.h"
 #include "config.h"
 #include "kernel_layout.h"
+#include "source_protocol.h"
 #include "vmlinux.h"
 #include <bpf/bpf_core_read.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 
-/* Direct native-pack path (ONLY path in this revision): emit() reserves the
- * EXACT wire size with bpf_ringbuf_reserve_dynptr, then dispatches on the
- * total frame count through 49 CONSTANT-size cases (0..48). Each case calls
- * bpf_dynptr_data(&d,0,176+200*N) with a constant length and packs with
- * iosec_emit_pack in the same branch. The variable-length
- * bpf_dynptr_data(d,0,size) form is NOT used: Codex capability
- * (experiments/pidfd_dynptr_view_codex,
- * evidence/pidfd-dynptr-view-codex/verifier.log) proved variable len
- * rejects at LOAD with R3 not known constant, while constant
- * 8/16/128/511/512 sizes load with actual native map-copy into the slice
- * and real ring-consumer byte verification. Whether the verifier accepts a
- * verifier-sized dynptr slice as the iosec_emit_pack kfunc MEM arg for all
- * 49 cases is UNPROVEN and decided by the build/load gate (Codex
- * load/test); if LOAD rejects, this candidate is unsupported and the
- * scratch predecessor remains the grounded path. No scratch fallback in
- * this object; wire_scratch stays declared but unused so the map count
- * stays 19. No IOSEC_EMIT_VIA_SCRATCH / IOSEC_EMIT_DIRECT_DIAGNOSTIC
- * macros are honored here. */
+/* Constant-size dispatch keeps dynptr slice bounds visible to the verifier.
+ * Each of 49 cases serializes a header and 0..48 populated frames. The unused
+ * wire scratch map remains part of the cleanup audit's fixed map set. */
 
 char LICENSE[] SEC("license") = "GPL";
-static __always_inline int watched(void);
+static __always_inline int task_is_monitored(void);
 
-struct source_frame {
-  char file[128];
-  char function[64];
-  int line;
-  int bytecode;
-};
-struct source_event {
-  unsigned long long pid_tid;
-  unsigned int count;
-  unsigned int flags;
-  struct source_frame frames[16];
-  unsigned long long birth;
-};
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, 1024);
+  __uint(max_entries, IOSEC_THREAD_CAPACITY);
   __type(key, unsigned long long);
   __type(value, unsigned long long);
 } threads SEC(".maps");
 struct {
   __uint(type, BPF_MAP_TYPE_RINGBUF);
-  __uint(max_entries, 8 * 1024 * 1024);
+  __uint(max_entries, IOSEC_RING_BYTES);
 } events SEC(".maps");
 
 struct {
@@ -65,7 +40,7 @@ struct {
   __type(key, unsigned int);
   __type(value, unsigned long long);
 } diagnostics SEC(".maps");
-static __always_inline void diagnostic(unsigned int key) {
+static __always_inline void increment_diagnostic(unsigned int key) {
   unsigned long long *n = bpf_map_lookup_elem(&diagnostics, &key);
   if (n)
     __sync_fetch_and_add(n, 1);
@@ -74,10 +49,10 @@ static __always_inline void diagnostic(unsigned int key) {
   ({                                                                           \
     long update_rc = bpf_map_update_elem(map, key, value, flags);              \
     if (update_rc)                                                             \
-      diagnostic(1);                                                           \
+      increment_diagnostic(1);                                                 \
     update_rc;                                                                 \
   })
-/* Muse mapcopy/mapzero: native non-sleepable verifier-bounded helpers for
+/* mapcopy/mapzero: native non-sleepable verifier-bounded helpers for
  * known live BPF map copies. iosec_map_copy is ONLY for initialized
  * writable map-to-map ranges: verifier knows ptr+__sz, kernel enforces
  * equal nonzero sizes <=9760 with memmove overlap/self-alias, and
@@ -92,48 +67,29 @@ extern int iosec_map_copy(void *to, unsigned int to__sz, const void *from,
                           unsigned int from__sz) __ksym;
 extern int iosec_map_zero(void *to, unsigned int to__sz) __ksym;
 
-static __always_inline int read_u64(unsigned long long address,
-                                    unsigned long long *out) {
-  return bpf_probe_read_user(out, sizeof(*out), (void *)address);
-}
-static __always_inline unsigned long long python_code_type(void) {
-  struct task_struct *task = (void *)bpf_get_current_task_btf();
-  unsigned long long start = BPF_CORE_READ(task, mm, start_code);
-  if (start < PYTHON_TEXT_ADDRESS)
-    return 0;
-  unsigned long long bias = start - PYTHON_TEXT_ADDRESS;
-  if (bias > ~0ULL - CODE_TYPE_ADDRESS)
-    return 0;
-  return bias + CODE_TYPE_ADDRESS;
-}
-
 struct {
   __uint(type, BPF_MAP_TYPE_ARRAY);
   __uint(max_entries, 1);
   __type(key, unsigned int);
   __uint(map_flags, BPF_F_RDONLY_PROG);
-  __type(value, unsigned char[9760]);
+  __type(value, unsigned char[IOSEC_EVENT_BYTES]);
 } zero_bytes SEC(".maps");
-/* Codex: kernel pending-return depth is authoritative; skipped instances must
+/* kernel pending-return depth is authoritative; skipped instances must
  * not inflate a software counter. Capacity matches tested kernel64 limit.
  * Other probe consumers/failed registrations/state swaps remain full gates. */
 struct eval_shadow {
-  unsigned long long states[64];
+  unsigned long long states[IOSEC_RETURN_DEPTH];
   unsigned int depth;
 };
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
-  __uint(max_entries, 1024);
+  __uint(max_entries, IOSEC_THREAD_CAPACITY);
   __type(key, unsigned long long);
   __type(value, struct eval_shadow);
 } shadows SEC(".maps");
-static __always_inline unsigned int pending_depth(void) {
-  struct task_struct *task = (void *)bpf_get_current_task_btf();
-  struct uprobe_task *u = BPF_CORE_READ(task, utask);
-  return u ? BPF_CORE_READ(u, depth) : 0;
-}
+
 SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   unsigned long long key = bpf_get_current_pid_tgid(),
                      state = PT_REGS_PARM1(ctx);
@@ -159,7 +115,7 @@ SEC("uprobe") int seed_thread(struct pt_regs *ctx) {
   return 0;
 }
 SEC("uretprobe") int eval_return(struct pt_regs *ctx) {
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   unsigned long long key = bpf_get_current_pid_tgid();
   unsigned int depth = pending_depth();
@@ -399,7 +355,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
   {
     struct frame_layout f;
     if (bpf_probe_read_user(&f, sizeof(f), (void *)frame)) {
-      walk->event->flags |= 1;
+      walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     previous = f.previous;
@@ -411,7 +367,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
 #if PYTHON_MINOR >= 12
   unsigned char owner = 0;
   if (bpf_probe_read_user(&owner, 1, (void *)(frame + FRAME_OWNER))) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (owner == 3)
@@ -419,13 +375,13 @@ static long walk_frame(unsigned int slot, void *opaque) {
 #endif
   code &= ~1ULL;
   if (!code || read_u64(code + OBJECT_TYPE, &type)) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (type != python_code_type())
     return 0;
-  if (walk->event->count >= 16) {
-    walk->event->flags |= 32;
+  if (walk->event->count >= IOSEC_SOURCE_FRAMES) {
+    walk->event->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
     return 1;
   }
   unsigned long long filename = 0, name = 0, table = 0, length = 0;
@@ -434,7 +390,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
     struct code_layout m;
     if (bpf_probe_read_user(&m, sizeof(m), (void *)code) ||
         m.type != python_code_type()) {
-      walk->event->flags |= 1;
+      walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     filename = m.filename;
@@ -443,33 +399,34 @@ static long walk_frame(unsigned int slot, void *opaque) {
     firstline = m.firstline;
   }
   if (read_u64(table + BYTES_SIZE, &length)) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   unsigned int fs = 0, ns = 0;
   if (bpf_probe_read_user(&fs, 4, (void *)(filename + UNICODE_STATE)) ||
       bpf_probe_read_user(&ns, 4, (void *)(name + UNICODE_STATE))) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if ((fs & 96) != 96 || (ns & 96) != 96) {
-    walk->event->flags |= 2;
+    walk->event->flags |= IOSEC_SOURCE_UNSUPPORTED_STRING;
     return 1;
   }
   /* Overflow-safe instruction bound: code+CODE_BYTECODE can wrap when code is
    * near U64_MAX. Check instr>=code, then difference>=CODE_BYTECODE, then
    * the bounded offset; short-circuit keeps every subtraction valid. */
 #if PYTHON_MINOR == 10
-  if (instr > 524288 || length > 1048576) {
-    walk->event->flags |= 4;
+  if (instr > 524288 || length > IOSEC_MAX_BYTECODE_BYTES) {
+    walk->event->flags |= IOSEC_SOURCE_INVALID_BOUNDS;
     return 1;
   }
   struct line_context line = {
       .data = table + BYTES_DATA, .size = length, .target = instr};
 #else
   if (instr < code || instr - code < CODE_BYTECODE ||
-      instr - code - CODE_BYTECODE > 1048576 || length > 1048576) {
-    walk->event->flags |= 4;
+      instr - code - CODE_BYTECODE > IOSEC_MAX_BYTECODE_BYTES ||
+      length > IOSEC_MAX_BYTECODE_BYTES) {
+    walk->event->flags |= IOSEC_SOURCE_INVALID_BOUNDS;
     return 1;
   }
   struct line_context line = {.data = table + BYTES_DATA,
@@ -493,12 +450,12 @@ static long walk_frame(unsigned int slot, void *opaque) {
                             : amount;
   asm volatile("" : "+r"(prefix), "+r"(amount));
   if (amount > 4096) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (!bytes || !prefix || prefix > 4096 ||
       bpf_probe_read_user(bytes, prefix, (void *)(table + BYTES_DATA))) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   struct compare_context compare = {
@@ -512,13 +469,13 @@ static long walk_frame(unsigned int slot, void *opaque) {
   else {
     if (amount > prefix &&
         bpf_probe_read_user(bytes, amount, (void *)(table + BYTES_DATA))) {
-      walk->event->flags |= 1;
+      walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     line.bytes = bytes;
-    bpf_loop(4096, decode_byte, &line, 0);
+    bpf_loop(IOSEC_LINE_DECODE_STEPS, decode_byte, &line, 0);
     if (!line.found || line.error || line.kind == 15) {
-      walk->event->flags |= 8;
+      walk->event->flags |= IOSEC_SOURCE_LINE_ERROR;
       return 1;
     }
     struct line_value *value = bpf_map_lookup_elem(&line_scratch, &zero);
@@ -527,7 +484,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
       value->amount = line.used;
       if (iosec_map_copy(value->bytes, sizeof(value->bytes), bytes,
                          sizeof(value->bytes))) {
-        diagnostic(1);
+        increment_diagnostic(1);
       } else {
         unsigned long long one = 1;
         if (!UPDATE(&warmed_mms, &key.mm, &one, BPF_ANY)) {
@@ -535,13 +492,13 @@ static long walk_frame(unsigned int slot, void *opaque) {
            * concurrent insert. */
           long rc = bpf_map_update_elem(&lines, &key, value, BPF_NOEXIST);
           if (rc && rc != -17)
-            diagnostic(1);
+            increment_diagnostic(1);
         }
       }
     }
   }
   unsigned int index = walk->event->count;
-  if (index >= 16)
+  if (index >= IOSEC_SOURCE_FRAMES)
     return 1;
   struct source_frame *out = &walk->event->frames[index];
   long fsize = bpf_probe_read_user_str(out->file, sizeof(out->file),
@@ -549,11 +506,11 @@ static long walk_frame(unsigned int slot, void *opaque) {
   long nsize = bpf_probe_read_user_str(out->function, sizeof(out->function),
                                        (void *)(name + ASCII_DATA));
   if (fsize < 0 || nsize < 0) {
-    walk->event->flags |= 1;
+    walk->event->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (fsize == sizeof(out->file) || nsize == sizeof(out->function))
-    walk->event->flags |= 16;
+    walk->event->flags |= IOSEC_SOURCE_STRING_TRUNCATED;
   out->line = line.line;
   out->bytecode = line.target * 2;
   walk->event->count++;
@@ -563,7 +520,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
 static __always_inline int copy_source(struct source_event *to,
                                        const struct source_event *from) {
   if (iosec_map_copy(to, sizeof(*to), from, sizeof(*to))) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return -1;
   }
   return 0;
@@ -580,18 +537,18 @@ static __always_inline int clear_source(struct source_event *e) {
   unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
   /* Zero via iosec_map_zero (byte-identical to copying the all-zero
    * frozen template). The lookup/null guard is retained so the existing
-   * diagnostic(1) failure ordering is unchanged; the readonly pointer is
-   * never passed as a mapcopy source. */
+   * increment_diagnostic(1) failure ordering is unchanged; the readonly pointer
+   * is never passed as a mapcopy source. */
   if (!zero || iosec_map_zero(e, sizeof(*e))) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return -1;
   }
   return 0;
 }
-static __always_inline int capture(struct source_event *e) {
+static __always_inline int capture_python_source(struct source_event *e) {
   if (clear_source(e)) {
     e->count = 0;
-    e->flags = 1;
+    e->flags = IOSEC_SOURCE_READ_ERROR;
     return -1;
   }
   unsigned long long tid = bpf_get_current_pid_tgid();
@@ -600,7 +557,7 @@ static __always_inline int capture(struct source_event *e) {
   e->birth = BPF_CORE_READ(task, start_time);
   unsigned long long *state = bpf_map_lookup_elem(&threads, &tid);
   if (!state) {
-    e->flags = 64;
+    e->flags = IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
   struct walk_context walk = {.event = e};
@@ -610,13 +567,13 @@ static __always_inline int capture(struct source_event *e) {
     failed = !walk.frame || read_u64(walk.frame + CFRAME_FRAME, &walk.frame);
 #endif
   if (failed)
-    e->flags |= 1;
+    e->flags |= IOSEC_SOURCE_READ_ERROR;
   else
     bpf_loop(32, walk_frame, &walk, 0);
   if (walk.frame)
-    e->flags |= 32;
+    e->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
   if (!e->count)
-    e->flags |= 64;
+    e->flags |= IOSEC_SOURCE_UNKNOWN;
   return 0;
 }
 
@@ -661,7 +618,7 @@ static __always_inline long warm_read(void *to, unsigned int size,
 }
 /* Sleepable string read: nofault first, fault-capable fallback. Returns
  * probe_read_str semantics (NUL-inclusive length, size on truncation). */
-/* Codex review fix: bounded NUL scan callback avoids nested verifier
+/* bounded NUL scan callback avoids nested verifier
  * path explosion; string size, fault fallback and truncation are unchanged. */
 struct fused_string_context {
   char *bytes;
@@ -734,12 +691,12 @@ static __always_inline int ensure_fused_scratch(unsigned long long tid,
  * buffers. Outer 32-step walk stays an explicit bounded for-loop (unrolling
  * disabled); exact 512-word prefix compare and 4096-byte line-table decode
  * reuse the existing compare_line/decode_byte bpf_loop callbacks over the
- * thread-owned line buffer (Codex sleepable-loop-copy capability; no nested
- * bpf_loop). Flag/count/limit semantics match the nonsleepable capture()
- * fallback exactly (16 frames, 32 steps, explicit unknown/partial flags).
- * Returns 0 with pid_tid set (even for explicit unknown), or -1 with
- * pid_tid==0 left for nonsleepable fallback. */
-/* Codex: isolate each frame in a bounded callback to prevent verifier
+ * thread-owned line buffer (sleepable-loop-copy capability; no nested
+ * bpf_loop). Flag/count/limit semantics match the nonsleepable
+ * capture_python_source() fallback exactly (16 frames, 32 steps, explicit
+ * unknown/partial flags). Returns 0 with pid_tid set (even for explicit
+ * unknown), or -1 with pid_tid==0 left for nonsleepable fallback. */
+/* isolate each frame in a bounded callback to prevent verifier
  * state explosion. Thread-owned buffers and every original bound retained. */
 struct fused_walk_context {
   struct source_event *out;
@@ -763,7 +720,7 @@ static long fused_frame_step(unsigned int step, void *opaque) {
   {
     struct frame_layout f;
     if (warm_read(&f, sizeof(f), frame)) {
-      out->flags |= 1;
+      out->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     previous = f.previous;
@@ -773,13 +730,13 @@ static long fused_frame_step(unsigned int step, void *opaque) {
   walk->frame = previous;
   code &= ~1ULL;
   if (!code || warm_read(&type, 8, code + OBJECT_TYPE)) {
-    out->flags |= 1;
+    out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (type != python_code_type())
     return 0;
-  if (out->count >= 16) {
-    out->flags |= 32;
+  if (out->count >= IOSEC_SOURCE_FRAMES) {
+    out->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
     return 1;
   }
   unsigned long long filename = 0, name = 0, table = 0, length = 0;
@@ -787,7 +744,7 @@ static long fused_frame_step(unsigned int step, void *opaque) {
   {
     struct code_layout m;
     if (warm_read(&m, sizeof(m), code) || m.type != python_code_type()) {
-      out->flags |= 1;
+      out->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     filename = m.filename;
@@ -796,24 +753,26 @@ static long fused_frame_step(unsigned int step, void *opaque) {
     firstline = m.firstline;
   }
   if (warm_read(&length, 8, table + BYTES_SIZE)) {
-    out->flags |= 1;
+    out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   unsigned int fs = 0, ns = 0;
   if (warm_read(&fs, 4, filename + UNICODE_STATE) ||
       warm_read(&ns, 4, name + UNICODE_STATE)) {
-    out->flags |= 1;
+    out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if ((fs & 96) != 96 || (ns & 96) != 96) {
-    out->flags |= 2;
+    out->flags |= IOSEC_SOURCE_UNSUPPORTED_STRING;
     return 1;
   }
   /* Overflow-safe instruction bound (same order as the nonsleepable
-   * walker); inherited flags|=4 retained, no semantic change. */
+   * walker); inherited flags|=IOSEC_SOURCE_INVALID_BOUNDS retained, no semantic
+   * change. */
   if (instr < code || instr - code < CODE_BYTECODE ||
-      instr - code - CODE_BYTECODE > 1048576 || length > 1048576) {
-    out->flags |= 4;
+      instr - code - CODE_BYTECODE > IOSEC_MAX_BYTECODE_BYTES ||
+      length > IOSEC_MAX_BYTECODE_BYTES) {
+    out->flags |= IOSEC_SOURCE_INVALID_BOUNDS;
     return 1;
   }
   int target = (instr - code - CODE_BYTECODE) / 2;
@@ -832,7 +791,7 @@ static long fused_frame_step(unsigned int step, void *opaque) {
                             : amount;
   if (!line_buf || !prefix || prefix > 4096 ||
       warm_read(line_buf, prefix, table + BYTES_DATA)) {
-    out->flags |= 1;
+    out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   struct line_context line = {
@@ -850,13 +809,13 @@ static long fused_frame_step(unsigned int step, void *opaque) {
     line_nr = cached->line;
   } else {
     if (amount > prefix && warm_read(line_buf, amount, table + BYTES_DATA)) {
-      out->flags |= 1;
+      out->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
     line.bytes = (unsigned char *)line_buf;
-    bpf_loop(4096, decode_byte, &line, 0);
+    bpf_loop(IOSEC_LINE_DECODE_STEPS, decode_byte, &line, 0);
     if (!line.found || line.error || line.kind == 15) {
-      out->flags |= 8;
+      out->flags |= IOSEC_SOURCE_LINE_ERROR;
       return 1;
     }
     line_nr = line.line;
@@ -865,22 +824,22 @@ static long fused_frame_step(unsigned int step, void *opaque) {
       line_val->amount = line.used;
       if (iosec_map_copy(line_val->bytes, sizeof(line_val->bytes), line_buf,
                          sizeof(line_val->bytes))) {
-        diagnostic(1);
+        increment_diagnostic(1);
       } else {
         unsigned long long one = 1;
         if (!UPDATE(&warmed_mms, &mm, &one, BPF_ANY)) {
           long rc = bpf_map_update_elem(&lines, &key, line_val, BPF_NOEXIST);
           if (rc && rc != -17)
-            diagnostic(1);
+            increment_diagnostic(1);
         }
       }
     }
   }
-  /* Codex review fix: callbacks invalidate verifier bounds on map fields.
+  /* callbacks invalidate verifier bounds on map fields.
    * Recheck a local slot immediately before pointer arithmetic. */
   unsigned int slot = out->count;
   if (slot >= 16) {
-    out->flags |= 32;
+    out->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
     return 1;
   }
   struct source_frame *dst = &out->frames[slot];
@@ -889,11 +848,11 @@ static long fused_frame_step(unsigned int step, void *opaque) {
   long nsize =
       fused_read_str(dst->function, sizeof(dst->function), name + ASCII_DATA);
   if (fsize < 0 || nsize < 0) {
-    out->flags |= 1;
+    out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
   if (fsize == (long)sizeof(dst->file) || nsize == (long)sizeof(dst->function))
-    out->flags |= 16;
+    out->flags |= IOSEC_SOURCE_STRING_TRUNCATED;
   dst->line = line_nr;
   dst->bytecode = target * 2;
   out->count = slot + 1;
@@ -902,7 +861,7 @@ static long fused_frame_step(unsigned int step, void *opaque) {
 extern int iosec_native_capture(unsigned long long state, void *out,
                                 unsigned int out__sz, void *bytes,
                                 unsigned int bytes__sz) __ksym;
-/* Codex: native KF_SLEEPABLE reader fills fresh source from current user heap.
+/* native KF_SLEEPABLE reader fills fresh source from current user heap.
  * No line cache is reused on this path; full bounded table is freshly read
  * and decoded. Nonsleepable BPF fallback retains its exact prefix comparison.
  * Source fields/16 frames/32 steps/4096 bytes/unknown flags stay unchanged. */
@@ -915,13 +874,13 @@ static __always_inline int fused_capture_source(struct source_event *out,
   if (!state) {
     if (clear_source(out)) {
       out->count = 0;
-      out->flags = 1;
+      out->flags = IOSEC_SOURCE_READ_ERROR;
       return -1;
     }
     out->pid_tid = tid;
     struct task_struct *task = (void *)bpf_get_current_task_btf();
     out->birth = BPF_CORE_READ(task, start_time);
-    out->flags = 64;
+    out->flags = IOSEC_SOURCE_UNKNOWN;
     return 0;
   }
   int rc = iosec_native_capture(*state, out, sizeof(*out), line_buf, 4096);
@@ -929,7 +888,7 @@ static __always_inline int fused_capture_source(struct source_event *out,
     out->pid_tid = 0;
     out->birth = 0;
     out->count = 0;
-    out->flags = 1;
+    out->flags = IOSEC_SOURCE_READ_ERROR;
     return -1;
   }
   return 0;
@@ -941,12 +900,6 @@ static __always_inline int fused_capture_source(struct source_event *out,
  * (sequential only, no nesting); outer walk and NUL scan stay explicit loops.
  */
 
-struct event {
-  struct source_event opener, acquirer, live;
-  unsigned long long file, files, generation, target, targetbirth, inode;
-  long result, inner;
-  unsigned int fd, stage, accepted, complete, label_count, coverage;
-};
 struct pidfd_slot {
   unsigned long long files;
   unsigned int fd, pad;
@@ -1029,43 +982,39 @@ struct {
   __type(key, unsigned int);
   __type(value, unsigned long long);
 } sequence SEC(".maps");
-static __always_inline unsigned long long next(void) {
+static __always_inline unsigned long long next_generation(void) {
   unsigned int z = 0;
   unsigned long long *n = bpf_map_lookup_elem(&sequence, &z);
   return n ? __sync_fetch_and_add(n, 1) + 1 : 0;
 }
-_Static_assert(sizeof(struct source_event) == 3224, "source_event ABI");
-_Static_assert(sizeof(struct event) == 9760, "event ABI");
+_Static_assert(sizeof(struct source_event) == IOSEC_SOURCE_BYTES,
+               "source_event ABI");
+_Static_assert(sizeof(struct event) == IOSEC_EVENT_BYTES, "event ABI");
 static __always_inline int copy_event(struct event *to,
                                       const struct event *from) {
   if (iosec_map_copy(to, sizeof(*to), from, sizeof(*to))) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return -1;
   }
   return 0;
 }
-static __always_inline int complete_source(const struct source_event *s) {
-  return s->count && !s->flags;
-}
-static __always_inline struct event *fresh_raw(void) {
+
+static __always_inline struct event *lookup_scratch_event(void) {
   unsigned int z = 0;
   return bpf_map_lookup_elem(&scratch, &z);
 }
-static __always_inline struct event *fresh(void) {
-  struct event *e = fresh_raw();
+static __always_inline struct event *reset_scratch_event(void) {
+  struct event *e = lookup_scratch_event();
   if (e) {
     if (iosec_map_zero(e, sizeof(*e))) {
-      diagnostic(1);
+      increment_diagnostic(1);
       return 0;
     }
   }
   return e;
 }
-static __always_inline unsigned long long table(void) {
-  struct task_struct *t = (void *)bpf_get_current_task_btf();
-  return (unsigned long long)BPF_CORE_READ(t, files);
-}
-static __always_inline int watched(void) {
+
+static __always_inline int task_is_monitored(void) {
   unsigned long long pid = bpf_get_current_pid_tgid() >> 32;
   return bpf_map_lookup_elem(&subjects, &pid) != 0;
 }
@@ -1100,7 +1049,7 @@ static __always_inline struct event *ensure_write(unsigned long long tid) {
   }
   return e;
 }
-/* Actual-Muse native direct emit over the Codex compact wire v1; every
+/* Actual-native direct emit over the compact wire v1; every
  * populated frame and actor field is retained, byte-identical on the wire.
  * emit() reserves the EXACT wire size with bpf_ringbuf_reserve_dynptr,
  * then dispatches on the total frame count through 49 CONSTANT-size cases
@@ -1116,23 +1065,21 @@ static __always_inline struct event *ensure_write(unsigned long long tid) {
  * branch and the reservation is either submitted or discarded exactly once
  * on every path. wire_scratch is declared but unused so the map count
  * stays 19. */
-struct wire_actor {
-  unsigned long long pid_tid, birth;
-  unsigned int count, flags;
-};
 struct wire_header {
   unsigned int magic, version, size, reserved;
   unsigned long long file, files, generation, target, targetbirth, inode;
   long result, inner;
   unsigned int fd, stage, accepted, complete, label_count, coverage;
-  struct wire_actor actors[3];
+  struct wire_actor actors[IOSEC_ACTOR_COUNT];
 };
 struct wire_record {
   struct wire_header header;
-  struct source_frame frames[48];
+  struct source_frame frames[IOSEC_TOTAL_FRAMES];
 };
-_Static_assert(sizeof(struct wire_header) == 176, "wire header ABI");
-_Static_assert(sizeof(struct source_frame) == 200, "wire frame ABI");
+_Static_assert(sizeof(struct wire_header) == IOSEC_WIRE_V1_BYTES,
+               "wire header ABI");
+_Static_assert(sizeof(struct source_frame) == IOSEC_FRAME_BYTES,
+               "wire frame ABI");
 _Static_assert(sizeof(struct wire_record) ==
                    176 + 48 * sizeof(struct source_frame),
                "wire record ABI");
@@ -1159,17 +1106,17 @@ static __always_inline void emit(struct event *e, unsigned int stage,
                                  long result) {
   e->stage = stage;
   e->result = result;
-  e->complete = e->accepted && complete_source(&e->opener) &&
-                complete_source(&e->acquirer) &&
-                ((stage < 7 || stage > 9) || complete_source(&e->live));
+  e->complete = e->accepted && source_is_complete(&e->opener) &&
+                source_is_complete(&e->acquirer) &&
+                ((stage < 7 || stage > 9) || source_is_complete(&e->live));
   unsigned int a = e->opener.count, b = e->acquirer.count, c = e->live.count;
   if (a > 16 || b > 16 || c > 16) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return;
   }
   unsigned int total = a + b + c;
   if (total > 48) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return;
   }
   /* Exact wire size, 8-byte aligned for every count (176 and 200 are both
@@ -1177,7 +1124,7 @@ static __always_inline void emit(struct event *e, unsigned int stage,
   unsigned int size =
       sizeof(struct wire_header) + total * sizeof(struct source_frame);
   if (size < sizeof(struct wire_header) || size > sizeof(struct wire_record)) {
-    diagnostic(1);
+    increment_diagnostic(1);
     return;
   }
   /* Direct slice path with CONSTANT-size dispatch: no BPF stores, no
@@ -1189,7 +1136,7 @@ static __always_inline void emit(struct event *e, unsigned int stage,
    * discard the (null) reservation before the ring-loss diagnostic. */
   if (bpf_ringbuf_reserve_dynptr(&events, size, 0, &d)) {
     bpf_ringbuf_discard_dynptr(&d, 0);
-    diagnostic(0);
+    increment_diagnostic(0);
     return;
   }
   /* 49 constant cases: each passes a compile-time-constant 176+200*N
@@ -1263,7 +1210,7 @@ static __always_inline void emit(struct event *e, unsigned int stage,
   (void)slice;
   if (!ok) {
     bpf_ringbuf_discard_dynptr(&d, 0);
-    diagnostic(1);
+    increment_diagnostic(1);
     return;
   }
   bpf_ringbuf_submit_dynptr(&d, BPF_RB_NO_WAKEUP);
@@ -1276,7 +1223,7 @@ static __always_inline void emit(struct event *e, unsigned int stage,
  * placeholder/snapshot is left for the nonsleepable fallback, which then
  * fails closed with diagnosable flags. */
 static __always_inline void fused_write_entry(void) {
-  if (!watched())
+  if (!task_is_monitored())
     return;
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = active_write(tid);
@@ -1289,7 +1236,7 @@ static __always_inline void fused_write_entry(void) {
   fused_capture_source(&e->live, tid, buf, val);
 }
 static __always_inline void fused_acquire_entry(void) {
-  if (!watched())
+  if (!task_is_monitored())
     return;
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
@@ -1302,7 +1249,7 @@ static __always_inline void fused_acquire_entry(void) {
   fused_capture_source(&e->acquirer, tid, buf, val);
 }
 static __always_inline void fused_open_entry(void) {
-  if (!watched())
+  if (!task_is_monitored())
     return;
   unsigned long long tid = bpf_get_current_pid_tgid();
   char *buf = 0;
@@ -1323,7 +1270,7 @@ static __always_inline void fused_open_entry(void) {
   if (!snap->pid_tid)
     bpf_map_delete_elem(&fused_opener, &tid);
 }
-/* Verified sleepable syscall wrappers (Codex capability evidence). Prototypes
+/* Verified sleepable syscall wrappers (capability evidence). Prototypes
  * match the arm64 syscall wrappers (single pt_regs argument); arguments are
  * unused because capture follows the bound thread state, not syscall args. */
 SEC("fentry.s/" IOSEC_SYS_WRITE)
@@ -1355,7 +1302,7 @@ int BPF_PROG(open_begin, int dfd, struct filename *pathname,
              const struct open_flags *op) {
   (void)dfd;
   (void)op;
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   char path[80];
   struct IOSEC_FILENAME_HEAD *name = (void *)pathname;
@@ -1368,20 +1315,20 @@ int BPF_PROG(open_begin, int dfd, struct filename *pathname,
       path[12] != 'e' || path[13] != 'c' || path[14] != '-')
     return 0;
   unsigned long long tid = bpf_get_current_pid_tgid();
-  struct event *e = fresh();
+  struct event *e = reset_scratch_event();
   if (e) {
     struct source_event *snap = bpf_map_lookup_elem(&fused_opener, &tid);
     if (snap && snap->pid_tid) {
       if (copy_source(&e->opener, snap)) {
         e->opener.count = 0;
-        e->opener.flags = 64;
+        e->opener.flags = IOSEC_SOURCE_UNKNOWN;
       }
       bpf_map_delete_elem(&fused_opener, &tid);
       UPDATE(&opening, &tid, e, BPF_ANY);
     } else {
       if (snap)
         bpf_map_delete_elem(&fused_opener, &tid);
-      if (!capture(&e->opener))
+      if (!capture_python_source(&e->opener))
         UPDATE(&opening, &tid, e, BPF_ANY);
     }
   }
@@ -1419,9 +1366,9 @@ int BPF_PROG(open_bound, int dfd, struct filename *pathname,
       struct file *fp = (void *)f;
       e->file = f;
       e->inode = BPF_CORE_READ(fp, f_inode, i_ino);
-      e->generation = next();
+      e->generation = next_generation();
       UPDATE(&origins, &f, e, BPF_ANY);
-      emit(e, 1, 0);
+      emit(e, IOSEC_STAGE_OPEN, 0);
     }
     bpf_map_delete_elem(&opening, &tid);
   }
@@ -1431,11 +1378,11 @@ int BPF_PROG(open_bound, int dfd, struct filename *pathname,
  * capture fills the placeholder at syscall entry; fget_task entry binds the
  * already-current snapshot to the target with a sys_exit fallback, so the
  * begin-before-fget_task ordering is preserved. pid_tid==0 marks a
- * placeholder; fused_capture_source()/capture() always set pid_tid, even for
- * unknown stacks. */
+ * placeholder; fused_capture_source()/capture_python_source() always set
+ * pid_tid, even for unknown stacks. */
 static __always_inline void acquire_entry_snapshot(unsigned long long fd) {
   unsigned long long tid = bpf_get_current_pid_tgid();
-  struct event *e = fresh();
+  struct event *e = reset_scratch_event();
   if (e) {
     e->fd = fd;
     UPDATE(&acquiring, &tid, e, BPF_ANY);
@@ -1448,7 +1395,7 @@ int BPF_PROG(target_bound, struct task_struct *task, unsigned int fd) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
-    if (!e->acquirer.pid_tid && capture(&e->acquirer)) {
+    if (!e->acquirer.pid_tid && capture_python_source(&e->acquirer)) {
       bpf_map_delete_elem(&acquiring, &tid);
       return 0;
     }
@@ -1471,12 +1418,12 @@ int BPF_PROG(reference_bound, struct task_struct *task, unsigned int fd,
     if (o) {
       if (copy_source(&e->opener, &o->opener)) {
         e->opener.count = 0;
-        e->opener.flags = 64;
+        e->opener.flags = IOSEC_SOURCE_UNKNOWN;
       }
       e->inode = o->inode;
     } else
-      e->opener.flags = 64;
-    emit(e, 2, 0);
+      e->opener.flags = IOSEC_SOURCE_UNKNOWN;
+    emit(e, IOSEC_STAGE_TARGET_RESOLVED, 0);
   }
   return 0;
 }
@@ -1491,7 +1438,7 @@ int BPF_PROG(receive_bound, struct file *file, int *ufd, unsigned int o_flags) {
       e->accepted = 0;
       e->file = 0;
     } else
-      emit(e, 3, 0);
+      emit(e, IOSEC_STAGE_RECEIVE, 0);
   }
   return 0;
 }
@@ -1504,24 +1451,24 @@ SEC("fentry/fd_install")
 int BPF_PROG(installed, unsigned int fd, struct file *file) {
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      file_addr = (unsigned long long)file;
-  struct pidfd_slot stale = {.files = table(), .fd = fd};
+  struct pidfd_slot stale = {.files = current_files_identity(), .fd = fd};
   bpf_map_delete_elem(&slots, &stale);
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (!e)
     e = bpf_map_lookup_elem(&aliasing, &tid);
   if (e && e->file == file_addr && file_addr) {
-    e->files = table();
+    e->files = current_files_identity();
     e->fd = fd;
-    e->generation = next();
+    e->generation = next_generation();
     struct pidfd_slot s = {.files = e->files, .fd = e->fd};
     index_slot(e->files, e->file);
     long rc = UPDATE(&slots, &s, e, BPF_ANY);
     if (rc)
-      e->acquirer.flags |= 128;
+      e->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
     unsigned int count = 0;
     bpf_for_each_map_elem(&slots, count_slot, &count, 0);
     e->label_count = count;
-    emit(e, 4, rc);
+    emit(e, IOSEC_STAGE_INSTALL, rc);
   }
   return 0;
 }
@@ -1535,7 +1482,7 @@ int BPF_PROG(receive_return, struct file *file, int *ufd, unsigned int o_flags,
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
     e->inner = ret;
-    emit(e, 5, e->inner);
+    emit(e, IOSEC_STAGE_RECEIVE_RETURN, e->inner);
   }
   return 0;
 }
@@ -1544,13 +1491,13 @@ int acquire_finish(struct trace_event_raw_sys_exit *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
-    if (!e->acquirer.pid_tid && capture(&e->acquirer)) {
+    if (!e->acquirer.pid_tid && capture_python_source(&e->acquirer)) {
       bpf_map_delete_elem(&acquiring, &tid);
       return 0;
     }
     e->accepted =
         ctx->ret >= 0 && ctx->ret == e->inner && ctx->ret == e->fd && e->file;
-    emit(e, 6, ctx->ret);
+    emit(e, IOSEC_STAGE_PIDFD_GETFD, ctx->ret);
     bpf_map_delete_elem(&acquiring, &tid);
   }
   return 0;
@@ -1559,18 +1506,18 @@ int acquire_finish(struct trace_event_raw_sys_exit *ctx) {
  * capture fills the placeholder at syscall entry; vfs_write entry binds the
  * already-current snapshot to the actual file with a sys_exit fallback, so
  * file binding still follows capture within the same syscall. */
-/* Codex: empty actors have no serialized frame payload. Reset every actor
+/* empty actors have no serialized frame payload. Reset every actor
  * descriptor and all object/event metadata, avoiding a 9,760-byte unused-frame
  * clear. Fresh native/BPF capture still clears and rebuilds live source. */
 static __always_inline void reset_write_event(struct event *e) {
   e->opener.pid_tid = 0;
   e->opener.birth = 0;
   e->opener.count = 0;
-  e->opener.flags = 64;
+  e->opener.flags = IOSEC_SOURCE_UNKNOWN;
   e->acquirer.pid_tid = 0;
   e->acquirer.birth = 0;
   e->acquirer.count = 0;
-  e->acquirer.flags = 64;
+  e->acquirer.flags = IOSEC_SOURCE_UNKNOWN;
   e->live.pid_tid = 0;
   e->live.birth = 0;
   e->live.count = 0;
@@ -1591,7 +1538,7 @@ static __always_inline void reset_write_event(struct event *e) {
   e->coverage = 0;
 }
 static __always_inline void write_entry_snapshot(unsigned long long fd) {
-  struct pidfd_slot key = {.files = table(), .fd = fd};
+  struct pidfd_slot key = {.files = current_files_identity(), .fd = fd};
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *w = ensure_write(tid);
   if (!w)
@@ -1600,7 +1547,7 @@ static __always_inline void write_entry_snapshot(unsigned long long fd) {
   struct event *label = bpf_map_lookup_elem(&slots, &key);
   if (label) {
     if (iosec_write_snapshot(w, sizeof(*w), label, sizeof(*label))) {
-      diagnostic(1);
+      increment_diagnostic(1);
       return;
     }
   } else
@@ -1616,7 +1563,7 @@ static __always_inline void write_entry_snapshot(unsigned long long fd) {
     w->stage = WRITE_ENTRY_ACTIVE;
 }
 
-/* Codex typed syscall entry: same trace_sys_enter event as both old
+/* typed syscall entry: same trace_sys_enter event as both old
  * per-syscall handlers, before wrapper capture/fd resolution. Typed pt_regs
  * is a verifier-known kernel pointer. Direct CO-RE loads match arm64
  * syscall_get_arguments: orig_x0 for arg0, regs[1] for arg1. One shared
@@ -1633,7 +1580,7 @@ int BPF_PROG(syscall_begin, struct pt_regs *regs, long id) {
   struct task_struct *task = (void *)bpf_get_current_task_btf();
   if (IOSEC_COMPAT(task))
     return 0;
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   if (id == IOSEC_NR_WRITE)
     write_entry_snapshot(IOSEC_ARG0(regs));
@@ -1650,7 +1597,7 @@ int BPF_PROG(write_file, struct file *file, const char *buf, size_t count,
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = active_write(tid);
   if (e) {
-    if (!e->live.pid_tid && capture(&e->live)) {
+    if (!e->live.pid_tid && capture_python_source(&e->live)) {
       e->stage = 0;
       return 0;
     }
@@ -1666,7 +1613,7 @@ int BPF_PROG(write_file, struct file *file, const char *buf, size_t count,
       e->generation = o->generation;
       if (copy_source(&e->opener, &o->opener)) {
         e->opener.count = 0;
-        e->opener.flags = 64;
+        e->opener.flags = IOSEC_SOURCE_UNKNOWN;
       }
     }
     e->accepted = e->file == actual;
@@ -1692,21 +1639,21 @@ int write_finish(struct trace_event_raw_sys_exit *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = active_write(tid);
   if (e) {
-    if (!e->live.pid_tid && capture(&e->live)) {
+    if (!e->live.pid_tid && capture_python_source(&e->live)) {
       e->stage = 0;
       return 0;
     }
     e->accepted = e->accepted && ctx->ret > 0 && ctx->ret == e->inner;
-    emit(e, 9, ctx->ret);
+    emit(e, IOSEC_STAGE_WRITE, ctx->ret);
     e->stage = 0;
   }
   return 0;
 }
 SEC("tracepoint/syscalls/sys_enter_fcntl")
 int alias_begin(struct trace_event_raw_sys_enter *ctx) {
-  if (!watched() || (ctx->args[1] != 1030 && ctx->args[1] != 0))
+  if (!task_is_monitored() || (ctx->args[1] != 1030 && ctx->args[1] != 0))
     return 0;
-  struct pidfd_slot s = {.files = table(), .fd = ctx->args[0]};
+  struct pidfd_slot s = {.files = current_files_identity(), .fd = ctx->args[0]};
   struct event *e = bpf_map_lookup_elem(&slots, &s);
   if (e) {
     unsigned long long tid = bpf_get_current_pid_tgid();
@@ -1731,7 +1678,7 @@ int alias_finish(struct trace_event_raw_sys_exit *ctx) {
   struct event *e = bpf_map_lookup_elem(&aliasing, &tid);
   if (e) {
     e->accepted = ctx->ret >= 0 && ctx->ret == e->fd && e->file;
-    emit(e, 10, ctx->ret);
+    emit(e, IOSEC_STAGE_FCNTL_DUPLICATION, ctx->ret);
     bpf_map_delete_elem(&aliasing, &tid);
   }
   return 0;
@@ -1764,7 +1711,7 @@ int BPF_PROG(slot_close_done, struct files_struct *files, unsigned int fd,
     struct event *now = bpf_map_lookup_elem(&slots, &key);
     if ((unsigned long long)ret == c->file && now &&
         now->generation == c->generation) {
-      emit(c, 13, 0);
+      emit(c, IOSEC_STAGE_CLOSE, 0);
       bpf_map_delete_elem(&slots, &key);
     }
     bpf_map_delete_elem(&closing, &tid);
@@ -1790,17 +1737,17 @@ static __always_inline unsigned long long real_slot(unsigned long long table,
 static long clone_slot(void *map, const struct pidfd_slot *s, struct event *e,
                        struct clone_context *c) {
   if (s->files == c->parent && real_slot(c->child, s->fd) == e->file) {
-    struct event *n = fresh_raw();
+    struct event *n = lookup_scratch_event();
     if (n) {
       if (copy_event(n, e))
         return 0;
       n->files = c->child;
       n->fd = s->fd;
-      n->generation = next();
+      n->generation = next_generation();
       struct pidfd_slot key = {.files = c->child, .fd = s->fd};
       index_slot(n->files, n->file);
       UPDATE(map, &key, n, BPF_ANY);
-      emit(n, 12, 0);
+      emit(n, IOSEC_STAGE_TABLE_COPY, 0);
     }
   }
   return 0;
@@ -1812,7 +1759,7 @@ static long clone_slot(void *map, const struct pidfd_slot *s, struct event *e,
 #define IOSEC_DUP_PARAMS struct files_struct *oldf, struct fd_range *punch_hole
 #endif
 SEC("fentry/dup_fd") int BPF_PROG(table_duplicate_begin, IOSEC_DUP_PARAMS) {
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      old = (unsigned long long)oldf;
@@ -1858,14 +1805,14 @@ int forked(struct bpf_raw_tracepoint_args *ctx) {
 static long exec_reconcile(void *map, const struct pidfd_slot *s,
                            struct event *e, unsigned long long *table) {
   if (s->files == *table && real_slot(*table, s->fd) != e->file) {
-    emit(e, 14, 0);
+    emit(e, IOSEC_STAGE_EXEC_CLOSE, 0);
     bpf_map_delete_elem(map, s);
   }
   return 0;
 }
 SEC("fentry/do_close_on_exec")
 int BPF_PROG(exec_close_begin, struct files_struct *files_arg) {
-  if (!watched())
+  if (!task_is_monitored())
     return 0;
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      files = (unsigned long long)files_arg;
@@ -1894,7 +1841,7 @@ SEC("fentry/__fput") int BPF_PROG(file_released, struct file *file) {
   unsigned long long f = (unsigned long long)file;
   struct event *e = bpf_map_lookup_elem(&origins, &f);
   if (e) {
-    emit(e, 11, 0);
+    emit(e, IOSEC_STAGE_FILE_RELEASE, 0);
     bpf_map_delete_elem(&origins, &f);
   }
   if (needs_scan(&tracked_files, f, 2))
@@ -1928,7 +1875,7 @@ SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {
 static long retire_table_slot(void *map, const struct pidfd_slot *s,
                               struct event *e, unsigned long long *table) {
   if (s->files == *table) {
-    emit(e, 15, 0);
+    emit(e, IOSEC_STAGE_TABLE_RELEASE, 0);
     bpf_map_delete_elem(map, s);
   }
   return 0;

@@ -1,0 +1,216 @@
+{
+  "passed": true,
+  "scope": "Locally generated pinned inputs; bounded fixtures and steady-state CPU screen",
+  "production_files_unchanged_during_validation": true,
+  "counts_as_new_solution": false,
+  "cpu": {
+    "added_cpu_pct_one_core_median": 1.4495310473732137,
+    "added_cpu_pct_four_vcpu_median": 0.3623827618433034,
+    "one_core_pair_range": [
+      1.2026782419147466,
+      1.585807822779346
+    ],
+    "all_five_pairs_below_target_one_core": false,
+    "four_vcpu_pair_range": [
+      0.30066956047868665,
+      0.3964519556948365
+    ],
+    "all_five_pairs_below_target_four_vcpu": false
+  },
+  "independently_recomputed_one_core_pairs": [
+    1.3312747266387595,
+    1.585807822779346,
+    1.2026782419147466,
+    1.5517058265785892,
+    1.4495310473732137
+  ],
+  "module_removed": true,
+  "remaining_bpf_program_names": [
+    "hid_tail_call",
+    "lima_ticker",
+    "sd_devices",
+    "sd_devices",
+    "sd_devices",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_devices",
+    "sd_devices",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_devices",
+    "sd_fw_egress",
+    "sd_fw_ingress",
+    "sd_devices"
+  ],
+  "evidence": "/Users/maorhadad/projects/pidfd-attribution/evidence",
+  "production_sha256": {
+    "reader.bpf.c": "47853871afb6bf586a945a82f2a10fa03328476e19b2a56b53bc9ab6d57fd350",
+    "loader.c": "b1ede3992e0ba6f08ba4244c183b7cd92096a7d8f820a0705fc94697d6c095d0",
+    "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+    "module/Makefile": "ecca2288986e50ec7bdbb6b72ab9842d7cef28d0016416d8a074fa560b073f47",
+    "module/config.h": "666b08e4b0f79e1ec970be04a8f4369119d1f94aec452e68cba65834321852a5",
+    "module/iosec_native.c": "bb1a7e50c657d514c2e06e5a208090883ca808ead6269bc9f7d241895c151420",
+    "source_protocol.h": "3f6aea0399ccb3a93663759aa4bafa05357dbbdee9cfa2f1e56185534650e951",
+    "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00"
+  },
+  "driver_sha256": {
+    "fixture_guest.py": "7ee690bfe8ce68f979f59f98b9d8524c5f5b80631099abcf6018246f79fc911a",
+    "measure_collector_path_guest.py": "71cb4c2d28784a77e365d46cf5694fcf7a99ca48ebf085d4263d69211ee515ed",
+    "compat_guest.py": "c63b16d8c5fa2923a259dfde221e010e632bbba15b9619f2513c93d48cc28f3a",
+    "run_collector_path_guest.py": "a9b8f94edd8122ced342677b9da46170a9cbb4a077213f9fac3c0f57b069e0b3",
+    "history_guest.py": "b62236a616baa059fdd8d304821ad0575f4598b412af65f22db404eaa4725ace",
+    "oracle_collector_path_guest.py": "ff316db98b2c6bab0b632a8c80655f2dfb69cbbb734a12576fc5840d138003a4",
+    "held_collector_path_guest.py": "d44e3c004b5c8cb07e7e69bbb44d4400eae5919b98f781e35e086b8c41460f94",
+    "verify_deep_collector_path_guest.py": "820cf7289e6b0050250e2fec4ad432cd2c086a5b84bf5ea8428a1abfe6fdf93a",
+    "validate_guest.py": "d91a585013a2b23023622e2726cc0578b7f048250452ed069f4ca3298f4fb586",
+    "strings_collector_path_guest.py": "ea1026d65ea9a8aa987c825b7acc8bf375f01cc2dac8671aedaa5fc1ae5e845f",
+    "settings.py": "9df3b939765e34ea15efbfb6fb225ae88603ff17c5975e9998ff2b5ad00ee844",
+    "build_collector_path_guest.py": "a56e76b27b7d04f6b85a7c709386876dd2ed6c96751b532fdedccaa93d4be78e",
+    "collector_path_scope_guest.py": "e9161540c1cf1d51418c3ebe82a88ea09ea9fcdd832e22b75236eb95451bb1be",
+    "doctor_guest.py": "56a0ad1d23a7ca18d1ba203e6ca352f5361613e0149e981f762e84859f6fbee9",
+    "prepare_guest.py": "c9e9fea92d0421427ca2eabf2a43f029e87a06c2728cc63c23fa396f69e05198"
+  },
+  "support_sha256": {
+    "support/fixture_transform.py": "d5ad532ba16e39c1435c0a72b9f5a60b37f06eb899ccbb40f9f45597c63327d7",
+    "support/run_guest_base.py": "0d37fac9d840fbb1bf2786750e8968bbfe0586bb602e486fea529d7d31bd5c85",
+    "support/python_layout.py": "cff27a256230502e1b2979a3a1a447bfcb23cec118291fd670792035b67a69e2",
+    "support/collector_benchmark.py": "b1f2e155c92f32e214f87b4ddf32c9b02ab6db5d0d1dbcf0dbaf757620618009",
+    "support/__init__.py": "2cdc9f402263cb0cbcfba17d20bf538cc5c17e5043f3d8fb0cc832016da22559",
+    "support/bytecode_oracle_guest.py": "1e856ba9d91b1845409fc1ee66cc072cad5bc068e269ef5e8741c3b387cd088e",
+    "support/collector_records.py": "ff4e2510710a15d13ffbcb0da62da9d1b9459e8d14f27c91397b4d625d092790"
+  },
+  "regression_checker_sha256": "ea849de44f39ac4d43e98d2f695604e0267e67c18d297bb9aecf506e62f7136b",
+  "completed_at": "2026-10-09T17:32:55.298770+00:00",
+  "source_oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "records": 999,
+    "stacks": 2937,
+    "frames": 16035,
+    "source_sha256": {
+      "/var/tmp/pidfd-standalone/workload.py": "5cc39dc52134a0060a84e55fb89b1c608e7414ddb85c1e108cb8e0470aaf60ba",
+      "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b"
+    },
+    "input_sha256": {
+      "hardened-serial-0-hardened.bin": "06f3ca6dfec78d0873d81315ecf4a88c8180f17a2a618bef7a6b7177b6a30c48",
+      "hardened-serial-1-hardened.bin": "3a67f8152f64499a941dd9d3b9b0ae9204797d74a33a0264c1a9b6fd4bf411e9",
+      "hardened-serial-2-hardened.bin": "c17b30411803232f0b654b24ff691ff4240643ece66762a5f9cbca7d766a6a4f",
+      "hardened-serial-3-hardened.bin": "b2cd7d3c2bce661d70a216d4d3d044bf36a7d7ffcba10ab79098b4005581c890",
+      "hardened-serial-4-hardened.bin": "a68dcfba68a2a07440797bec36402c2b1dd61a16496d52fd84219385273c8e60",
+      "hardened-threads-0-hardened.bin": "409ee3dd0b3e3bca58bf7ba7e76b8fff0fb79ad7258904964b1493aa6049cac5"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "kfunc_registration": {
+    "passed": true,
+    "kernel": "6.8.0-142-generic",
+    "module_sha256": "3d95112c03ceb66454211b9889f01f71c9dc7321c03839dfb2d952759fb6eaf7",
+    "trials": [
+      {
+        "enabled": false,
+        "parameter": "N",
+        "exit_code": 1,
+        "stdout": "LOAD_RESULT -13\n",
+        "stderr": "libbpf: prog 'test_registration': BPF program load failed: Permission denied\nlibbpf: prog 'test_registration': -- BEGIN PROG LOAD LOG --\narg#0 reference type('UNKNOWN ') size cannot be determined: -22\n0: R1=ctx() R10=fp0\n; SEC(\"tc\") int test_registration(void *ctx) {\n0: (b7) r6 = 0                        ; R6_w=0\n; __u32 key = 0;\n1: (63) *(u32 *)(r10 -4) = r6         ; R6_w=0 R10=fp0 fp-8=0000????\n2: (bf) r2 = r10                      ; R2_w=fp0 R10=fp0\n3: (07) r2 += -4                      ; R2_w=fp-4\n; void *value = bpf_map_lookup_elem(&buffer, &key);\n4: (18) r1 = 0xff23eb7d451fd800       ; R1_w=map_ptr(map=buffer,ks=4,vs=16)\n6: (85) call bpf_map_lookup_elem#1    ; R0_w=map_value_or_null(id=1,map=buffer,ks=4,vs=16)\n; return value ? iosec_map_zero(value, 16) : 0;\n7: (15) if r0 == 0x0 goto pc+4        ; R0_w=map_value(map=buffer,ks=4,vs=16)\n; return value ? iosec_map_zero(value, 16) : 0;\n8: (bf) r1 = r0                       ; R0_w=map_value(map=buffer,ks=4,vs=16) R1_w=map_value(map=buffer,ks=4,vs=16)\n9: (b7) r2 = 16                       ; R2_w=16\n10: (85) call iosec_map_zero#140295\ncalling kernel function iosec_map_zero is not allowed\nprocessed 10 insns (limit 1000000) max_states_per_insn 0 total_states 0 peak_states 0 mark_read 0\n-- END PROG LOAD LOG --\nlibbpf: prog 'test_registration': failed to load: -13\nlibbpf: failed to load object '/var/tmp/pidfd-kfunc-scope-57gt7pf_/probe.bpf.o'\n"
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "exit_code": 0,
+        "stdout": "LOAD_RESULT 0\n",
+        "stderr": ""
+      }
+    ],
+    "cleanup_ok": true
+  },
+  "source_binding": {
+    "passed": true,
+    "backend": "root",
+    "kernel": "6.8.0-142-generic",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "trials": [
+      {
+        "mode": "normal",
+        "return_probe_attached": true,
+        "source_positive_control": true,
+        "empty_maps_verified": 19,
+        "zero_diagnostics": true,
+        "post_retirement_complete_writes": 0,
+        "post_retirement_incomplete_writes": 64,
+        "source_flags": [
+          0,
+          64
+        ],
+        "kernel_accepted_writes": 65,
+        "complete_source_writes": 1,
+        "incomplete_source_writes": 64,
+        "incorrect_complete_bindings": 0,
+        "reused_addresses": 56,
+        "oracle": {
+          "status": "passed",
+          "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+          "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+          "records": 73,
+          "stacks": 145,
+          "frames": 435,
+          "source_sha256": {
+            "/var/tmp/pidfd-binding-y124_ul1/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+          },
+          "input_sha256": {
+            "records.bin": "6b3d40f63ee7fe2b4b73b046c5c1d19a4a548696bb5d26fc207d4965053a8af2"
+          },
+          "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+        },
+        "raw_sha256": "22cbb25353d0b9cf7eed5890294616eab1d45775ef3f6500469f1a913d50f263"
+      },
+      {
+        "mode": "missing-returns",
+        "return_probe_attached": false,
+        "source_positive_control": true,
+        "empty_maps_verified": 19,
+        "zero_diagnostics": true,
+        "post_retirement_complete_writes": 0,
+        "post_retirement_incomplete_writes": 64,
+        "source_flags": [
+          0,
+          64
+        ],
+        "kernel_accepted_writes": 65,
+        "complete_source_writes": 1,
+        "incomplete_source_writes": 64,
+        "incorrect_complete_bindings": 0,
+        "reused_addresses": 56,
+        "oracle": {
+          "status": "passed",
+          "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+          "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+          "records": 73,
+          "stacks": 145,
+          "frames": 435,
+          "source_sha256": {
+            "/var/tmp/pidfd-binding-y124_ul1/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+          },
+          "input_sha256": {
+            "records.bin": "e0e01e46817beec615adbea994382eed449027e1e106f605592bf35416a19c49"
+          },
+          "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+        },
+        "raw_sha256": "04721158f4564c59e636e1bd8ce0e27a7bf3c2973b15960f9f47bd6fcf517834"
+      }
+    ],
+    "bpf_object_sha256": "25fac875036f66a890252acafdd55ea52f2532ccb81f9a5563691ce157001f69",
+    "source_sha256": {
+      "tests/source_binding_guest.py": "267d051f680e635d2e63212cea014574524acf012c82255e8efa5ec6a6caee5c",
+      "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+      "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+      "loader.c": "b1ede3992e0ba6f08ba4244c183b7cd92096a7d8f820a0705fc94697d6c095d0",
+      "reader.bpf.c": "47853871afb6bf586a945a82f2a10fa03328476e19b2a56b53bc9ab6d57fd350"
+    },
+    "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+    "cleanup_ok": true,
+    "base": "/var/tmp/pidfd-binding-y124_ul1"
+  },
+  "phase": "Full runtime validation before final stage constant identifier rename",
+  "final_identifier_verification": "cleanup-stage-identifiers.json"
+}

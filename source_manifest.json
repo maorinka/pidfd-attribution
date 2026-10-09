@@ -1,0 +1,28 @@
+{
+  "production_files": [
+    {
+      "file": "reader.bpf.c"
+    },
+    {
+      "file": "loader.c"
+    },
+    {
+      "file": "direct_ring.h"
+    },
+    {
+      "file": "module/Makefile"
+    },
+    {
+      "file": "module/config.h"
+    },
+    {
+      "file": "module/iosec_native.c"
+    },
+    {
+      "file": "source_protocol.h"
+    },
+    {
+      "file": "bpf_task_helpers.h"
+    }
+  ]
+}

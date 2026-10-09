@@ -32,12 +32,14 @@ PRODUCTION = (
     "collector.c",
     "direct_ring.h",
     "arch.h",
+    "source_protocol.h",
+    "bpf_task_helpers.h",
     "policy.h",
     "protocol.h",
 )
 
 
-def sha(path):
+def sha256_file(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
@@ -230,9 +232,10 @@ def build():
         schema_version=1,
         upstream_only=True,
         pins=pins,
-        sources={name: sha(directory / name) for name in PRODUCTION},
+        sources={name: sha256_file(directory / name) for name in PRODUCTION},
         artifacts={
-            name: sha(directory / name) for name in ("collector", "reader.bpf.o")
+            name: sha256_file(directory / name)
+            for name in ("collector", "reader.bpf.o")
         },
     )
     (directory / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
@@ -243,18 +246,20 @@ def build():
 def verify_build(config):
     manifest = json.loads((ROOT / "build/manifest.json").read_text())
     pins = manifest["pins"]
-    if pins["kernel"] != os.uname().release or pins["kernel_btf_sha256"] != sha(
+    if pins["kernel"] != os.uname().release or pins["kernel_btf_sha256"] != sha256_file(
         "/sys/kernel/btf/vmlinux"
     ):
         raise RuntimeError(
             "Kernel changed: rebuild and reinstall the sensor for this kernel"
         )
-    if config["capture_python"] and pins["python_sha256"] != sha(pins["python_binary"]):
+    if config["capture_python"] and pins["python_sha256"] != sha256_file(
+        pins["python_binary"]
+    ):
         raise RuntimeError(
             "Selected Python binary changed: rebuild and reinstall before source capture"
         )
     for name, expected in manifest["artifacts"].items():
-        if sha(ROOT / "build" / name) != expected:
+        if sha256_file(ROOT / "build" / name) != expected:
             raise RuntimeError(f"Artifact checksum mismatch: {name}")
     return manifest
 

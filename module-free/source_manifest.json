@@ -1,0 +1,22 @@
+{
+  "production_files": [
+    {
+      "file": "reader.bpf.c"
+    },
+    {
+      "file": "loader.c"
+    },
+    {
+      "file": "direct_ring.h"
+    },
+    {
+      "file": "arch.h"
+    },
+    {
+      "file": "source_protocol.h"
+    },
+    {
+      "file": "bpf_task_helpers.h"
+    }
+  ]
+}

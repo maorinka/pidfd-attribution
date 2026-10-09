@@ -1,26 +1,7 @@
-/* Actual Muse: preallocated-output collector over the Codex mapped-ring
- * consumer. The zero-copy vector writev output path is unchanged from the
- * direct-emit base; reservation-ensure plus written accounting wrap it.
- * No consumer release before complete successful synchronous output of the
- * collected bytes. Acquire/release matches documented BPF ring ABI.
- * Validated compact wire bytes unchanged; sole consumer, pinned64bit guest.
- * Change vs base: regular-file output space is reserved ahead of writes with
- * fallocate(FALLOC_FL_KEEP_SIZE) in fixed generic 1MiB chunks, so timed
- * writev calls find kernel output pages already reserved while the logical
- * file size and visible bytes advance only through the unchanged synchronous
- * writev path (no pre-extended file, no trailing zeros). The first chunk is
- * reserved once at loader startup (before fork, outside the steady CPU
- * window); further fixed chunks are reserved inside direct_commit only when
- * the pending batch end exceeds the reserved high-water mark. Reservation is
- * best-effort and never affects correctness: any fallocate failure, or a
- * non-regular output file, latches a documented original-path state and the
- * run continues with byte-identical output semantics. Startup and fallocate
- * CPU sit outside the existing short screen and MUST be counted by any
- * future inclusive audit; no full-goal claim follows from the screen.
- * Hypothesis only: fewer kernel output-page/block allocations inside timed
- * writev calls at the cost of a few fallocate syscalls; no win assumed,
- * measured, or claimed. Scalar write() is deliberately NOT used: it would
- * enter the unchanged agent's monitored sys_write/vfs_write hooks. */
+/* Sole-consumer mapped BPF ring with synchronous batched writev output.
+ * Release the consumer position only after the entire batch has been written.
+ * Best-effort KEEP_SIZE reservation never changes logical output bytes.
+ * Acquire/release ordering follows the BPF ring-buffer ABI. */
 #ifndef IOSEC_DIRECT_RING_H
 #define IOSEC_DIRECT_RING_H
 #ifndef _GNU_SOURCE
@@ -35,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #define DIRECT_IOVS 128
+#define DIRECT_RECORD_ALIGNMENT 8
 /* Generic fixed reservation quantum: a 1MiB page-multiple unrelated to the
  * fixture rate, count, or size. Whole multiples cover any bounded batch. */
 #define DIRECT_RESERVE_CHUNK 1048576
@@ -94,12 +76,12 @@ static void direct_close(struct direct_ring *r) {
 }
 static int direct_validate(const void *data, size_t size) {
   const struct wire_header *h = data;
-  if (size < sizeof(*h) || h->magic != 0x49535731 || h->version != 2 ||
-      h->size != size || h->reserved)
+  if (size < sizeof(*h) || h->magic != IOSEC_WIRE_MAGIC ||
+      h->version != IOSEC_WIRE_V2 || h->size != size || h->reserved)
     return -1;
   unsigned int total = 0;
-  for (int i = 0; i < 3; i++) {
-    if (h->actors[i].count > 16)
+  for (int i = 0; i < IOSEC_ACTOR_COUNT; i++) {
+    if (h->actors[i].count > IOSEC_SOURCE_FRAMES)
       return -1;
     total += h->actors[i].count;
   }
@@ -247,7 +229,8 @@ static int direct_consume(struct direct_ring *r) {
     size_t size = raw & ~(BPF_RINGBUF_BUSY_BIT | BPF_RINGBUF_DISCARD_BIT);
     if (size > r->capacity - BPF_RINGBUF_HDR_SZ)
       return -1;
-    size_t step = (size + BPF_RINGBUF_HDR_SZ + 7) & ~(size_t)7;
+    size_t step = (size + BPF_RINGBUF_HDR_SZ + DIRECT_RECORD_ALIGNMENT - 1) &
+                  ~(size_t)(DIRECT_RECORD_ALIGNMENT - 1);
     if (step > available || step > r->capacity)
       return -1;
     end = cons + step;
@@ -256,14 +239,14 @@ static int direct_consume(struct direct_ring *r) {
       if (direct_validate(payload, size))
         return -1;
       const struct wire_header *h = payload;
-      if (h->stage == 9 && !steady_events) {
+      if (h->stage == IOSEC_STAGE_WRITE && !steady_events) {
         if (getrusage(RUSAGE_SELF, &steady_start))
           return -1;
         steady_events = 1;
       }
       iov[count++] =
           (struct iovec){.iov_base = (void *)payload, .iov_len = size};
-      if (h->stage == 9)
+      if (h->stage == IOSEC_STAGE_WRITE)
         writes++;
     }
     cons = end;

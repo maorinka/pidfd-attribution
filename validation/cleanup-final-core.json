@@ -1,0 +1,14 @@
+{
+  "pidfd-attribution": {
+    "passed": true,
+    "core_relocations": 61
+  },
+  "module-free": {
+    "passed": true,
+    "core_relocations": 70
+  },
+  "endpoint-service": {
+    "passed": true,
+    "core_relocations": 86
+  }
+}

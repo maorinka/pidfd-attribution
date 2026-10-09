@@ -12,6 +12,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from shared.collector_records import Frame, WireHeader, WorkloadVerifier, events
+from shared.fixture_transform import held_gil_workload
+import ast
+import re
 
 
 class SharedRecordsTests(unittest.TestCase):
@@ -78,9 +81,51 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
                 "live", Path("/unused"), "MAP_EMPTY a 1\nMAPS_EMPTY 1\n", {}
             )
 
+    def test_held_gil_control_uses_pydll_for_both_quote_styles(self):
+        for payload in ("b'x'", 'b"x"'):
+            source = (
+                "import ctypes, os\nlibc = ctypes.CDLL(None)\n"
+                "libc.syscall.restype = ctypes.c_long\n"
+                "def write_leaf(fd):\n    return os.write(fd, " + payload + ")\n"
+            )
+            tree = ast.parse(held_gil_workload(source))
+            calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)]
+            self.assertIn("ctypes.PyDLL", [ast.unparse(node.func) for node in calls])
+            (write,) = [
+                node for node in calls if ast.unparse(node.func) == "gil_libc.write"
+            ]
+            self.assertEqual(len(write.args), 3)
+            self.assertEqual(ast.literal_eval(write.args[-1]), 1)
+            self.assertNotIn("os.write", [ast.unparse(node.func) for node in calls])
+        with self.assertRaises(ValueError):
+            held_gil_workload("def write_leaf(fd):\n    pass\n")
+
+    def test_stage_names_match_the_endpoint_wire_decoder(self):
+        specification = importlib.util.spec_from_file_location(
+            "endpoint_wire", ROOT / "endpoint-service/wire.py"
+        )
+        wire = importlib.util.module_from_spec(specification)
+        specification.loader.exec_module(wire)
+        names = {
+            int(value): name.lower()
+            for name, value in re.findall(
+                r"IOSEC_STAGE_([A-Z_]+) = ([0-9]+)",
+                (ROOT / "shared/source_protocol.h").read_text(),
+            )
+        }
+        self.assertEqual(names, wire.STAGES)
+
+    def test_fixture_collectors_and_rings_share_one_implementation(self):
+        for relative in ("loader.c", "direct_ring.h"):
+            paths = [backend / relative for backend in (ROOT, ROOT / "module-free")]
+            self.assertTrue(all(path.is_symlink() for path in paths))
+            self.assertEqual(paths[0].resolve(), paths[1].resolve())
+
     def test_shared_primitives_are_symlinked_in_all_backends(self):
         for relative in (
             "arch.h",
+            "source_protocol.h",
+            "bpf_task_helpers.h",
             "support/offsets.c",
             "support/python_layout.py",
             "install-ubuntu.sh",

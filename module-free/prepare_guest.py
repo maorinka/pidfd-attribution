@@ -5,7 +5,10 @@ import hashlib, json, os, re, shutil, subprocess, sys
 from settings import ROOT, PREPARED, ARCH, PYTHON, PYTHON_CONFIG
 from support.python_layout import layout_header
 
-sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+
+def sha256_file(path):
+    p = path
+    return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
 def prepare():
@@ -187,13 +190,13 @@ def prepare():
         kernel=os.uname().release,
         architecture=os.uname().machine,
         python_binary=str(python),
-        python_sha256=sha(python),
-        kernel_btf_sha256=sha(Path("/sys/kernel/btf/vmlinux")),
+        python_sha256=sha256_file(python),
+        kernel_btf_sha256=sha256_file(Path("/sys/kernel/btf/vmlinux")),
         python_version=version,
         offsets=offsets,
         kernel_hooks={name: functions[name] for name in (open_hook, "dup_fd")},
         fixture_inputs={
-            name: sha(PREPARED / name)
+            name: sha256_file(PREPARED / name)
             for name in (
                 "config.h",
                 "python_layout.h",
@@ -203,7 +206,7 @@ def prepare():
                 "deep_fixture.py",
             )
         },
-        thread_header_sha256=sha(thread_header),
+        thread_header_sha256=sha256_file(thread_header),
     )
     (PREPARED / "pins.json").write_text(json.dumps(pins, indent=2) + "\n")
     print(

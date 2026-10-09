@@ -7,20 +7,22 @@ import shutil
 import subprocess
 from settings import ROOT, ARCH, BPF_INCLUDES, BPF_LIBS
 
-E = ROOT / "evidence/encoder-controls"
-G = Path("/var/tmp/pidfd-module-free-encoder")
-E.mkdir(parents=True, exist_ok=True)
-G.mkdir(mode=0o700, exist_ok=True)
+EVIDENCE_DIR = ROOT / "evidence/encoder-controls"
+RUNTIME_DIR = Path("/var/tmp/pidfd-module-free-encoder")
+EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+RUNTIME_DIR.mkdir(mode=0o700, exist_ok=True)
 for name in (
     "reader.bpf.c",
     "arch.h",
+    "source_protocol.h",
+    "bpf_task_helpers.h",
     "config.h",
     "kernel_layout.h",
     "python_layout.h",
     "vmlinux.h",
 ):
-    shutil.copy2(ROOT / "evidence/build" / name, G / name)
-shutil.copy2(ROOT / "tests/encoder.c", G / "encoder.c")
+    shutil.copy2(ROOT / "evidence/build" / name, RUNTIME_DIR / name)
+shutil.copy2(ROOT / "tests/encoder.c", RUNTIME_DIR / "encoder.c")
 text = (
     (ROOT / "tests/encoder.bpf.c")
     .read_text()
@@ -29,7 +31,7 @@ text = (
         "__x64_sys_write" if ARCH == "x86" else "__arm64_sys_write",
     )
 )
-(G / "encoder.bpf.c").write_text(text)
+(RUNTIME_DIR / "encoder.bpf.c").write_text(text)
 commands = [
     [
         "clang",
@@ -60,11 +62,13 @@ commands = [
     ["./encoder"],
 ]
 for index, command in enumerate(commands):
-    result = subprocess.run(command, cwd=G, capture_output=True, text=True, timeout=180)
-    (E / f"step-{index}.log").write_text(result.stdout + result.stderr)
+    result = subprocess.run(
+        command, cwd=RUNTIME_DIR, capture_output=True, text=True, timeout=180
+    )
+    (EVIDENCE_DIR / f"step-{index}.log").write_text(result.stdout + result.stderr)
     assert (
         result.returncode == 0
-    ), f'Encoder step {index} failed; see {E / f"step-{index}.log"}'
+    ), f'Encoder step {index} failed; see {EVIDENCE_DIR / f"step-{index}.log"}'
 assert "ENCODER_CASES 147 INVALID_COUNT_CASES 3" in result.stdout
 report = dict(
     passed=True,
@@ -75,5 +79,5 @@ report = dict(
     maximum_frames=48,
     source_sha256=hashlib.sha256((ROOT / "reader.bpf.c").read_bytes()).hexdigest(),
 )
-(E / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+(EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
 print(json.dumps(report))
