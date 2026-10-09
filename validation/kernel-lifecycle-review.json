@@ -1,0 +1,1525 @@
+{
+  "schema_version": 1,
+  "scope": "Kernel lifecycle, endpoint parser and storage recovery; not production or CPU qualification",
+  "kernel_6_8": {
+    "ordering": {
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "scratch_mode": "voluntary",
+      "deployment_admitted": true,
+      "ordering": {
+        "return_depth_bias": 1,
+        "entry_depths": [
+          0,
+          1
+        ],
+        "return_depths": [
+          2,
+          1
+        ]
+      },
+      "source_sha256": {
+        "shared/core/return_depth.c": "017e8f64b0eeff1a8e4764a04a840d85fac641ff5a4dbfc1a139f853dbbc9571",
+        "shared/core/return_depth.bpf.c": "af244613cefa3640718b70ccf5341d1a94fd82fe2c9c1667b6791020ee43708b",
+        "shared/python/return_depth.py": "4ad6e18520c553930b1e5f8b812d66f089d052a0855413f55edbdbc198dc0fb4",
+        "tests/kernel_ordering_guest.py": "e8a6df2cebeafc974443a712d5e44f2efa4093834d83810e5aa117d207e78917"
+      }
+    },
+    "integrity_admission": {
+      "firmware_secure_boot_tested": false,
+      "kernel_policy_test": true,
+      "lockdown_before": "[none] integrity confidentiality",
+      "mode_before": "voluntary",
+      "lockdown_during": "none [integrity] confidentiality",
+      "admitted_under_integrity": false,
+      "refusal": "Cannot verify active dynamic preemption under the current lockdown/debugfs policy: [Errno 1] Operation not permitted: '/sys/kernel/debug/sched/preempt'",
+      "doctor_exit_code": 1,
+      "doctor_checks": [
+        {
+          "check": "cgroup admission",
+          "passed": true,
+          "detail": {
+            "enabled": false
+          }
+        },
+        {
+          "check": "scratch preemption model",
+          "passed": false,
+          "detail": "Cannot verify active dynamic preemption under the current lockdown/debugfs policy: [Errno 1] Operation not permitted: '/sys/kernel/debug/sched/preempt'"
+        },
+        {
+          "check": "architecture",
+          "passed": true,
+          "detail": "x86_64"
+        },
+        {
+          "check": "BPF/perf capabilities",
+          "passed": true,
+          "detail": "Validated configurations use CAP_SYS_ADMIN; BPF/PERFMON-only failed system-wide uprobes on Ubuntu24; CAP_SYS_MODULE is not required"
+        },
+        {
+          "check": "Ubuntu LTS",
+          "passed": true,
+          "detail": "Supported releases: Ubuntu 22.04, 24.04 and 26.04"
+        },
+        {
+          "check": "kernel baseline",
+          "passed": true,
+          "detail": "This collection path requires Linux 6.8 or newer; Ubuntu 22.04 needs its HWE kernel"
+        },
+        {
+          "check": "gcc",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "clang",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "make",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "bpftool",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "readelf",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "nm",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "objcopy",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "/usr/bin/python3.12-config",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "matching kernel headers",
+          "passed": true,
+          "detail": "/lib/modules/6.8.0-142-generic/build"
+        },
+        {
+          "check": "kernel BTF",
+          "passed": true,
+          "detail": "/sys/kernel/btf/vmlinux"
+        },
+        {
+          "check": "lockdown",
+          "passed": true,
+          "detail": "none [integrity] confidentiality; none/integrity allowed; required BPF load/attach checks decide support"
+        },
+        {
+          "check": "CPython 3.10\u20133.14",
+          "passed": true,
+          "detail": "/usr/bin/python3.12"
+        },
+        {
+          "check": "ELF interpreter",
+          "passed": true,
+          "detail": "EXEC and PIE are supported; shared-library interpreter symbols require a separate adapter"
+        }
+      ],
+      "kernel_policy_reset": "VM poweroff resets this volatile test policy; no boot configuration was changed"
+    },
+    "endpoint_integration": {
+      "passed": true,
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "nonleader_exec": {
+        "iterations": 4,
+        "old_thread_state_retired": true
+      },
+      "outermost_return": {
+        "binding_present_during_eval": true,
+        "binding_retired_before_task_exit": true,
+        "empty_shadow": true
+      },
+      "storage_recovery": {
+        "partial_write_rolled_back": true,
+        "writes": 3,
+        "same_session": true,
+        "history_gaps": false
+      },
+      "cleanup_ok": true,
+      "modules_unchanged": true
+    },
+    "storage": {
+      "passed": true,
+      "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+      "rotations": 5,
+      "retained_segments": 3,
+      "input_records": 38400,
+      "decoded_retained_records": 1024,
+      "record_boundaries_preserved": true,
+      "no_preallocated_zero_tail": true,
+      "failed_write_does_not_release_ring": true,
+      "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+      "admin_modified_segments_preserved": true,
+      "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+      "bounded_consumer_backlog_retry": true,
+      "busy_record_no_spin": true,
+      "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1"
+    },
+    "systemd": {
+      "passed": true,
+      "base": "/var/tmp/pidfd-systemd-test-qtkvbivg",
+      "installation_bpf_ids": [
+        2,
+        18,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        938
+      ],
+      "hardening": {
+        "SystemCallArchitectures": "native",
+        "RestrictNamespaces": "yes",
+        "RestrictSUIDSGID": "yes",
+        "PrivateDevices": "yes",
+        "ProtectProc": "invisible"
+      },
+      "source_writes": 3,
+      "attachments": 35,
+      "effective_capabilities": "0xc001200004",
+      "cap_sys_module": false,
+      "watchdog_notification": true,
+      "reload_rotates": true,
+      "automatic_restart": true,
+      "old_session": "43f971f2bfb67ee9fe4e474efca0658c",
+      "new_session": "a8b4e2e427090e79a0c477343903b708",
+      "active_health": {
+        "schema_version": 1,
+        "state": "running",
+        "pid": 4023,
+        "session": "a8b4e2e427090e79a0c477343903b708",
+        "boot_id": "df4934e6-2c03-414c-be7a-6eca958a0a9d",
+        "start_monotonic_ns": 1923463217178,
+        "updated_monotonic_ns": 1927547622973,
+        "updated_realtime_ns": 1791582989383896224,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 0,
+        "session_bytes": 0,
+        "active_segment": "events-01791582985299490451-a8b4e2e427090e79a0c477343903b708-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "malformed_records": 0,
+        "storage_blocked": false,
+        "storage_stalls": 0,
+        "unflushed_ring_bytes": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 27164,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "cache_pressure": 0,
+        "cleanup_index_failures": 0,
+        "source_state_errors": 0,
+        "cleanup_scans": 0,
+        "python_entries": 0,
+        "python_returns": 0,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "final_health": {
+        "schema_version": 1,
+        "state": "stopped",
+        "pid": 4023,
+        "session": "a8b4e2e427090e79a0c477343903b708",
+        "boot_id": "df4934e6-2c03-414c-be7a-6eca958a0a9d",
+        "start_monotonic_ns": 1923463217178,
+        "updated_monotonic_ns": 1930475663339,
+        "updated_realtime_ns": 1791582992311939592,
+        "attachments": 35,
+        "capture_python": true,
+        "records": 0,
+        "session_bytes": 0,
+        "active_segment": "events-01791582985299490451-a8b4e2e427090e79a0c477343903b708-0000000000.bin",
+        "segments_created": 1,
+        "segments_deleted": 0,
+        "retention_skipped": 0,
+        "malformed_records": 0,
+        "storage_blocked": false,
+        "storage_stalls": 0,
+        "unflushed_ring_bytes": 0,
+        "ring_drops": 0,
+        "state_errors": 0,
+        "cleanup_fallback": 0,
+        "history_gaps": false,
+        "errno": 0,
+        "reservation_state": 1,
+        "reservation_errno": 0,
+        "max_rss_kib": 27164,
+        "restart_resets_history": true,
+        "requested_capture_python": true,
+        "effective_capture_python": true,
+        "capture_epoch": 1,
+        "capture_transitions": 0,
+        "degraded_ns": 0,
+        "ring_backlog_bytes": 0,
+        "uprobe_missed_callbacks": null,
+        "cache_pressure": 0,
+        "cleanup_index_failures": 0,
+        "source_state_errors": 0,
+        "cleanup_scans": 0,
+        "python_entries": 5154,
+        "python_returns": 5154,
+        "binding_invalidations": 0,
+        "return_depth_overflow": 0,
+        "binding_unavailable": 0,
+        "bpf_stats_enabled": false,
+        "bpf_runtime": []
+      },
+      "final_bpf_ids": [
+        2,
+        18,
+        2723,
+        2724,
+        2725,
+        2726,
+        2727,
+        2728,
+        2729,
+        2730,
+        2731,
+        2732,
+        2733,
+        2734,
+        2735
+      ],
+      "baseline_bpf_ids": [
+        2,
+        18,
+        2723,
+        2724,
+        2725,
+        2726,
+        2727,
+        2728,
+        2729,
+        2730,
+        2731,
+        2732,
+        2733,
+        2734,
+        2735
+      ],
+      "cleanup_ok": true
+    },
+    "native_correctness": {
+      "hypothesis": "Intermediate unread steady_end snapshots deferred to one final snapshot after last drain; cadence/output/release/flush/failure semantics unchanged",
+      "build": {
+        "reader.bpf.c": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91",
+        "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "ed83893259a38f5b4ba977eb82ccca23810a4eab5431b15c78b77dbaca321032",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "reader.bpf.o": "c6a2ea4cc3347f03a2eddc428228e4ddaf23288fe0f946ae9eea2de16209b7a7",
+        "fentry.bpf.o": "c6a2ea4cc3347f03a2eddc428228e4ddaf23288fe0f946ae9eea2de16209b7a7",
+        "loader": "9e7d8dc24024142d1c7d3b217f9b27be095615d508c62c3402d9a51bd1317f18",
+        "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+        "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+        "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+        "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+        "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+        "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+        "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+        "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+        "/usr/bin/python3.12": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+      },
+      "attach-check": {
+        "exit_code": 0,
+        "attached": [
+          "ATTACH_OK prog=seed_thread sec=uprobe",
+          "ATTACH_OK prog=eval_return sec=uretprobe",
+          "ATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write",
+          "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd",
+          "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat",
+          "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2",
+          "ATTACH_OK prog=open_begin sec=fentry/do_filp_open",
+          "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+          "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+          "ATTACH_OK prog=open_bound sec=fexit/do_filp_open",
+          "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+          "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+          "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+          "ATTACH_OK prog=installed sec=fentry/fd_install",
+          "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+          "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+          "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+          "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+          "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+          "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+          "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+          "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+          "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+          "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+          "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+          "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+          "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+          "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+          "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+          "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+          "ATTACH_OK prog=file_released sec=fentry/__fput",
+          "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+          "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+          "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+          "ATTACH_OK prog=warm_mm_retired sec=fentry/mmput"
+        ],
+        "failed": []
+      },
+      "regression": {
+        "passed": true,
+        "profiles": {
+          "direct": {
+            "kernel_records": 24,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "8e5b92b7c9e754d41c9bd725d28f0e48d18e68e42a21bdde96febb3becd5b103"
+          },
+          "controls": {
+            "kernel_records": 31,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "af1ed125fc2edfece98072bb99db84633743da1ca421c520313145fcd1b8f674"
+          },
+          "native": {
+            "kernel_records": 10,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "987ea3582e442c28dba99afd34bbf47e083522fd6c8a19a94e19967f25c200d7"
+          },
+          "lifetime": {
+            "kernel_records": 38,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "9cfdb2b400433c74a0b2b519039229e7dbd68eeef7469fc87c07068d11c23c28"
+          },
+          "pressure": {
+            "kernel_records": 412,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 1,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "d17f419c1fa181d1e29550532cfb6e4b151247837e7ab4e8377de95a9e676a00"
+          }
+        },
+        "kernel_records": 515,
+        "exact_source_ASTs_and_file_reference_install_write_identity": true,
+        "native_source_unknown": true,
+        "reaped_target_dup_fork_badwrite_and_descriptor_reuse_controls": true,
+        "exec_CLOEXEC_unshare_actual_table_copy_and_mutated_source_unknown_recovery": true,
+        "actual_128_slot_capacity_unknown_write_and_fresh_recovery": true,
+        "guest_compiled_source_and_binary_hashes_preserved": true,
+        "old_shared_table_physical_retirement_while_file_survives": true,
+        "build_sha256": {
+          "reader.bpf.c": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91",
+          "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
+          "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+          "reader.bpf.o": "c6a2ea4cc3347f03a2eddc428228e4ddaf23288fe0f946ae9eea2de16209b7a7",
+          "loader": "9e7d8dc24024142d1c7d3b217f9b27be095615d508c62c3402d9a51bd1317f18",
+          "control": "f345ca15c9c3dd092acb4fb179ae5700654d6f2a2f8e798685e5cb6b70464b93",
+          "share.so": "482bb29f0239af1d9c801e6666bb79f52c493ca87f338472a1c24619eac6ec6c"
+        },
+        "counts_as_tested_solution": false,
+        "count_increment": 0,
+        "scope": "Selected-interpreter serial owned Python/root and native fixtures. Source metadata mutable/unattested; accepted gates matching actual file and successful inner/outer transfer or write; complete additionally gates all required source sections. Neither attests source metadata. Opener bound at the selected file-open hook return before installation; acquirer frozen at syscall entry and associated with actual fget_task/receive_fd/fd_install file. Descriptor label keyed by actual files_struct/fd; physical file/table release removes labels.",
+        "unproven": "Concurrent/batched syscall or shared-table races; other map pressure, cold/corrupt frames, performance/portability. Bounded warmed ASCII CPython metadata is mutable and unattested; no byte-authorship claim.",
+        "source_sha256": {
+          "experiments/pidfd_lineage/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "experiments/pidfd_lineage/reader.bpf.c": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91",
+          "experiments/pidfd_lineage/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "experiments/pidfd_lineage/control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "experiments/pidfd_lineage/share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "experiments/pidfd_lineage/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40"
+        }
+      },
+      "deep": {
+        "status": "passed",
+        "results": [
+          {
+            "depth": 4,
+            "actual_frames": 10,
+            "captured_frames": 10,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "7ba9c35666bc7b7101f98b2e4fb5a45496225c14cc26ded153bc3eba7c3abf70"
+          },
+          {
+            "depth": 10,
+            "actual_frames": 16,
+            "captured_frames": 16,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "ef6b49272639ce11baf6250795bc257d5d46feb3103024cd9c64b8e48cff0fd6"
+          },
+          {
+            "depth": 11,
+            "actual_frames": 17,
+            "captured_frames": 16,
+            "complete": false,
+            "flags": 32,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "346d1fd9fc60a3f8e1885fca4671689a2bc4681bcc903a318abeee01bacff120"
+          }
+        ],
+        "fixture_sha256": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
+        "bpf_source_sha256": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91"
+      },
+      "held": {
+        "passed": true,
+        "test": "ctypes.PyDLL write retains the GIL",
+        "profiles": [
+          {
+            "profile": "serial",
+            "complete_writes": 3
+          },
+          {
+            "profile": "threads",
+            "complete_writes": 13
+          }
+        ]
+      },
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true
+    },
+    "module_free_correctness": {
+      "backend": "module-free",
+      "collector": "Mapped ring, batched writev, preallocation, deferred final CPU snapshot",
+      "build": {
+        "reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+        "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "ed83893259a38f5b4ba977eb82ccca23810a4eab5431b15c78b77dbaca321032",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "reader.bpf.o": "380fbb5cc91ef45dba9992441243f30ea3ef9063fc8500881a58e9bd2bc74ded",
+        "fentry.bpf.o": "380fbb5cc91ef45dba9992441243f30ea3ef9063fc8500881a58e9bd2bc74ded",
+        "loader": "9e7d8dc24024142d1c7d3b217f9b27be095615d508c62c3402d9a51bd1317f18",
+        "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+        "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+        "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+        "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+        "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+        "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+        "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+        "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+        "/usr/bin/python3.12": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+      },
+      "attach-check": {
+        "exit_code": 0,
+        "attached": [
+          "ATTACH_OK prog=seed_thread sec=uprobe",
+          "ATTACH_OK prog=eval_return sec=uretprobe",
+          "ATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write",
+          "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd",
+          "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat",
+          "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2",
+          "ATTACH_OK prog=open_begin sec=fentry/do_filp_open",
+          "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+          "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+          "ATTACH_OK prog=open_bound sec=fexit/do_filp_open",
+          "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+          "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+          "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+          "ATTACH_OK prog=installed sec=fentry/fd_install",
+          "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+          "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+          "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+          "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+          "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+          "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+          "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+          "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+          "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+          "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+          "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+          "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+          "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+          "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+          "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+          "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+          "ATTACH_OK prog=file_released sec=fentry/__fput",
+          "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+          "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+          "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+          "ATTACH_OK prog=warm_mm_retired sec=fentry/mmput"
+        ],
+        "failed": []
+      },
+      "regression": {
+        "passed": true,
+        "profiles": {
+          "direct": {
+            "kernel_records": 24,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "48ef19b235a9745fdedbb897beca1fe0e7d596bf7c40623e78d414d8f7d1236a"
+          },
+          "controls": {
+            "kernel_records": 31,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "3704154a939cdc9487b7bda56c73a747220f2fdc7d5777c859b20f96adbcd339"
+          },
+          "native": {
+            "kernel_records": 10,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "b8ac2ee18d66aaea3ea551284cb1abdf72fed3cdf907c21451daed1c50e87974"
+          },
+          "lifetime": {
+            "kernel_records": 38,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "e13ad447730b3bf908b186502ef896f31e45b2c104634071afb2e1ade56f200a"
+          },
+          "pressure": {
+            "kernel_records": 412,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 1,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "917841ae733a5bd588368e67acff2d75500d0f9227bef5042fd1eb9c8602188b"
+          }
+        },
+        "kernel_records": 515,
+        "exact_source_ASTs_and_file_reference_install_write_identity": true,
+        "native_source_unknown": true,
+        "reaped_target_dup_fork_badwrite_and_descriptor_reuse_controls": true,
+        "exec_CLOEXEC_unshare_actual_table_copy_and_mutated_source_unknown_recovery": true,
+        "actual_128_slot_capacity_unknown_write_and_fresh_recovery": true,
+        "guest_compiled_source_and_binary_hashes_preserved": true,
+        "old_shared_table_physical_retirement_while_file_survives": true,
+        "build_sha256": {
+          "reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+          "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
+          "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+          "reader.bpf.o": "380fbb5cc91ef45dba9992441243f30ea3ef9063fc8500881a58e9bd2bc74ded",
+          "loader": "9e7d8dc24024142d1c7d3b217f9b27be095615d508c62c3402d9a51bd1317f18",
+          "control": "684dfa2050878bc20f65f3ff2f328394eab84eeb919eb5619da26ade180636c6",
+          "share.so": "482bb29f0239af1d9c801e6666bb79f52c493ca87f338472a1c24619eac6ec6c"
+        },
+        "counts_as_tested_solution": false,
+        "count_increment": 0,
+        "scope": "Selected-interpreter serial owned Python/root and native fixtures. Source metadata mutable/unattested; accepted gates matching actual file and successful inner/outer transfer or write; complete additionally gates all required source sections. Neither attests source metadata. Opener bound at the selected file-open hook return before installation; acquirer frozen at syscall entry and associated with actual fget_task/receive_fd/fd_install file. Descriptor label keyed by actual files_struct/fd; physical file/table release removes labels.",
+        "unproven": "Concurrent/batched syscall or shared-table races; other map pressure, cold/corrupt frames, performance/portability. Bounded warmed ASCII CPython metadata is mutable and unattested; no byte-authorship claim.",
+        "source_sha256": {
+          "experiments/pidfd_lineage/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "experiments/pidfd_lineage/reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+          "experiments/pidfd_lineage/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "experiments/pidfd_lineage/control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "experiments/pidfd_lineage/share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "experiments/pidfd_lineage/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40"
+        }
+      },
+      "deep": {
+        "status": "passed",
+        "results": [
+          {
+            "depth": 4,
+            "actual_frames": 10,
+            "captured_frames": 10,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "3ed785e3408f893d13509b369a05bb499ce770ce1691f3e92d376cfcf12013d9"
+          },
+          {
+            "depth": 10,
+            "actual_frames": 16,
+            "captured_frames": 16,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "013f9d2487f6b94d62b3e472f07f9cf309d6081bd05799081f0d385be3ce4da0"
+          },
+          {
+            "depth": 11,
+            "actual_frames": 17,
+            "captured_frames": 16,
+            "complete": false,
+            "flags": 32,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "c0e69029e978a43462e9b62933d0cb9804f27faa334d055f886198a4b878f2af"
+          }
+        ],
+        "fixture_sha256": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
+        "bpf_source_sha256": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+      },
+      "held": {
+        "passed": true,
+        "test": "ctypes.PyDLL write retains the GIL",
+        "profiles": [
+          {
+            "profile": "serial",
+            "complete_writes": 3
+          },
+          {
+            "profile": "threads",
+            "complete_writes": 13
+          }
+        ]
+      },
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true
+    },
+    "native_binding": {
+      "passed": true,
+      "baseline_bpf_ids": [
+        2,
+        18,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        938
+      ],
+      "backend": "root",
+      "kernel": "6.8.0-142-generic",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "trials": [
+        {
+          "mode": "normal",
+          "return_probe_attached": true,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 3786,
+            "3": 3786,
+            "4": 0,
+            "5": 0,
+            "6": 11,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 64,
+          "post_retirement_incomplete_writes": 0,
+          "source_flags": [
+            0
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 65,
+          "incomplete_source_writes": 0,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 53,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "records": 73,
+            "stacks": 209,
+            "frames": 627,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-b5gu0g6h/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "57b2ee99284872a7f95c4f28a570295a33059860a85f72548b4d2ee3f70c24eb"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "199be3768b495ae7189c341dcdb664508ed1fd8a6868ab49e8f123c49866a25c"
+        },
+        {
+          "mode": "missing-returns",
+          "return_probe_attached": false,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 3786,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 10,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 0,
+          "post_retirement_incomplete_writes": 64,
+          "source_flags": [
+            0,
+            64
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 1,
+          "incomplete_source_writes": 64,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 53,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "records": 73,
+            "stacks": 145,
+            "frames": 435,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-b5gu0g6h/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "ca6b9a6cc9a6f314dea1f72059bf401c51bc678dd8d8a61e115f18f0c6cd8df9"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "c33582943918315ee8765ff6a7c987c6e16f0829d7905518e00b4dae6222dbf4"
+        }
+      ],
+      "bpf_object_sha256": "c6a2ea4cc3347f03a2eddc428228e4ddaf23288fe0f946ae9eea2de16209b7a7",
+      "source_sha256": {
+        "tests/source_binding_guest.py": "f884deb572d78b19263591f58ef513fd1366fddd169676cb923db365ade94f27",
+        "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+        "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+        "core/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "core/reader.bpf.c": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91"
+      },
+      "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+      "final_bpf_ids": [
+        2,
+        18,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        938
+      ],
+      "cleanup_ok": true,
+      "base": "/var/tmp/pidfd-binding-b5gu0g6h"
+    },
+    "module_free_binding": {
+      "passed": true,
+      "baseline_bpf_ids": [
+        2,
+        18,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        938
+      ],
+      "backend": "module-free",
+      "kernel": "6.8.0-142-generic",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "trials": [
+        {
+          "mode": "normal",
+          "return_probe_attached": true,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 3786,
+            "3": 3786,
+            "4": 0,
+            "5": 0,
+            "6": 11,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 64,
+          "post_retirement_incomplete_writes": 0,
+          "source_flags": [
+            0
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 65,
+          "incomplete_source_writes": 0,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 53,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "records": 73,
+            "stacks": 209,
+            "frames": 627,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-dq8q695i/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "f4cb7a546a486d6d468f1b69fdfa6a290523b7f6cbc4d8b4435f5504e141c23e"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "8174ef38a6583b6ad7309ef3b06b438b6ddfbb7624dc37219458c0d46736cae1"
+        },
+        {
+          "mode": "missing-returns",
+          "return_probe_attached": false,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 3786,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 10,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 0,
+          "post_retirement_incomplete_writes": 64,
+          "source_flags": [
+            0,
+            64
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 1,
+          "incomplete_source_writes": 64,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 53,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+            "records": 73,
+            "stacks": 145,
+            "frames": 435,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-dq8q695i/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "679199cc33b4985778ca478db57e2284bfb632a7993dd5eb5f7638e44dc96ce8"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "21b25df66a9c664b34482bc90386aa0f7f494559d61713b77d37de085b73293a"
+        }
+      ],
+      "bpf_object_sha256": "380fbb5cc91ef45dba9992441243f30ea3ef9063fc8500881a58e9bd2bc74ded",
+      "source_sha256": {
+        "tests/source_binding_guest.py": "f884deb572d78b19263591f58ef513fd1366fddd169676cb923db365ade94f27",
+        "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+        "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+        "module-free/core/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "module-free/core/reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+      },
+      "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+      "final_bpf_ids": [
+        2,
+        18,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        938
+      ],
+      "cleanup_ok": true,
+      "base": "/var/tmp/pidfd-binding-dq8q695i"
+    },
+    "encoder": {
+      "passed": true,
+      "record_lengths": 49,
+      "byte_comparison_cases": 147,
+      "invalid_count_cases": 3,
+      "wire_version": 1,
+      "maximum_frames": 48,
+      "source_sha256": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+    }
+  },
+  "kernel_7_0": {
+    "ordering": {
+      "kernel": "7.0.0-38-generic",
+      "architecture": "x86_64",
+      "deployment_admitted": false,
+      "refusal": "Full or unknown dynamic preemption is unsupported",
+      "ordering": {
+        "return_depth_bias": 0,
+        "entry_depths": [
+          0,
+          1
+        ],
+        "return_depths": [
+          1,
+          0
+        ]
+      },
+      "source_sha256": {
+        "shared/core/return_depth.c": "017e8f64b0eeff1a8e4764a04a840d85fac641ff5a4dbfc1a139f853dbbc9571",
+        "shared/core/return_depth.bpf.c": "af244613cefa3640718b70ccf5341d1a94fd82fe2c9c1667b6791020ee43708b",
+        "shared/python/return_depth.py": "4ad6e18520c553930b1e5f8b812d66f089d052a0855413f55edbdbc198dc0fb4",
+        "tests/kernel_ordering_guest.py": "e8a6df2cebeafc974443a712d5e44f2efa4093834d83810e5aa117d207e78917"
+      }
+    },
+    "test_only_admission_override": true,
+    "module_free_correctness": {
+      "backend": "module-free",
+      "collector": "Mapped ring, batched writev, preallocation, deferred final CPU snapshot",
+      "build": {
+        "reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+        "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "config.h": "b28c83414c6eefed187dbdd2d9e7f2ea8b68afad3cd143c274385d235f5a8f89",
+        "python_layout.h": "9da0b72cf62edb5a255326fe3ab8a7dd53a56a5cff0d58563fe204f933cdb0fc",
+        "kernel_layout.h": "1935c08ee3131e261d59790c2e9b569677fe3952384a82744ba3bc09f10b663d",
+        "vmlinux.h": "e1b0accd1e92c990e40a06af44a238686b2702546714d32b5b5ea465dca7c907",
+        "reader.bpf.o": "08162894425b784739b030231339febf0dae2bd9434eaeadbd5d7670054b239e",
+        "fentry.bpf.o": "08162894425b784739b030231339febf0dae2bd9434eaeadbd5d7670054b239e",
+        "loader": "f33d6acb47e8c953959436e8071e683e25ff5b65196e753b3a07368b77da5599",
+        "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+        "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+        "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+        "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+        "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+        "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+        "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+        "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+        "/usr/bin/python3.14": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41"
+      },
+      "attach-check": {
+        "exit_code": 0,
+        "attached": [
+          "ATTACH_OK prog=seed_thread sec=uprobe",
+          "ATTACH_OK prog=eval_return sec=uretprobe",
+          "ATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write",
+          "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd",
+          "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat",
+          "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2",
+          "ATTACH_OK prog=open_begin sec=fentry/do_file_open",
+          "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+          "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+          "ATTACH_OK prog=open_bound sec=fexit/do_file_open",
+          "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+          "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+          "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+          "ATTACH_OK prog=installed sec=fentry/fd_install",
+          "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+          "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+          "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+          "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+          "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+          "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+          "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+          "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+          "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+          "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+          "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+          "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+          "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+          "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+          "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+          "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+          "ATTACH_OK prog=file_released sec=fentry/__fput",
+          "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+          "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+          "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+          "ATTACH_OK prog=warm_mm_retired sec=fentry/mmput"
+        ],
+        "failed": []
+      },
+      "regression": {
+        "passed": true,
+        "profiles": {
+          "direct": {
+            "kernel_records": 24,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "29dff2087aae313d7279ae189b0d1bf588d03430b1081b7645a344b9673f1c98"
+          },
+          "controls": {
+            "kernel_records": 31,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": true,
+            "raw_log_sha256": "ffa828d5f1c1916c389dcc79dabe45e4d797e5d95fda9d7e19ee869c71b539c7"
+          },
+          "native": {
+            "kernel_records": 10,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "2e5d8f7c0528dc3937fed67ea40e6275d82e433dab6f26b0158a5ff1dc016c11"
+          },
+          "lifetime": {
+            "kernel_records": 38,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "a0057b3fed6535a27e62ed0ca22ac3ed4217442acb4618cc15e361e7f73a7d17"
+          },
+          "pressure": {
+            "kernel_records": 412,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 1,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "417a6b91e559f9c9fd14f4789a43794bd00a31c60efab2d9bc9dd76c25689436"
+          }
+        },
+        "kernel_records": 515,
+        "exact_source_ASTs_and_file_reference_install_write_identity": true,
+        "native_source_unknown": true,
+        "reaped_target_dup_fork_badwrite_and_descriptor_reuse_controls": true,
+        "exec_CLOEXEC_unshare_actual_table_copy_and_mutated_source_unknown_recovery": true,
+        "actual_128_slot_capacity_unknown_write_and_fresh_recovery": true,
+        "guest_compiled_source_and_binary_hashes_preserved": true,
+        "old_shared_table_physical_retirement_while_file_survives": true,
+        "build_sha256": {
+          "reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+          "loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
+          "config.h": "b28c83414c6eefed187dbdd2d9e7f2ea8b68afad3cd143c274385d235f5a8f89",
+          "reader.bpf.o": "08162894425b784739b030231339febf0dae2bd9434eaeadbd5d7670054b239e",
+          "loader": "f33d6acb47e8c953959436e8071e683e25ff5b65196e753b3a07368b77da5599",
+          "control": "00b9236f09dbd7d0dd88f7554d2116e4c0d1580c62440c3c58878210d5d021e6",
+          "share.so": "998ba2c741a47dd8c120507014f7149af2b6518287acf364f7b802038ea08141"
+        },
+        "counts_as_tested_solution": false,
+        "count_increment": 0,
+        "scope": "Selected-interpreter serial owned Python/root and native fixtures. Source metadata mutable/unattested; accepted gates matching actual file and successful inner/outer transfer or write; complete additionally gates all required source sections. Neither attests source metadata. Opener bound at the selected file-open hook return before installation; acquirer frozen at syscall entry and associated with actual fget_task/receive_fd/fd_install file. Descriptor label keyed by actual files_struct/fd; physical file/table release removes labels.",
+        "unproven": "Concurrent/batched syscall or shared-table races; other map pressure, cold/corrupt frames, performance/portability. Bounded warmed ASCII CPython metadata is mutable and unattested; no byte-authorship claim.",
+        "source_sha256": {
+          "experiments/pidfd_lineage/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "experiments/pidfd_lineage/reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+          "experiments/pidfd_lineage/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+          "experiments/pidfd_lineage/control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "experiments/pidfd_lineage/share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "experiments/pidfd_lineage/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40"
+        }
+      },
+      "deep": {
+        "status": "passed",
+        "results": [
+          {
+            "depth": 4,
+            "actual_frames": 10,
+            "captured_frames": 10,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "a307b0a8f2c8120cdb413e07358f5a2a49787592c85e9cf39e5e18a6307730d2"
+          },
+          {
+            "depth": 10,
+            "actual_frames": 16,
+            "captured_frames": 16,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "da2d06c7142d44c593b6cf1d6d060a109ba7c47165bbfef63099de5394f6ad8e"
+          },
+          {
+            "depth": 11,
+            "actual_frames": 17,
+            "captured_frames": 16,
+            "complete": false,
+            "flags": 32,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "199e056da9230cab635a66cc43ddd02eaf641523bcfd51401d5fce7428af8035"
+          }
+        ],
+        "fixture_sha256": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
+        "bpf_source_sha256": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+      },
+      "held": {
+        "passed": true,
+        "test": "ctypes.PyDLL write retains the GIL",
+        "profiles": [
+          {
+            "profile": "serial",
+            "complete_writes": 3
+          },
+          {
+            "profile": "threads",
+            "complete_writes": 13
+          }
+        ]
+      },
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true
+    },
+    "source_binding": {
+      "passed": true,
+      "baseline_bpf_ids": [
+        61,
+        69,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        85,
+        86,
+        87,
+        88,
+        90
+      ],
+      "backend": "module-free",
+      "kernel": "7.0.0-38-generic",
+      "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+      "trials": [
+        {
+          "mode": "normal",
+          "return_probe_attached": true,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 2118,
+            "3": 2118,
+            "4": 0,
+            "5": 0,
+            "6": 12,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 64,
+          "post_retirement_incomplete_writes": 0,
+          "source_flags": [
+            0
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 65,
+          "incomplete_source_writes": 0,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 63,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+            "records": 73,
+            "stacks": 209,
+            "frames": 627,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-mzy896qq/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "fbdc32061293e04aaf0e3fa5a4dd72aaacc9f5f76e5d023c449de103d00c5f6b"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "16ee6b8c0648b42d4dab3a2e01f88a021737c49ca7415b4c8ae6ef6b63a77315"
+        },
+        {
+          "mode": "missing-returns",
+          "return_probe_attached": false,
+          "source_positive_control": true,
+          "empty_maps_verified": 19,
+          "zero_error_diagnostics": true,
+          "diagnostic_counts": {
+            "0": 0,
+            "1": 0,
+            "2": 2118,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 11,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 2
+          },
+          "post_retirement_complete_writes": 0,
+          "post_retirement_incomplete_writes": 64,
+          "source_flags": [
+            0,
+            64
+          ],
+          "kernel_accepted_writes": 65,
+          "complete_source_writes": 1,
+          "incomplete_source_writes": 64,
+          "incorrect_complete_bindings": 0,
+          "reused_addresses": 63,
+          "oracle": {
+            "status": "passed",
+            "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+            "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+            "records": 73,
+            "stacks": 145,
+            "frames": 435,
+            "source_sha256": {
+              "/var/tmp/pidfd-binding-mzy896qq/fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e"
+            },
+            "input_sha256": {
+              "records.bin": "3cacc90b53258cb71ef05df9791fac3581c4d69829462f705a62bd9c058af60a"
+            },
+            "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+          },
+          "raw_sha256": "6e5f1e6ff2b66eca49ba236b3b8418bbe077f032ffbd3d50bf1a2d9c210f16a6"
+        }
+      ],
+      "bpf_object_sha256": "08162894425b784739b030231339febf0dae2bd9434eaeadbd5d7670054b239e",
+      "source_sha256": {
+        "tests/source_binding_guest.py": "f884deb572d78b19263591f58ef513fd1366fddd169676cb923db365ade94f27",
+        "tests/source_binding.c": "9d0f2a3add91bf05d1afe365dc513c9df2ab6373961068258bec58d2d1c9ccb0",
+        "tests/source_binding_fixture.py": "efaaffd048dc38419cd836e1f4fa521ed71827a1907ca8201225c5082711cd5e",
+        "module-free/core/loader.c": "e82bf5a920c06f9a9aa84a3ab64a49e909b293304dcb7eaabc43b7fd21f3cbd3",
+        "module-free/core/reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+      },
+      "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
+      "final_bpf_ids": [
+        61,
+        69,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        85,
+        86,
+        87,
+        88,
+        90
+      ],
+      "cleanup_ok": true,
+      "base": "/var/tmp/pidfd-binding-mzy896qq"
+    },
+    "encoder": {
+      "passed": true,
+      "record_lengths": 49,
+      "byte_comparison_cases": 147,
+      "invalid_count_cases": 3,
+      "wire_version": 1,
+      "maximum_frames": 48,
+      "source_sha256": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e"
+    }
+  },
+  "limitations": [
+    "Kernel 7.0 full/lazy scratch admission remains refused; fixture tests used an isolated in-process admission override, never a production bypass.",
+    "Integrity lockdown prevents dynamic preemption verification on the tested host; admission remains refused. Firmware Secure Boot was not tested.",
+    "No new fleet CPU benchmark; arbitrary missed callbacks and all nesting scenarios are not proven.",
+    "Historical evidence hashes still refer to original artifacts; public identity redaction does not rewrite git history."
+  ],
+  "source_sha256": {
+    ".github/workflows/offline.yml": "fc83e0902d52facdef723173e0d47bc7905253e51d184466961c70cb1c773d15",
+    "README": "8c6b8aca5a3594d35f403968e4622cc3978f2e1c20853d5e3b0d47f9b2984b90",
+    "core/reader.bpf.c": "f18f60dbe5763dc9943fc1961ecebb9e877b003692415d5c9c5580a535c33d91",
+    "endpoint-service/core/collector.c": "818ff7cc5c872a08865ed663b031cbc6ba122fa6bfd380bb0b724a278b3742fb",
+    "endpoint-service/core/direct_ring.h": "dcff674b36d07acd9fc6b8ae59e473e81558ae5a1826d0685aa902a730664738",
+    "endpoint-service/core/reader.bpf.c": "f3e365e0c684296c90ec1c3ffa9a863f05c312127b762b60ccc38728b04688f4",
+    "endpoint-service/iosec-endpoint.service": "92c4387e53c1602c3623dfeb369a0d87a3f2e0ba9044e36dcb2197fc927f3328",
+    "endpoint-service/python/prepare_guest.py": "894b4b8d9af69855b5a3012d4e69818d0e51c88f59e9cd03dbeeda5da0d132cd",
+    "endpoint-service/python/service.py": "f323eda18fb90124852fc50e14fec251693dab4e832034730a29beca1315c410",
+    "endpoint-service/tests/consumer.c": "fddb1aad62f685eb317687e2ba040489e4a9226735324a7999050a1f0a2c10e5",
+    "endpoint-service/tests/exec_fixture.py": "4ff1ed98a74d54190c9319f3f3e85403df51edd8b389791bdcc3e9d247c3177c",
+    "endpoint-service/tests/integration_guest.py": "a0df91a4de1de69c4f0d37791cde3118bf814bad0591d14e97228f6f5a0c69c0",
+    "endpoint-service/tests/storage_fault.c": "183983771d96f3fc96ab20c14ccba2e81fc9ec20be081a8be5e7a38c9d2cb2a9",
+    "endpoint-service/tests/test_service.py": "277a51203d281070372a8f6301956e7497cbed9d329b681eefdf903a07b96bb9",
+    "module-free/core/reader.bpf.c": "4991f69a8097caa67e1b223d2fb9a429a76545149754f0c4c546a03dbe738e0e",
+    "module-free/python/prepare_guest.py": "da7e7051cafb94a17243bc4c633e3a2bb41a683c6432a1c504c88c6fc0c78998",
+    "python/prepare_guest.py": "ef8426151d15ca02f4f6c274f79a92f773a8c19da125ad16330ba652ee537170",
+    "shared/core/cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+    "shared/core/python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+    "shared/core/return_depth.bpf.c": "af244613cefa3640718b70ccf5341d1a94fd82fe2c9c1667b6791020ee43708b",
+    "shared/core/return_depth.c": "017e8f64b0eeff1a8e4764a04a840d85fac641ff5a4dbfc1a139f853dbbc9571",
+    "shared/python/kernel_admission.py": "ed13ad09a4ec8ab00605c9b42f781494e304f1e82c472ee8abc54e2239e709b9",
+    "shared/python/return_depth.py": "4ad6e18520c553930b1e5f8b812d66f089d052a0855413f55edbdbc198dc0fb4",
+    "tests/kernel_ordering_guest.py": "e8a6df2cebeafc974443a712d5e44f2efa4093834d83810e5aa117d207e78917",
+    "tests/test_kernel_admission.py": "12ed0fc0b1bb94167fc6a46fbf20377be7ac53ff34cda54f3cf735bd5486f40b",
+    "tests/test_public_evidence.py": "bd863584c8a8693ad5c9758439d0a1ed7bc049bce2eb291d4626fadbd3d21442",
+    "tools/sanitize_evidence.py": "a8a399bcfdca5572e97f750c22d8c1e20b07d54d810d90e54b0f20a5f55448af"
+  },
+  "guest_source_comparison": {
+    "6.8": {
+      "matched": [
+        "core/reader.bpf.c",
+        "endpoint-service/core/collector.c",
+        "endpoint-service/core/direct_ring.h",
+        "endpoint-service/core/reader.bpf.c",
+        "endpoint-service/python/prepare_guest.py",
+        "endpoint-service/python/service.py",
+        "endpoint-service/tests/consumer.c",
+        "endpoint-service/tests/exec_fixture.py",
+        "endpoint-service/tests/integration_guest.py",
+        "endpoint-service/tests/storage_fault.c",
+        "endpoint-service/tests/test_service.py",
+        "module-free/core/reader.bpf.c",
+        "module-free/python/prepare_guest.py",
+        "python/prepare_guest.py",
+        "shared/core/cleanup_retirement.bpf.h",
+        "shared/core/python_binding.bpf.h",
+        "shared/core/return_depth.bpf.c",
+        "shared/core/return_depth.c",
+        "shared/python/kernel_admission.py",
+        "shared/python/return_depth.py",
+        "tests/kernel_ordering_guest.py",
+        "tests/test_kernel_admission.py",
+        "tests/test_public_evidence.py",
+        "tools/sanitize_evidence.py"
+      ],
+      "different": []
+    },
+    "7.0": {
+      "matched": [
+        "module-free/core/reader.bpf.c",
+        "shared/core/python_binding.bpf.h",
+        "shared/core/cleanup_retirement.bpf.h",
+        "shared/core/return_depth.c",
+        "shared/core/return_depth.bpf.c",
+        "shared/python/return_depth.py"
+      ],
+      "different": []
+    }
+  },
+  "offline_tests": {
+    "root": 13,
+    "endpoint": 15
+  },
+  "rejected_attempts": [
+    {
+      "artifact": "calibration-first-attempt.log",
+      "sha256": "085351dd07a21f39de7df03a9b56180fb9dc8e0dedcc2477d968960fd4152024",
+      "reason": "LLVM18 required -mcpu=v3 for atomic fetch-add; corrected build flag."
+    },
+    {
+      "artifact": "health-format-first-attempt.log",
+      "sha256": "8d6a056487b69af94c25f4d586809a51413c0a45e40a3822b5e12f3bd67567c7",
+      "reason": "Compiler caught missing health-format argument; corrected."
+    },
+    {
+      "artifact": "module-drift-first-attempt.json",
+      "sha256": "8ef32d124890ac1ca0ade602b923c30452548849f90f971a30a7e20b81e9411f",
+      "reason": "Exact module-set audit rejected integration; initial baseline module names were not retained, so the specific difference is unknown. Audit unchanged on passing rerun."
+    },
+    {
+      "artifact": "source-binding.log",
+      "sha256": "e21bc77250b7e094355ff3f346061acc8cdf4f261e28ffc0dcec88b19926350f",
+      "reason": "Original emit accumulation exceeded verifier instruction budget."
+    },
+    {
+      "artifact": "source-binding-noinline.log",
+      "sha256": "83cc0fb52884695d3252aa4d554befb493cb2df36be80e666c7a28f71198ba60",
+      "reason": "Guest-only noinline experiment also exceeded verifier budget; not adopted."
+    }
+  ]
+}

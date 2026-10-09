@@ -1,15 +1,14 @@
 [Unit]
 Description=IO.Security module-free endpoint attribution sensor
 After=local-fs.target
-StartLimitIntervalSec=300
-StartLimitBurst=5
+StartLimitIntervalSec=0
 
 [Service]
 Type=notify
 NotifyAccess=main
 ExecStart=/usr/bin/python3 /opt/iosec-endpoint/python/service.py run --config /etc/iosec-endpoint.json
 ExecReload=/bin/kill -HUP $MAINPID
-Restart=on-failure
+Restart=always
 RestartSec=10
 TimeoutStartSec=180
 TimeoutStopSec=30

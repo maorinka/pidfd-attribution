@@ -26,10 +26,13 @@ Recent live endpoint validation used Ubuntu 24.04/x86_64/Linux 6.8/Python 3.12.
 Build-only evidence does not establish attachment support on another target.
 
 The current attachment configuration requires CAP_SYS_ADMIN. Confidentiality
-lockdown is unsupported. Full/RT preemption is refused: the current collector
+lockdown is unsupported. Full/RT/lazy preemption is refused: the current collector
 uses per-CPU scratch. Dynamic kernels must expose their selected mode through
 /sys/kernel/debug/sched/preempt. The selected mode must remain none or voluntary
 while the sensor runs; a boot configuration fixed to that mode is preferable.
+Integrity lockdown blocked this debugfs read on the tested Ubuntu 24.04 kernel.
+Such hosts are refused even by the module-free backend; boot arguments alone
+do not prove the running preemption mode. Firmware Secure Boot was not tested.
 
 Endpoint quick start
 --------------------
@@ -76,9 +79,26 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 python3 endpoint-service/tests/test_service.py
 python3 tools/check_style.py  (requires Black 24.2.0 and clang-format 18.1.3)
 
-Hosted CI runs offline checks on every push and pull request. The opt-in VM
+Hosted CI runs offline checks and the real collector storage tests on every
+push and pull request. The storage job compiles without BPF attachment; it does
+not establish kernel compatibility. The opt-in VM
 workflows perform kernel validation. sudo ./run.sh validate in a fixture backend
 runs its owned controls. Validation JSONs under validation/ record both passing
 and rejected runs; historical reports pin historical source hashes. QEMU CPU
 screens are not fleet benchmarks. This remains a research sensor, not a general
 endpoint EDR or a production qualification claim.
+
+Return-handler ordering is calibrated with an owned nested native call during
+preparation. The measured bias is pinned alongside kernel BTF, not inferred
+from the release number. Kernel 7.0 builds selecting lazy/full preemption remain
+outside the current scratch backend's deployment support.
+
+The endpoint skips and counts malformed payloads only inside valid ring-record
+boundaries; these losses mark history gaps. Invalid ring boundaries stop the
+collector. Partial event writes are rolled back before a disk/quota-full retry.
+During storage blockage the service retains pending ring bytes, services its
+watchdog, and retries each second. Ring overflow remains an explicit loss. A full
+filesystem may also prevent fresh health files; status then becomes stale.
+Automatic restarts continue at ten-second intervals until the fault is resolved.
+Published evidence normalizes local host identities while preserving original
+artifact hashes.

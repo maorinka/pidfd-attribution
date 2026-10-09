@@ -101,7 +101,7 @@
       33,
       37
     ],
-    "script": "/Users/maorhadad/projects/pidfd-attribution/tests/source_binding_guest.py",
+    "script": "/workspace/pidfd-attribution/tests/source_binding_guest.py",
     "args": [
       "--backend",
       "root"
@@ -319,5 +319,6 @@
         "bytes_memlock": 4096
       }
     ]
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

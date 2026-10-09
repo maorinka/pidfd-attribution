@@ -16,8 +16,8 @@ SEC("fentry/__fput") int BPF_PROG(file_released, struct file *file) {
   if (has_cleanup_index(&tracked_files, f)) {
     increment_diagnostic(IOSEC_DIAG_CLEANUP_SCANS);
     bpf_for_each_map_elem(&slots, retire_slot, &f, 0);
+    bpf_map_delete_elem(&tracked_files, &f);
   }
-  bpf_map_delete_elem(&tracked_files, &f);
   return 0;
 }
 static long retire_table_slot(void *map, const struct pidfd_slot *s,
@@ -43,8 +43,8 @@ int table_physically_freed(struct trace_event_raw_kmem_cache_free *ctx) {
   if (has_cleanup_index(&tracked_tables, ptr)) {
     increment_diagnostic(IOSEC_DIAG_CLEANUP_SCANS);
     bpf_for_each_map_elem(&slots, retire_table_slot, &ptr, 0);
+    bpf_map_delete_elem(&tracked_tables, &ptr);
   }
-  bpf_map_delete_elem(&tracked_tables, &ptr);
   return 0;
 }
 

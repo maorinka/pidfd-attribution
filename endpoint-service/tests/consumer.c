@@ -42,10 +42,27 @@ int main(int argc, char **argv) {
   *(uint32_t *)data = sizeof(header) | BPF_RINGBUF_DISCARD_BIT;
   assert(!direct_consume(&ring) && consumer == producer &&
          output_records == 2048);
+  /* A valid ring boundary lets us reject one bad payload and continue. */
+  consumer = 0;
+  producer = 2 * step;
+  *(uint32_t *)data = sizeof(header);
+  struct wire_header bad = header;
+  bad.magic = 0;
+  memcpy(data + BPF_RINGBUF_HDR_SZ, &bad, sizeof(bad));
+  *(uint32_t *)(data + step) = sizeof(header);
+  memcpy(data + step + BPF_RINGBUF_HDR_SZ, &header, sizeof(header));
+  assert(!direct_consume(&ring) && consumer == producer);
+  assert(ring.malformed_records == 1 && output_records == 2049);
+  /* A corrupt envelope has no trusted boundary to skip. */
+  consumer = 0;
+  producer = step;
+  *(uint32_t *)data = capacity;
+  assert(direct_consume(&ring) == -1 && consumer == 0);
   assert(!close_segment());
   free(data);
   close(directory_fd);
   puts("CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 "
-       "discarded_no_output=1");
+       "discarded_no_output=1 malformed_payload_skipped=1 "
+       "corrupt_envelope_stops=1");
   return 0;
 }

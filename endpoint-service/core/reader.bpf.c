@@ -1069,35 +1069,40 @@ static __always_inline void emit(struct event *e, unsigned int stage,
     increment_diagnostic(0);
     return;
   }
-  int error = bpf_dynptr_write(&d, 0, h, 224, 0);
+  if (bpf_dynptr_write(&d, 0, h, 224, 0))
+    goto discard_record;
   unsigned int offset = 224;
 #pragma clang loop unroll(disable)
   for (unsigned int i = 0; i < 16; i++) {
     if (i >= a)
       break;
-    error |= bpf_dynptr_write(&d, offset, &e->opener.frames[i], 200, 0);
+    if (bpf_dynptr_write(&d, offset, &e->opener.frames[i], 200, 0))
+      goto discard_record;
     offset += 200;
   }
 #pragma clang loop unroll(disable)
   for (unsigned int i = 0; i < 16; i++) {
     if (i >= b)
       break;
-    error |= bpf_dynptr_write(&d, offset, &e->acquirer.frames[i], 200, 0);
+    if (bpf_dynptr_write(&d, offset, &e->acquirer.frames[i], 200, 0))
+      goto discard_record;
     offset += 200;
   }
 #pragma clang loop unroll(disable)
   for (unsigned int i = 0; i < 16; i++) {
     if (i >= c)
       break;
-    error |= bpf_dynptr_write(&d, offset, &e->live.frames[i], 200, 0);
+    if (bpf_dynptr_write(&d, offset, &e->live.frames[i], 200, 0))
+      goto discard_record;
     offset += 200;
   }
-  if (error || offset != size) {
-    bpf_ringbuf_discard_dynptr(&d, 0);
-    increment_diagnostic(1);
-    return;
-  }
+  if (offset != size)
+    goto discard_record;
   bpf_ringbuf_submit_dynptr(&d, BPF_RB_NO_WAKEUP);
+  return;
+discard_record:
+  bpf_ringbuf_discard_dynptr(&d, 0);
+  increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
 }
 /* Fused sleepable entries. Each runs after its sys_enter tracepoint (for
  * write/pidfd_getfd) and before deeper nonsleepable hooks. Write/acquire
@@ -1350,7 +1355,8 @@ int BPF_PROG(installed, unsigned int fd, struct file *file) {
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      file_addr = (unsigned long long)file;
   struct pidfd_slot stale = {.files = current_files_identity(), .fd = fd};
-  bpf_map_delete_elem(&slots, &stale);
+  if (bpf_map_lookup_elem(&slots, &stale))
+    bpf_map_delete_elem(&slots, &stale);
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (!e)
     e = bpf_map_lookup_elem(&aliasing, &tid);
@@ -1752,8 +1758,7 @@ int BPF_PROG(exec_close_done, struct files_struct *files_arg) {
   return 0;
 }
 #include "cleanup_retirement.bpf.h"
-SEC("tracepoint/sched/sched_process_exec") int executed(void *ctx) {
-  unsigned long long tid = bpf_get_current_pid_tgid();
+static __always_inline void retire_thread_state(unsigned long long tid) {
   bpf_map_delete_elem(&shadows, &tid);
   bpf_map_delete_elem(&threads, &tid);
   bpf_map_delete_elem(&warm_tmp, &tid);
@@ -1766,6 +1771,15 @@ SEC("tracepoint/sched/sched_process_exec") int executed(void *ctx) {
   bpf_map_delete_elem(&closing, &tid);
   bpf_map_delete_elem(&duplicating, &tid);
   bpf_map_delete_elem(&execclosing, &tid);
+}
+SEC("tracepoint/sched/sched_process_exec")
+int executed(struct trace_event_raw_sched_process_exec *ctx) {
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  unsigned long long old_tid =
+      (tid & 0xffffffff00000000ULL) | (unsigned int)ctx->old_pid;
+  retire_thread_state(tid);
+  if (old_tid != tid)
+    retire_thread_state(old_tid);
   return 0;
 }
 SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {

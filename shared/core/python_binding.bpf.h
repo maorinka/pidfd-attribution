@@ -34,8 +34,8 @@ lookup_python_binding(unsigned long long tid) {
   }
   return binding;
 }
-/* Entry observes depth before registration; return observes it before removal.
- * Return processing subtracts its own pending instance before restoring
+/* Preparation measures whether return handlers run before or after the
+ * kernel removes the pending instance. Apply that measured bias to restore
  * callers. Lifecycle callbacks continue during capture degradation; snapshot
  * epochs still prevent source data from crossing mode transitions. kernel
  * pending-return depth is authoritative; skipped instances must not inflate a
@@ -93,7 +93,9 @@ SEC("uretprobe") int eval_return(struct pt_regs *ctx) {
     return 0;
   unsigned long long key = bpf_get_current_pid_tgid();
   unsigned int return_depth = pending_depth();
-  unsigned int depth = return_depth ? return_depth - 1 : IOSEC_RETURN_DEPTH + 1;
+  unsigned int depth = return_depth >= IOSEC_RETURN_DEPTH_BIAS
+                           ? return_depth - IOSEC_RETURN_DEPTH_BIAS
+                           : IOSEC_RETURN_DEPTH + 1;
   struct eval_shadow *s = bpf_map_lookup_elem(&shadows, &key);
   increment_diagnostic(IOSEC_DIAG_PYTHON_RETURNS);
   if (depth > IOSEC_RETURN_DEPTH)

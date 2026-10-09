@@ -22,7 +22,13 @@ def validate_preemption(config_text=None, dynamic_text=None):
             path = Path("/sys/kernel/debug/sched/preempt")
             if not path.is_file():
                 raise ValueError("Cannot verify active dynamic preemption mode")
-            dynamic_text = path.read_text()
+            try:
+                dynamic_text = path.read_text()
+            except OSError as error:
+                raise ValueError(
+                    "Cannot verify active dynamic preemption under the current "
+                    "lockdown/debugfs policy: " + str(error)
+                ) from error
         selected = re.findall(r"\((none|voluntary|full)\)", dynamic_text)
         if len(selected) != 1 or selected[0] not in ("none", "voluntary"):
             raise ValueError("Full or unknown dynamic preemption is unsupported")

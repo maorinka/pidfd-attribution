@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #define DIRECT_IOVS 128
+#define DIRECT_DRAIN_RECORDS (8 * DIRECT_IOVS)
 #define DIRECT_RECORD_ALIGNMENT 8
 /* Generic fixed reservation quantum: a 1MiB page-multiple unrelated to the
  * fixture rate, count, or size. Whole multiples cover any bounded batch. */
@@ -33,6 +34,7 @@ static int direct_reserve_errno;
 static unsigned long long direct_written, direct_reserve_calls,
     direct_reserved_end;
 struct direct_ring {
+  unsigned long long malformed_records;
   unsigned long *consumer, *producer;
   unsigned char *data;
   size_t capacity, page;
@@ -190,8 +192,17 @@ static int direct_commit(struct direct_ring *r, struct iovec *iov, int count,
       return -1;
     if (direct_reserve_ensure(fileno(binary), direct_written + batch))
       return -1;
-    if (direct_write_all(fileno(binary), iov, count))
+    if (direct_write_all(fileno(binary), iov, count)) {
+      int error = errno;
+      /* A retry must not append a partially written batch a second time. */
+      if (ftruncate(fileno(binary), (off_t)direct_written) ||
+          lseek(fileno(binary), (off_t)direct_written, SEEK_SET) < 0) {
+        errno = EIO;
+        return -1;
+      }
+      errno = error;
       return -1;
+    }
     direct_written += batch;
     output_records += (unsigned long long)count;
   }
@@ -209,7 +220,8 @@ static int direct_commit(struct direct_ring *r, struct iovec *iov, int count,
 static int direct_consume(struct direct_ring *r) {
   struct iovec iov[DIRECT_IOVS];
   int count = 0;
-  unsigned int batches = 0;
+  unsigned int processed = 0;
+  unsigned long long malformed = 0;
   unsigned long long writes = 0;
   unsigned long cons = __atomic_load_n(r->consumer, __ATOMIC_ACQUIRE),
                 end = cons;
@@ -236,32 +248,38 @@ static int direct_consume(struct direct_ring *r) {
     end = cons + step;
     if (!(raw & BPF_RINGBUF_DISCARD_BIT)) {
       const void *payload = record + BPF_RINGBUF_HDR_SZ;
-      if (direct_validate(payload, size))
-        return -1;
-      const struct wire_header *h = payload;
-      if (h->stage == IOSEC_STAGE_WRITE && !steady_events) {
-        if (getrusage(RUSAGE_SELF, &steady_start))
-          return -1;
-        steady_events = 1;
+      if (direct_validate(payload, size)) {
+        malformed++;
+      } else {
+        const struct wire_header *h = payload;
+        if (h->stage == IOSEC_STAGE_WRITE && !steady_events) {
+          if (getrusage(RUSAGE_SELF, &steady_start))
+            return -1;
+          steady_events = 1;
+        }
+        iov[count++] =
+            (struct iovec){.iov_base = (void *)payload, .iov_len = size};
+        if (h->stage == IOSEC_STAGE_WRITE)
+          writes++;
       }
-      iov[count++] =
-          (struct iovec){.iov_base = (void *)payload, .iov_len = size};
-      if (h->stage == IOSEC_STAGE_WRITE)
-        writes++;
     }
     cons = end;
-    if (count == DIRECT_IOVS) {
+    processed++;
+    if (count == DIRECT_IOVS || processed == DIRECT_DRAIN_RECORDS) {
       if (direct_commit(r, iov, count, end, writes))
         return -1;
+      r->malformed_records += malformed;
+      malformed = 0;
       count = 0;
       writes = 0;
-      if (++batches == 8)
+      if (processed == DIRECT_DRAIN_RECORDS)
         return __atomic_load_n(r->producer, __ATOMIC_ACQUIRE) != cons;
     }
   }
   if (end != __atomic_load_n(r->consumer, __ATOMIC_ACQUIRE) &&
       direct_commit(r, iov, count, end, writes))
     return -1;
+  r->malformed_records += malformed;
   return 0;
 }
 #endif

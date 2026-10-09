@@ -3,6 +3,7 @@
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shared.python.kernel_admission import validate_preemption
@@ -24,6 +25,7 @@ class KernelAdmissionTests(unittest.TestCase):
             "none voluntary (full)",
             "none voluntary full",
             "(none) (voluntary)",
+            "full (lazy)",
         ):
             with self.subTest(selected=selected), self.assertRaises(ValueError):
                 validate_preemption(config, selected)
@@ -36,3 +38,11 @@ class KernelAdmissionTests(unittest.TestCase):
         ):
             with self.subTest(config=config), self.assertRaises(ValueError):
                 validate_preemption(config)
+
+
+class RestrictedDebugfsTests(unittest.TestCase):
+    def test_permission_denied_refuses_unknown_mode(self):
+        with patch.object(Path, "is_file", return_value=True), patch.object(
+            Path, "read_text", side_effect=PermissionError("debugfs locked down")
+        ), self.assertRaisesRegex(ValueError, "lockdown/debugfs"):
+            validate_preemption("CONFIG_PREEMPT_DYNAMIC=y\n")

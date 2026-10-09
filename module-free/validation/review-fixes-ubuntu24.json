@@ -169,11 +169,11 @@
     "stacks": 1291,
     "frames": 5655,
     "source_sha256": {
-      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/compat_fixture.py": "961c2526241e56a6772bc7dcf8275c1cc2f8adc2159b17c470763abc84a83a72",
+      "/workspace/pidfd-attribution/module-free/fixtures/compat_fixture.py": "961c2526241e56a6772bc7dcf8275c1cc2f8adc2159b17c470763abc84a83a72",
       "/var/tmp/pidfd-module-free/deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
       "/var/tmp/pidfd-module-free-held/held_fixture.py": "01c4fd3f24edeffdaa7a95a3f61fbec6325548df9c174847fbc42bbd0ca41372",
       "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b",
-      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
+      "/workspace/pidfd-attribution/module-free/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
       "/var/tmp/pidfd-module-free/regression/fixture.py": "dc40a3e815540f9ec2449228ac7c9e6faab0106f18b0f168e9e1a6dd2e4c581d",
       "/var/tmp/pidfd-module-free/regression/exec_control.py": "8cefcda9e581310d5756ea597b1581a0ad88c51814aff25e1b824eebc832a34c",
       "/var/tmp/pidfd-module-free/workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811"
@@ -304,5 +304,6 @@
     "virtualization": "Lima QEMU on Apple Silicon",
     "physical_intel": false,
     "firmware_secure_boot_tested": false
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

@@ -392,7 +392,11 @@ def validate_health(health):
         raise ValueError("missing or invalid state")
     if type(health.get("history_gaps")) is not bool:
         raise ValueError("missing or invalid history_gaps")
-    for name in ("requested_capture_python", "effective_capture_python"):
+    for name in (
+        "requested_capture_python",
+        "effective_capture_python",
+        "storage_blocked",
+    ):
         if name in health and type(health[name]) is not bool:
             raise ValueError(f"invalid {name}")
     return health
@@ -424,6 +428,7 @@ def status(config):
         and 0 <= age < 15
         and health["state"] == "running"
         and not health["history_gaps"]
+        and not health.get("storage_blocked", False)
         and not (
             health.get("requested_capture_python", False)
             and not health.get("effective_capture_python", False)

@@ -1312,7 +1312,8 @@ int BPF_PROG(installed, unsigned int fd, struct file *file) {
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      file_addr = (unsigned long long)file;
   struct pidfd_slot stale = {.files = current_files_identity(), .fd = fd};
-  bpf_map_delete_elem(&slots, &stale);
+  if (bpf_map_lookup_elem(&slots, &stale))
+    bpf_map_delete_elem(&slots, &stale);
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (!e)
     e = bpf_map_lookup_elem(&aliasing, &tid);
@@ -1706,14 +1707,22 @@ int BPF_PROG(exec_close_done, struct files_struct *files_arg) {
   return 0;
 }
 #include "cleanup_retirement.bpf.h"
-SEC("tracepoint/sched/sched_process_exec") int executed(void *ctx) {
-  unsigned long long tid = bpf_get_current_pid_tgid();
+static __always_inline void retire_thread_state(unsigned long long tid) {
   bpf_map_delete_elem(&shadows, &tid);
   bpf_map_delete_elem(&threads, &tid);
   bpf_map_delete_elem(&warm_tmp, &tid);
   bpf_map_delete_elem(&fused_opener, &tid);
   bpf_map_delete_elem(&fused_lineval, &tid);
   bpf_map_delete_elem(&writing, &tid);
+}
+SEC("tracepoint/sched/sched_process_exec")
+int executed(struct trace_event_raw_sched_process_exec *ctx) {
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  unsigned long long old_tid =
+      (tid & 0xffffffff00000000ULL) | (unsigned int)ctx->old_pid;
+  retire_thread_state(tid);
+  if (old_tid != tid)
+    retire_thread_state(old_tid);
   return 0;
 }
 SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {

@@ -42,7 +42,7 @@
     "sd_fw_ingress",
     "sd_devices"
   ],
-  "evidence": "/Users/maorhadad/projects/pidfd-attribution/evidence",
+  "evidence": "/workspace/pidfd-attribution/evidence",
   "production_sha256": {
     "reader.bpf.c": "47853871afb6bf586a945a82f2a10fa03328476e19b2a56b53bc9ab6d57fd350",
     "loader.c": "b1ede3992e0ba6f08ba4244c183b7cd92096a7d8f820a0705fc94697d6c095d0",
@@ -212,5 +212,6 @@
     "base": "/var/tmp/pidfd-binding-y124_ul1"
   },
   "phase": "Full runtime validation before final stage constant identifier rename",
-  "final_identifier_verification": "cleanup-stage-identifiers.json"
+  "final_identifier_verification": "cleanup-stage-identifiers.json",
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

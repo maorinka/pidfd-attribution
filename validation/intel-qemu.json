@@ -41,7 +41,7 @@
     "sd_devices",
     "lima_ticker"
   ],
-  "evidence": "/Users/maorhadad/projects/pidfd-attribution/evidence",
+  "evidence": "/workspace/pidfd-attribution/evidence",
   "production_sha256": {
     "reader.bpf.c": "27b5003d26ae687e1f5749de1b9d04ca5732a13b78304b6c2a2f9820e042cb20",
     "loader.c": "6d9c27e49a0dd9c866ba0a970de467278eb5b961d32e8ad59d6a7a230689570c",
@@ -232,5 +232,6 @@
       "frames": 16035
     },
     "monitored_workload_writes": 951
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

@@ -267,7 +267,7 @@
       37,
       38
     ],
-    "script": "/Users/maorhadad/projects/pidfd-attribution/run_collector_path_guest.py",
+    "script": "/workspace/pidfd-attribution/run_collector_path_guest.py",
     "args": [],
     "module_sha256": "cbb93565bf9892d5681413150a09557bc178bd0f9ee836bb4e644c6d640590fe",
     "taint_before": "12288",
@@ -506,5 +506,6 @@
     "tests/kfunc_registration.bpf.c": "49f7077a292a6bdfb6996ee3605f99ed8c28d23f54516d3317cc51d6fce03fce",
     "collector_path_scope_guest.py": "e8cf5025e96f454b08344a3047ed2ce68bb406ebe963812d1f9e5c1fea20d2cc",
     "run_collector_path_guest.py": "c4bf2da3f199987191299655b8fe6bae07d7843f7ab5c414107d936d562593b8"
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

@@ -53,6 +53,9 @@ static unsigned long long segment_number, session_bytes, deleted_segments;
 static unsigned long long retention_skipped;
 static unsigned long long ring_drops, state_errors, start_ns, start_real_ns;
 static unsigned int attachment_count, cleanup_bits;
+static unsigned long long malformed_records, storage_stalls,
+    unflushed_ring_bytes;
+static bool storage_blocked;
 static struct capture_controller capture;
 static unsigned long long diagnostic_counts[IOSEC_DIAG_COUNT];
 static int capture_fd = -1, transition_fd = -1, stats_fd = -1;
@@ -324,7 +327,7 @@ static int output_prepare(unsigned long long batch) {
     errno = EOVERFLOW;
     return -1;
   }
-  if (direct_written && batch > cfg.segment_bytes - direct_written)
+  if (!binary || (direct_written && batch > cfg.segment_bytes - direct_written))
     return new_segment();
   return 0;
 }
@@ -374,7 +377,9 @@ static int write_health(const char *state, int error) {
       "\"attachments\":%u,\"capture_python\":%s,\"records\":%llu,"
       "\"session_bytes\":%llu,\"active_segment\":\"%s\","
       "\"segments_created\":%llu,\"segments_deleted\":%llu,"
-      "\"retention_skipped\":%llu,"
+      "\"retention_skipped\":%llu,\"malformed_records\":%llu,"
+      "\"storage_blocked\":%s,\"storage_stalls\":%llu,"
+      "\"unflushed_ring_bytes\":%llu,"
       "\"ring_drops\":%llu,\"state_errors\":%llu,\"cleanup_fallback\":%u,"
       "\"history_gaps\":%s,\"errno\":%d,\"reservation_state\":%d,"
       "\"reservation_errno\":%d,\"max_rss_kib\":%ld,"
@@ -393,8 +398,12 @@ static int write_health(const char *state, int error) {
       now_ns(CLOCK_REALTIME), attachment_count,
       capture.effective ? "true" : "false", output_records,
       session_bytes + (binary ? direct_written : 0), active_segment,
-      segment_number, deleted_segments, retention_skipped, ring_drops,
-      state_errors, cleanup_bits, ring_drops || state_errors ? "true" : "false",
+      segment_number, deleted_segments, retention_skipped, malformed_records,
+      storage_blocked ? "true" : "false", storage_stalls, unflushed_ring_bytes,
+      ring_drops, state_errors, cleanup_bits,
+      ring_drops || state_errors || malformed_records || unflushed_ring_bytes
+          ? "true"
+          : "false",
       error, direct_reserve_state, direct_reserve_errno, usage.ru_maxrss,
       capture.requested ? "true" : "false",
       capture.effective ? "true" : "false", (unsigned long long)capture.epoch,
@@ -762,6 +771,37 @@ int main(int argc, char **argv) {
     }
     errno = 0;
     int drain = direct_consume(&ring);
+    malformed_records = ring.malformed_records;
+    while (drain < 0 && (errno == ENOSPC || errno == EDQUOT) && !stopping) {
+      int storage_error = errno;
+      if (!storage_blocked) {
+        storage_stalls++;
+        fprintf(stderr,
+                "STORAGE_BLOCKED errno=%d; retaining pending ring bytes\n",
+                storage_error);
+      }
+      storage_blocked = true;
+      CHECK_SENSOR(read_diagnostics(obj));
+      if (write_health("running", storage_error) && errno != ENOSPC &&
+          errno != EDQUOT) {
+        failure_errno = errno ? errno : EIO;
+        goto cleanup;
+      }
+      notify_systemd("WATCHDOG=1");
+      struct timespec retry = {.tv_sec = 1};
+      nanosleep(&retry, NULL);
+      if (stopping) {
+        errno = storage_error;
+        break;
+      }
+      errno = 0;
+      drain = direct_consume(&ring);
+      malformed_records = ring.malformed_records;
+    }
+    if (drain >= 0 && storage_blocked) {
+      storage_blocked = false;
+      fprintf(stderr, "STORAGE_RECOVERED\n");
+    }
     if (drain < 0) {
       failure_errno = errno ? errno : EIO;
       goto cleanup;
@@ -799,8 +839,9 @@ cleanup:
     if (bpf_map_update_elem(policy_fd, &zero, &cfg.policy, BPF_ANY))
       result = 1;
   }
-  /* Detach producers first, then drain bounded batches. Closing links waits
-   * for executing callbacks; maps remain alive until the drain completes. */
+  /* Detach producers first, then drain bounded batches. Policy is disabled
+   * before detachment; maps remain alive for the bounded final drain.
+   * Detachment alone is not a proof of callback quiescence. */
   for (unsigned int i = 0; i < attachment_count; i++)
     bpf_link__destroy(links[i]);
   if (!result && ring.consumer) {
@@ -815,6 +856,10 @@ cleanup:
   }
   if (obj && policy_fd >= 0 && read_diagnostics(obj))
     result = 1;
+  malformed_records = ring.malformed_records;
+  if (ring.consumer)
+    unflushed_ring_bytes = __atomic_load_n(ring.producer, __ATOMIC_ACQUIRE) -
+                           __atomic_load_n(ring.consumer, __ATOMIC_ACQUIRE);
   direct_close(&ring);
   if (close_segment())
     result = 1;

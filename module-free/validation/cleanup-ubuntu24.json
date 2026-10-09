@@ -134,11 +134,11 @@
     "stacks": 1291,
     "frames": 5655,
     "source_sha256": {
-      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/compat_fixture.py": "657ce8ca0b03f7997510e77741a0bc3aafd954e637e06c496b69d024b5a8505d",
+      "/workspace/pidfd-attribution/module-free/fixtures/compat_fixture.py": "657ce8ca0b03f7997510e77741a0bc3aafd954e637e06c496b69d024b5a8505d",
       "/var/tmp/pidfd-module-free/deep_fixture.py": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
       "/var/tmp/pidfd-module-free-held/held_fixture.py": "480ad14656848f5f3a16748b2fe5caa4756261802fce52ac9ef470f86c9618e5",
       "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b",
-      "/Users/maorhadad/projects/pidfd-attribution/module-free/fixtures/history_fixture.py": "5c44f6a1ba7228087c1f02c217d9c31ffe96f19320277ae2548711729fb43346",
+      "/workspace/pidfd-attribution/module-free/fixtures/history_fixture.py": "5c44f6a1ba7228087c1f02c217d9c31ffe96f19320277ae2548711729fb43346",
       "/var/tmp/pidfd-module-free/regression/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
       "/var/tmp/pidfd-module-free/regression/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
       "/var/tmp/pidfd-module-free/workload.py": "5cc39dc52134a0060a84e55fb89b1c608e7414ddb85c1e108cb8e0470aaf60ba"
@@ -345,5 +345,6 @@
     "limitations": "Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",
     "cleanup_ok": true,
     "base": "/var/tmp/pidfd-binding-16o_4nxj"
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

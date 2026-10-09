@@ -22,3 +22,15 @@ jobs:
       - run: |
           gcc -std=c11 -Wall -Wextra -Werror endpoint-service/tests/capture_controller.c -o /tmp/capture-controller
           /tmp/capture-controller
+  storage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: sudo apt-get update && sudo apt-get install -y libbpf-dev libelf-dev zlib1g-dev
+      - name: Compile and exercise the collector without BPF attachment
+        run: |
+          mkdir -p endpoint-service/build
+          cat > endpoint-service/build/python_layout.h <<'HEADER'
+          #define IOSEC_PYTHON_BINARY "/usr/bin/python3.12"
+          HEADER
+          python3 endpoint-service/tests/check_storage.py

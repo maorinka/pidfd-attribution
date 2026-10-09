@@ -69,7 +69,7 @@ def health(state):
         return {}
 
 
-def start_sensor(name, capture=False, prefix=None, **overrides):
+def start_sensor(name, capture=False, prefix=None, environment=None, **overrides):
     state = BASE / name
     state.mkdir(mode=0o700, exist_ok=True)
     config = configuration()
@@ -93,6 +93,7 @@ def start_sensor(name, capture=False, prefix=None, **overrides):
             *collector_command(config),
         ],
         cwd=BASE,
+        env=environment,
         stdout=log,
         stderr=log,
     )
@@ -123,7 +124,11 @@ def stop(process, state, crash=False, expect_gaps=False):
             current["state"] == "stopped" and current["history_gaps"] == expect_gaps
         ), current
     wait_for(lambda: programs() == baseline_programs, timeout=30)
-    assert modules() == baseline_modules
+    current_modules = modules()
+    assert current_modules == baseline_modules, dict(
+        added=sorted(set(current_modules) - set(baseline_modules)),
+        removed=sorted(set(baseline_modules) - set(current_modules)),
+    )
     return health(state)
 
 
@@ -542,6 +547,89 @@ try:
         binding_present_during_eval=True,
         binding_retired_before_task_exit=True,
         empty_shadow=True,
+    )
+
+    process, state, _ = start_sensor("worker-exec", capture=True)
+    for iteration in range(4):
+        fixture = subprocess.Popen(
+            [sys.executable, str(ROOT / "tests/exec_fixture.py")],
+            env=dict(
+                os.environ, PIDFD_EXEC_FILE=str(BASE / "files" / f"exec-{iteration}")
+            ),
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        active.append(fixture)
+        before = json.loads(fixture.stdout.readline())
+        assert before["pid"] != before["tid"]
+        old_key = struct.pack("<Q", (before["pid"] << 32) | before["tid"])
+        assert map_value("threads", old_key) is not None
+        fixture.stdin.write("x")
+        fixture.stdin.flush()
+        after = json.loads(fixture.stdout.readline())
+        assert after["pid"] == before["pid"] == after["tid"]
+        for name in (
+            "threads",
+            "shadows",
+            "warm_tmp",
+            "fused_opener",
+            "fused_lineval",
+            "writing",
+            "opening",
+            "acquiring",
+            "aliasing",
+            "closing",
+            "duplicating",
+            "execclosing",
+        ):
+            assert map_value(name, old_key) is None, name
+        fixture.stdin.write("x")
+        fixture.stdin.flush()
+        fixture.communicate(timeout=30)
+        assert fixture.returncode == 0
+        active.remove(fixture)
+    stop(process, state)
+    result["nonleader_exec"] = dict(iterations=4, old_thread_state_retired=True)
+
+    fault_library = BASE / "storage-fault.so"
+    subprocess.run(
+        [
+            "gcc",
+            "-shared",
+            "-fPIC",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            str(ROOT / "tests/storage_fault.c"),
+            "-ldl",
+            "-o",
+            str(fault_library),
+        ],
+        check=True,
+    )
+    gate = BASE / "storage-full"
+    process, state, _ = start_sensor(
+        "storage-recovery",
+        environment=dict(
+            os.environ, LD_PRELOAD=str(fault_library), PIDFD_STORAGE_FAULT=str(gate)
+        ),
+    )
+    initial_session = health(state)["session"]
+    gate.touch(mode=0o600)
+    application = demo("storage-recovery")
+    wait_for(lambda: health(state).get("storage_blocked") is True)
+    assert process.poll() is None
+    gate.unlink()
+    wait_for(lambda: health(state).get("storage_blocked") is False)
+    verify_writes(state, application)
+    stopped = stop(process, state)
+    assert stopped["session"] == initial_session and stopped["storage_stalls"] == 1
+    result["storage_recovery"] = dict(
+        partial_write_rolled_back=True,
+        writes=3,
+        same_session=True,
+        history_gaps=stopped["history_gaps"],
     )
 
     process, state, _ = start_sensor("birth-mismatch", capture=True, bpf_stats=True)

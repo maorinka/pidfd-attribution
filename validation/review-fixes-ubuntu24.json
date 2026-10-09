@@ -53,7 +53,7 @@
       "sd_devices",
       "sd_devices"
     ],
-    "evidence": "/Users/maorhadad/projects/pidfd-attribution/evidence",
+    "evidence": "/workspace/pidfd-attribution/evidence",
     "production_sha256": {
       "reader.bpf.c": "67160c4591347851b700921557333b21e399c0d0c679a9ec3f06c489eddcbc77",
       "loader.c": "028dc7ebcf17276621e4baa0dec6c7abd5a4cd674ec6791144ab9d9f117dc4b1",
@@ -201,7 +201,7 @@
     "stacks": 70,
     "frames": 73,
     "source_sha256": {
-      "/Users/maorhadad/projects/pidfd-attribution/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
+      "/workspace/pidfd-attribution/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
       "/usr/lib/python3.12/threading.py": "8273b4cf5b6f274b4993f5cae08634dd272c6952af9867ff9aa13ed446f1549b"
     },
     "input_sha256": {
@@ -337,5 +337,6 @@
       "fixture_sha256": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
       "bpf_source_sha256": "67160c4591347851b700921557333b21e399c0d0c679a9ec3f06c489eddcbc77"
     }
-  }
+  },
+  "publication_redaction": "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
 }

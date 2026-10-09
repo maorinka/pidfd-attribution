@@ -236,6 +236,26 @@ class HealthTests(unittest.TestCase):
                 self.assertEqual(status(dict(state_dir="/unused")), expected)
             self.assertFalse(json.loads(output.getvalue())["history_gaps"])
 
+    def test_blocked_storage_is_unhealthy_without_fabricating_history_loss(self):
+        health = dict(
+            schema_version=1,
+            boot_id="test",
+            updated_monotonic_ns=1,
+            state="running",
+            history_gaps=False,
+            storage_blocked=True,
+        )
+        output = io.StringIO()
+        with patch(
+            "service.Path.read_text", side_effect=[json.dumps(health), "test"]
+        ), patch("service.Path.exists", return_value=True), patch(
+            "service.time.monotonic_ns", return_value=100
+        ), redirect_stdout(
+            output
+        ):
+            self.assertEqual(status(dict(state_dir="/unused")), 1)
+        self.assertFalse(json.loads(output.getvalue())["history_gaps"])
+
     def test_incomplete_or_wrongly_typed_health_is_an_error_exit(self):
         valid = dict(
             schema_version=1,
@@ -252,6 +272,7 @@ class HealthTests(unittest.TestCase):
             {**valid, "state": []},
             {**valid, "requested_capture_python": "false"},
             {**valid, "effective_capture_python": 1},
+            {**valid, "storage_blocked": "false"},
         ]
         variants.extend(
             {key: value for key, value in valid.items() if key != missing}
