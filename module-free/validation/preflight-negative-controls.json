@@ -1,0 +1,190 @@
+{
+  "passed": true,
+  "scope": "Owned disposable Ubuntu22 test VM; reboot resets temporary policy",
+  "checks": [
+    {
+      "case": "Missing BPF/perf capabilities",
+      "passed": true,
+      "exit_code": 1,
+      "checks": [
+        {
+          "check": "architecture",
+          "passed": true,
+          "detail": "aarch64"
+        },
+        {
+          "check": "BPF/perf capabilities",
+          "passed": false,
+          "detail": "Requires CAP_SYS_ADMIN or both CAP_BPF and CAP_PERFMON"
+        },
+        {
+          "check": "Ubuntu LTS",
+          "passed": true,
+          "detail": "Supported releases: Ubuntu 22.04, 24.04 and 26.04"
+        },
+        {
+          "check": "kernel baseline",
+          "passed": true,
+          "detail": "This collection path requires Linux 6.8 or newer; Ubuntu 22.04 needs its HWE kernel"
+        },
+        {
+          "check": "gcc",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "clang",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "make",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "bpftool",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "readelf",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "nm",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "objcopy",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "/usr/bin/python3.10-config",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "matching kernel headers",
+          "passed": true,
+          "detail": "/lib/modules/6.8.0-138-generic/build"
+        },
+        {
+          "check": "kernel BTF",
+          "passed": true,
+          "detail": "/sys/kernel/btf/vmlinux"
+        },
+        {
+          "check": "lockdown",
+          "passed": true,
+          "detail": "none [integrity] confidentiality; none/integrity allowed; required BPF load/attach checks decide support"
+        },
+        {
+          "check": "CPython 3.10\u20133.14",
+          "passed": true,
+          "detail": "/usr/bin/python3.10"
+        },
+        {
+          "check": "ELF interpreter",
+          "passed": true,
+          "detail": "EXEC and PIE are supported; shared-library interpreter symbols require a separate adapter"
+        }
+      ]
+    },
+    {
+      "case": "Confidentiality lockdown unsupported",
+      "passed": true,
+      "exit_code": 1,
+      "checks": [
+        {
+          "check": "architecture",
+          "passed": true,
+          "detail": "aarch64"
+        },
+        {
+          "check": "BPF/perf capabilities",
+          "passed": true,
+          "detail": "Requires CAP_SYS_ADMIN or both CAP_BPF and CAP_PERFMON"
+        },
+        {
+          "check": "Ubuntu LTS",
+          "passed": true,
+          "detail": "Supported releases: Ubuntu 22.04, 24.04 and 26.04"
+        },
+        {
+          "check": "kernel baseline",
+          "passed": true,
+          "detail": "This collection path requires Linux 6.8 or newer; Ubuntu 22.04 needs its HWE kernel"
+        },
+        {
+          "check": "gcc",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "clang",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "make",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "bpftool",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "readelf",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "nm",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "objcopy",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "/usr/bin/python3.10-config",
+          "passed": true,
+          "detail": "Install with sudo ./install-ubuntu.sh"
+        },
+        {
+          "check": "matching kernel headers",
+          "passed": true,
+          "detail": "/lib/modules/6.8.0-138-generic/build"
+        },
+        {
+          "check": "kernel BTF",
+          "passed": true,
+          "detail": "/sys/kernel/btf/vmlinux"
+        },
+        {
+          "check": "lockdown",
+          "passed": false,
+          "detail": "none integrity [confidentiality]; none/integrity allowed; required BPF load/attach checks decide support"
+        },
+        {
+          "check": "CPython 3.10\u20133.14",
+          "passed": true,
+          "detail": "/usr/bin/python3.10"
+        },
+        {
+          "check": "ELF interpreter",
+          "passed": true,
+          "detail": "EXEC and PIE are supported; shared-library interpreter symbols require a separate adapter"
+        }
+      ]
+    }
+  ]
+}

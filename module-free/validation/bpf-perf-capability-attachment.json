@@ -1,0 +1,134 @@
+{
+  "passed": false,
+  "CAP_SYS_ADMIN_present": false,
+  "CAP_SYS_MODULE_present": false,
+  "capability_scope": "Only SYS_ADMIN and SYS_MODULE removed; other capabilities retained",
+  "attached": 33,
+  "exit_code": 1,
+  "stdout": "ATTACH_FAIL prog=seed_thread sec=uprobe err=-13\nATTACH_FAIL prog=eval_return sec=uretprobe err=-13\nATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write\nATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd\nATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat\nATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2\nATTACH_OK prog=open_begin sec=fentry/do_filp_open\nATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat\nATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2\nATTACH_OK prog=open_bound sec=fexit/do_filp_open\nATTACH_OK prog=target_bound sec=fentry/fget_task\nATTACH_OK prog=reference_bound sec=fexit/fget_task\nATTACH_OK prog=receive_bound sec=fentry/receive_fd\nATTACH_OK prog=installed sec=fentry/fd_install\nATTACH_OK prog=receive_return sec=fexit/receive_fd\nATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd\nATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter\nATTACH_OK prog=write_file sec=fentry/vfs_write\nATTACH_OK prog=write_inner sec=fexit/vfs_write\nATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write\nATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl\nATTACH_OK prog=alias_file sec=fentry/f_dupfd\nATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl\nATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked\nATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked\nATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd\nATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd\nATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork\nATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec\nATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec\nATTACH_OK prog=file_released sec=fentry/__fput\nATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec\nATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit\nATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free\nATTACH_OK prog=warm_mm_retired sec=fentry/mmput\nATTACH_SUMMARY ok=33 failed=2\n",
+  "stderr": "libbpf: prog 'seed_thread': failed to create uprobe '/usr/bin/python3.12:0x1d6630' perf event: Permission denied\nlibbpf: prog 'eval_return': failed to create uretprobe '/usr/bin/python3.12:0x1d6630' perf event: Permission denied\n",
+  "baseline_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    26,
+    27,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    478
+  ],
+  "remaining_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    26,
+    27,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    478
+  ],
+  "configuration_supported": false,
+  "expected_preflight_rejection": true,
+  "updated_preflight_checks": [
+    {
+      "check": "architecture",
+      "passed": true,
+      "detail": "x86_64"
+    },
+    {
+      "check": "BPF/perf capabilities",
+      "passed": false,
+      "detail": "Validated configurations use CAP_SYS_ADMIN; BPF/PERFMON-only failed system-wide uprobes on Ubuntu24; CAP_SYS_MODULE is not required"
+    },
+    {
+      "check": "Ubuntu LTS",
+      "passed": true,
+      "detail": "Supported releases: Ubuntu 22.04, 24.04 and 26.04"
+    },
+    {
+      "check": "kernel baseline",
+      "passed": true,
+      "detail": "This collection path requires Linux 6.8 or newer; Ubuntu 22.04 needs its HWE kernel"
+    },
+    {
+      "check": "gcc",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "clang",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "make",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "bpftool",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "readelf",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "nm",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "objcopy",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "/usr/bin/python3.12-config",
+      "passed": true,
+      "detail": "Install with sudo ./install-ubuntu.sh"
+    },
+    {
+      "check": "matching kernel headers",
+      "passed": true,
+      "detail": "/lib/modules/6.8.0-142-generic/build"
+    },
+    {
+      "check": "kernel BTF",
+      "passed": true,
+      "detail": "/sys/kernel/btf/vmlinux"
+    },
+    {
+      "check": "lockdown",
+      "passed": true,
+      "detail": "none [integrity] confidentiality; none/integrity allowed; required BPF load/attach checks decide support"
+    },
+    {
+      "check": "CPython 3.10\u20133.14",
+      "passed": true,
+      "detail": "/usr/bin/python3.12"
+    },
+    {
+      "check": "ELF interpreter",
+      "passed": true,
+      "detail": "EXEC and PIE are supported; shared-library interpreter symbols require a separate adapter"
+    }
+  ],
+  "root_preflight_passed": true
+}

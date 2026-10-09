@@ -1,0 +1,41 @@
+name: Module-free attribution validation
+
+# Dedicated disposable VMs, preconfigured with integrity lockdown and module
+# loading disabled. No workflow changes boot or kernel policy.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ubuntu22-arm64
+            labels: '["self-hosted", "Linux", "ARM64", "pidfd-module-free-ubuntu22"]'
+          - target: ubuntu24-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-module-free-ubuntu24"]'
+          - target: ubuntu26-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-module-free-ubuntu26"]'
+    runs-on: ${{ fromJSON(matrix.labels) }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install build dependencies
+        run: sudo ./module-free/install-ubuntu.sh
+      - name: Require the configured test policy
+        run: |
+          test "$(cat /proc/sys/kernel/modules_disabled)" = 1
+          sudo python3 -c "from pathlib import Path; assert '[integrity]' in Path('/sys/kernel/security/lockdown').read_text()"
+      - name: Validate without module-loading capability
+        run: sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module ./module-free/run.sh validate
+      - name: Retain reports and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: module-free-${{ matrix.target }}
+          path: |
+            module-free/evidence/**/*.json
+            module-free/evidence/**/*.log
+          if-no-files-found: warn

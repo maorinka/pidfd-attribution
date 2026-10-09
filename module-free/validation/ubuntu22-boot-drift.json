@@ -1,0 +1,40 @@
+{
+  "bpf_program_ids_restored": false,
+  "module_set_unchanged": true,
+  "baseline_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    44,
+    45,
+    46
+  ],
+  "remaining_bpf_ids": [
+    2,
+    18,
+    23,
+    24,
+    25,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37
+  ],
+  "scope": "First module-free run: functional checks passed; boot-time system BPF programs disappeared; strict audit retained"
+}

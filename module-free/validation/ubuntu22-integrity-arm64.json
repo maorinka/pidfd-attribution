@@ -1,0 +1,478 @@
+{
+  "verification": {
+    "passed": true,
+    "backend": "module-free",
+    "scope": "Bounded fixture attribution and independent source oracle",
+    "third_party_module_loaded": false,
+    "module_set_unchanged": true,
+    "lockdown": "none [integrity] confidentiality",
+    "bpf_program_ids_restored": true,
+    "pins": {
+      "kernel": "6.8.0-138-generic",
+      "architecture": "aarch64",
+      "python_binary": "/usr/bin/python3.10",
+      "python_sha256": "06dbbe8641183e6db09f8540e7e69c9507304ee469dd9992cc5d20a13466aa3b",
+      "kernel_btf_sha256": "0345010bcfd0e23212ddff7cb7681f3e3b401b9525c68b60a16a263ee8a6ae33",
+      "python_version": "(3, 10, 12)",
+      "offsets": {
+        "TSTATE_FRAME": 24,
+        "TSTATE_FRAME_INDIRECT": 0,
+        "CFRAME_FRAME": 0,
+        "FRAME_CODE": 32,
+        "FRAME_INSTR": 96,
+        "FRAME_PREVIOUS": 24,
+        "FRAME_OWNER": 0,
+        "CODE_FILENAME": 104,
+        "CODE_NAME": 112,
+        "CODE_FIRSTLINE": 40,
+        "CODE_LINETABLE": 120,
+        "CODE_BYTECODE": 48,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 48,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 10,
+        "CODE_TYPE_ADDRESS": 5498184,
+        "PYTHON_TEXT_ADDRESS": 0,
+        "IOSEC_COMPAT_MASK": 4194304
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 100148,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 543,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 11
+            },
+            {
+              "name": "pathname",
+              "type_id": 1971
+            },
+            {
+              "name": "op",
+              "type_id": 38558
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 66272,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 431,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 431
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 58092
+            }
+          ]
+        }
+      },
+      "fixture_inputs": {
+        "config.h": "2b8a579bb0f4ea1168141d099231a4dcec0d20e209176b624e7625d2eabcbc84",
+        "python_layout.h": "47d4507167c505db2579881663c80032f6b7338d07d553d4a0f756d52231a18f",
+        "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+        "vmlinux.h": "02b595ffd91585e5a22db173dbb02fcf942a456d1c9b9b51d4274b286a00ca49",
+        "workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811",
+        "deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0"
+      },
+      "thread_header_sha256": "a5e0fe6e1fbedd79c376f7a70a215650742116e1f309bf6c2c7c26ba5ce63e2d"
+    },
+    "modules_disabled": "1",
+    "effective_capabilities": "000001fffffeffff",
+    "CAP_SYS_MODULE_present": false,
+    "production_sha256": {
+      "reader.bpf.c": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509",
+      "loader.c": "9e14c25bff2732b4c1fd1fe23e711e2b7849cb745a97ad6e1847a9cd401af0a5",
+      "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77"
+    },
+    "completed_at": "2026-10-09T13:06:48.698820+00:00"
+  },
+  "cleanup": {
+    "bpf_program_ids_restored": true,
+    "module_set_unchanged": true,
+    "baseline_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "remaining_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ]
+  },
+  "correctness": {
+    "backend": "module-free",
+    "collector": "Mapped ring, batched writev, preallocation, deferred final CPU snapshot",
+    "build": {
+      "reader.bpf.c": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509",
+      "loader.c": "9e14c25bff2732b4c1fd1fe23e711e2b7849cb745a97ad6e1847a9cd401af0a5",
+      "config.h": "2b8a579bb0f4ea1168141d099231a4dcec0d20e209176b624e7625d2eabcbc84",
+      "python_layout.h": "47d4507167c505db2579881663c80032f6b7338d07d553d4a0f756d52231a18f",
+      "kernel_layout.h": "557d65f872d84b2cc91582ea4ccc42120f1b9be377626e36f9620b28d8df6645",
+      "vmlinux.h": "02b595ffd91585e5a22db173dbb02fcf942a456d1c9b9b51d4274b286a00ca49",
+      "reader.bpf.o": "12e050e1a6105abfd5ff4b1d411b0a1cdefd827ce07e3020f56e1dd730c6a080",
+      "fentry.bpf.o": "12e050e1a6105abfd5ff4b1d411b0a1cdefd827ce07e3020f56e1dd730c6a080",
+      "loader": "9eb77427277150959839b195268d1e67105ba8a8129e34fbf038862c948b978c",
+      "direct_ring.h": "8c267f86af1e4d1f71a12baea86604951185d63d51ab1eb2fd0b03b3055920b1",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "/usr/bin/python3.10": "06dbbe8641183e6db09f8540e7e69c9507304ee469dd9992cc5d20a13466aa3b"
+    },
+    "attach-check": {
+      "exit_code": 0,
+      "attached": [
+        "ATTACH_OK prog=seed_thread sec=uprobe",
+        "ATTACH_OK prog=eval_return sec=uretprobe",
+        "ATTACH_OK prog=write_fused_entry sec=fentry.s/__arm64_sys_write",
+        "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__arm64_sys_pidfd_getfd",
+        "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__arm64_sys_openat",
+        "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__arm64_sys_openat2",
+        "ATTACH_OK prog=open_begin sec=fentry/do_filp_open",
+        "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+        "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+        "ATTACH_OK prog=open_bound sec=fexit/do_filp_open",
+        "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+        "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+        "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+        "ATTACH_OK prog=installed sec=fentry/fd_install",
+        "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+        "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+        "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+        "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+        "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+        "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+        "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+        "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+        "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+        "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+        "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+        "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+        "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+        "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+        "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+        "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+        "ATTACH_OK prog=file_released sec=fentry/__fput",
+        "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+        "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+        "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+        "ATTACH_OK prog=warm_mm_retired sec=fentry/mmput"
+      ],
+      "failed": []
+    },
+    "regression": {
+      "passed": true,
+      "profiles": {
+        "direct": {
+          "kernel_records": 24,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "0c507e2924f1c4de4f012dd38c1567958414730eef124a1376d6b22f42a9da85"
+        },
+        "controls": {
+          "kernel_records": 31,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "d760820d41b4cd83ec7bb4fb61b27258f0b5188250693101b345ef91245a4569"
+        },
+        "native": {
+          "kernel_records": 10,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "c82a3f44addd55228deb2cda68ec61df85e60d328393bf69744f7834ca71683b"
+        },
+        "lifetime": {
+          "kernel_records": 38,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 0,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "f14627b6b8a5e8beb2344ae78d3849d4654f4c5a9d2f0b40fccc56609d17a81d"
+        },
+        "pressure": {
+          "kernel_records": 412,
+          "nineteen_empty_maps": true,
+          "ring_diagnostics": 0,
+          "expected_map_capacity_diagnostics": 1,
+          "actual_file_pointer_reuse_observed": false,
+          "raw_log_sha256": "cbfddab90019b74446fe9cc0a166d80056068cf1d9f7a52dd210b77e02f51175"
+        }
+      },
+      "kernel_records": 515,
+      "counts_as_tested_solution": false,
+      "count_increment": 0
+    },
+    "deep": {
+      "status": "passed",
+      "results": [
+        {
+          "depth": 4,
+          "actual_frames": 10,
+          "captured_frames": 10,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "cd6ec8b8f720d9263408a2ecc7bed5e4b89825b01c074134287dea06cd0f8251"
+        },
+        {
+          "depth": 10,
+          "actual_frames": 16,
+          "captured_frames": 16,
+          "complete": true,
+          "flags": 0,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "0c1dcc09de93f8260b3db23c9afd6f21937866821a612796db9b59ef79e01565"
+        },
+        {
+          "depth": 11,
+          "actual_frames": 17,
+          "captured_frames": 16,
+          "complete": false,
+          "flags": 32,
+          "verified_writes": 3,
+          "verified_actor_stacks": 23,
+          "log_sha256": "b851aff1f91f0ca571cdd4f1fa8c5a322aad462f60e69c87fce85d0562dbb90f"
+        }
+      ],
+      "fixture_sha256": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
+      "bpf_source_sha256": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509"
+    },
+    "held": {
+      "passed": true,
+      "test": "ctypes.PyDLLwrite retainsGIL; collector-batch candidate (actual Muse)",
+      "profiles": [
+        {
+          "profile": "serial",
+          "complete_writes": 3
+        },
+        {
+          "profile": "threads",
+          "complete_writes": 13
+        }
+      ]
+    },
+    "status": "correctness-checks-passed; CPU not measured by this script",
+    "remaining_bpf_programs": [
+      "hid_tail_call",
+      "lima_ticker",
+      "unnamed:23",
+      "unnamed:24",
+      "unnamed:25",
+      "unnamed:26",
+      "unnamed:27",
+      "unnamed:28",
+      "unnamed:32",
+      "unnamed:33",
+      "unnamed:34",
+      "unnamed:35",
+      "unnamed:36",
+      "unnamed:37"
+    ],
+    "cleanup_ok": true
+  },
+  "strings": {
+    "passed": true,
+    "real_kernel_capture": true,
+    "owned_synthetic_metadata": true,
+    "guard_page_cases": 44,
+    "malformed_cases": 11,
+    "partial_cold_cases": 17,
+    "checks": [
+      "Exact200byte frame including zero tails",
+      "Short/exact-limit/over-limit filename and function",
+      "Embedded NUL and empty strings",
+      "Both string objects end immediately before PROT_NONE page",
+      "All15unused frames zero",
+      "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+      "Exactly8B file/function payloads and linetable bytes recover across cold page",
+      "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+      "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+    ],
+    "backend": "module-free",
+    "artifacts": {
+      "vmlinux.h": "02b595ffd91585e5a22db173dbb02fcf942a456d1c9b9b51d4274b286a00ca49",
+      "step-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "strings.bpf.c": "4904359ec610c34c3e44c8bf3e0700ffb6f3de5fb3f8fe7996bda4e7d6bfef20",
+      "loader": "4744bbb92c2675672dc3224db4df6471d0f0e5942329e5a24d9092bce24bc7be",
+      "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174",
+      "loader.c": "e10eb758eb5354cfb4cf26c5ef1621324c8471467ff06749a9640b896e13a3a3",
+      "strings.bpf.o": "3d6c03afc1f0d540c4a71fe7185e7a6c2d399b8e3d51b2e6604ac73966a15842",
+      "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "full_goal_complete": false
+  },
+  "history": {
+    "passed": true,
+    "application": {
+      "tid": 1334,
+      "closed_while_blocked": true,
+      "written": 4096,
+      "pid": 1332,
+      "target": 1333,
+      "fd": 7,
+      "inode": 823249
+    },
+    "actors": {
+      "opener": {
+        "pid_tid": 5725191406901,
+        "birth": 122405359231,
+        "count": 1,
+        "flags": 0
+      },
+      "acquirer": {
+        "pid_tid": 5720896439604,
+        "birth": 122372650051,
+        "count": 1,
+        "flags": 0
+      },
+      "live": {
+        "pid_tid": 5720896439606,
+        "birth": 122406093905,
+        "count": 4,
+        "flags": 0
+      }
+    },
+    "raw_sha256": "75cd1efc45c2bb95a4c046bed5df6b3f5984e89d69309da301b8407b492310a5",
+    "fixture_sha256": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417"
+  },
+  "compat": {
+    "status": "not-applicable",
+    "architecture": "arm64"
+  },
+  "source_oracle": {
+    "status": "passed",
+    "oracle": "Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",
+    "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+    "records": 640,
+    "stacks": 1274,
+    "frames": 5638,
+    "source_sha256": {
+      "/var/tmp/pidfd-module-free/deep_fixture.py": "887c3b36a10a5d00dfbc711ef5ea63187c3ab03df869f57d6591db3c839b22f0",
+      "/var/tmp/pidfd-module-free-held/held_fixture.py": "01c4fd3f24edeffdaa7a95a3f61fbec6325548df9c174847fbc42bbd0ca41372",
+      "/usr/lib/python3.10/threading.py": "a21926e636bec8c2e5579f3e79cce144c36379ef93c4596252af29970983553d",
+      "/opt/pidfd-module-free/fixtures/history_fixture.py": "55c91d3425545bde59fac9147172479d273641d44d8b9d9c8c102580fef28417",
+      "/var/tmp/pidfd-module-free/regression/fixture.py": "dc40a3e815540f9ec2449228ac7c9e6faab0106f18b0f168e9e1a6dd2e4c581d",
+      "/var/tmp/pidfd-module-free/regression/exec_control.py": "8cefcda9e581310d5756ea597b1581a0ad88c51814aff25e1b824eebc832a34c",
+      "/var/tmp/pidfd-module-free/workload.py": "1708b5bdb07f84c3420f1eacd71a5f98600560f2a55356c0e3657df7c6807811"
+    },
+    "input_sha256": {
+      "deep-10.log.bin": "1256ad1d018a71f718bcccaf5eb22e9a2c457c18d191ebc09200ad87d90ac29f",
+      "deep-11.log.bin": "347e88d82a657cd513fdde795e6ba414e7c93a23c7b4b7b22378001333454bcb",
+      "deep-4.log.bin": "6df1c806a70ad147c04ffeff28983eae99ad20803d7a6e80858522bb183c13a0",
+      "held-baseline-serial.bin": "a4d41a5d00d2c5d9d5e23f70584abea406f647d91d10ff0ba84f85ea9314396c",
+      "held-baseline-threads.bin": "0ff19c1e9975cde7386972bab4994e30f7109eea83ac7c9cc235fbb6d3a44248",
+      "history-control-candidate-records.bin": "203e8645ead3b71721da4d58dd7c95bd9cee5a1b67c07d0a7f652a2e9ea5cfea",
+      "regression-evidence-pidfd-source-controls.log.bin": "38badd13015f856750900525629e6db660e06be5224088926e82c09f621681a3",
+      "regression-evidence-pidfd-source-direct.log.bin": "683ad5c9bb27e205c5cae2bb7c0d384bf0602c8463e55fbf41922ea90a805078",
+      "regression-evidence-pidfd-source-lifetime.log.bin": "5b8a1db6ff5d762bb170ecabfb47028bfca10dcf785fd211db28a16c9f86d8d5",
+      "regression-evidence-pidfd-source-native.log.bin": "01d195ccb56d9436b0284c4ad997ccc7b8b23ce01ccf598a7410e05c366387f2",
+      "regression-evidence-pidfd-source-pressure.log.bin": "5497b10b0b8aa84b3490c26554102523ed50ea395a9ccb2e018b0e6daeeae7be",
+      "workload-controls-serial.bin": "b5a7553600d20b550812f3e9987a2331191818d9442bb3a247a905c9c827ca61",
+      "workload-controls-threads.bin": "5f998ad7b76cdbbea08992e9b50c91e003631e82b6044aa11ddc91c1d0b0c445"
+    },
+    "limitations": "Source objects with duplicate co_name accept a matching position among compiled candidates; metadata remains mutable/unattested; no concurrency proof."
+  },
+  "encoder": {
+    "passed": true,
+    "record_lengths": 49,
+    "byte_comparison_cases": 147,
+    "invalid_count_cases": 3,
+    "wire_version": 1,
+    "maximum_frames": 48,
+    "source_sha256": "349a183f6a9b851d079eb979496feb554bbc5511051d61fbbbcee69572599509"
+  },
+  "workload": {
+    "passed": true,
+    "test": "Normal os.write releases GIL; serial and threaded attribution",
+    "profiles": [
+      {
+        "profile": "serial",
+        "complete_writes": 3,
+        "expected_writes": 3
+      },
+      {
+        "profile": "threads",
+        "complete_writes": 13,
+        "expected_writes": 13
+      }
+    ]
+  },
+  "upstream_only": {
+    "passed": true,
+    "undefined_symbols": [],
+    "custom_kfunc_sections": false
+  },
+  "physical_Intel_performance_claim": false,
+  "firmware_Secure_Boot_tested": false,
+  "virtualization": "Lima VZ arm64 on Apple Silicon",
+  "evidence_sha256": {
+    "cleanup.json": "d485ade86f8aa7bb275f1a88f79ef825b0b4de17f33d01d4294f56a4ca90b4a3",
+    "build.json": "0d8b5bebd284d09faaed7b9fb1c3f8a71f3aea69b198ead3944aaacf369041b1",
+    "deep-4.json": "4cf94d8ef7700c95189ff8c54359156822e03f30669a94b61e27164fd2779058",
+    "pins.json": "f9101cfb70c22f4f2be5d1245c2c3a2ee9c5aee0e69bfdd5a37a6c521c053ce0",
+    "deep-verification.json": "e67dfd701c964724a106101749fa08b8539c073c5106339533c646b79b1020de",
+    "attach-check.json": "4b19c5e59fbead3efd53661cc0c0bed0ec1695803e32888d32f2780cdaab1e4c",
+    "upstream-only.json": "7682deff88aea892617f3d9e63dc89975ddd3c2d0f9be1197f19b35a19da1295",
+    "correctness.json": "39c7101d8a8634241b72749a6c490bfabfb06a6a40459536b7669a38f16cf4ab",
+    "verification.json": "13c7cb7bc471151906288d3b41d52d827003d2ab2e02316247ccf32f39c958a9",
+    "provenance.json": "b3969638f0ed2e8a204974ed34999a72dfc0f14cdfe0715eeb2ce820a3696223",
+    "deep-11.json": "1f4d86107bb884ef9835e23cc58e343e7e9362c3597cc8f044c4ba42f34b2b2d",
+    "deep-10.json": "9ce87355f298100e901bfbab60892d6e225dfbcbb4928b87b5b9381085c74e9d",
+    "string-controls/verification.json": "fc74bfea4a36676b4ce22516e4cefc240c3b69ded79c0ea906121bf83c4706cc",
+    "regression/evidence/pidfd-source-verification.json": "3a00e126b30ac4a947ada7d1c2a744068cd3d490e1d453e958677cf0b91f0774",
+    "expanded/bindings.json": "f3b5c41a905040e461e67828bc34df658e3e7721e2d065e0ce9f8968f1f2c2aa",
+    "expanded/bytecode-position-verification.json": "25ef16374ad134e6ddf42e5ce6cf155626fbf2b4ebba355b3a44e965981a1011",
+    "encoder-controls/verification.json": "aa12f305f697d052a64223efeea3f50a107148a25f2926d9d2e84dc55211ad35",
+    "compat-control/verification.json": "d4674b975de74f6572cc74c905700a56605e6a69d525dbadc4fa0ab2ff2cdfe4",
+    "held-baseline/serial.json": "a8afe3f8396770c9ce6365654021472fb687292c29e117919b24a56fa6df4d0b",
+    "held-baseline/verification.json": "4bc3e225883efb0d75e0c6ac26e34b227b6c57801612c3b730fc7548bd4de1c1",
+    "held-baseline/threads.json": "6ba5feae7e2255d0fe801fe8cce34940e47a12ca0d018c9515a5ae7c6cb87bac",
+    "held-baseline/expanded/bytecode-position-verification.json": "18037330f10584b32194841ed21b4cb45864db92a1186c4a60f0a3059789eaf9",
+    "history-control/candidate/verification.json": "e256bb60647fad33266138816c03387d481518b889c73b0bb3ec8bd7dca639da",
+    "history-control/candidate/expanded/bytecode-position-verification.json": "80ea5d21c85988bc68dbd738f1cd3aa30e59068170297f7f2f9415d6e5bf75e1",
+    "workload-controls/serial.json": "959af714aaad1044176a9f65f9b3ac9653524a8b78802bfaf2ba95f77a6ec32e",
+    "workload-controls/verification.json": "28ee5448f681cf24410c712bacd041e3a09206605eb154a6c37bf1225a1d5663",
+    "workload-controls/threads.json": "03003396eca5d18c8d3fbdb912d179aa51919c71f9324d962228f3bba7b98c10"
+  }
+}

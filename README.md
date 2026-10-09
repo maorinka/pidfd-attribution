@@ -18,6 +18,8 @@ FRAME 0 .../fixture.py:31 write_leaf bytecode=...
 
 This is a bounded experimental pipeline, not an endpoint-wide EDR service.
 
+A separate [module-free backend](module-free/README.md) uses upstream BPF helpers and retains the compact collector. Its documentation describes tested integrity-lockdown conditions and remaining fleet-policy limits.
+
 ## Compatibility
 
 | Ubuntu | Default Python adapter | Kernel requirement |

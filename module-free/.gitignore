@@ -1,0 +1,7 @@
+generated/
+evidence/
+evidence-runs/
+.deps/
+__pycache__/
+*.pyc
+*.o
