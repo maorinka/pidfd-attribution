@@ -275,7 +275,14 @@ def verify_build(config):
     return manifest
 
 
-def run(config):
+class PermanentStartupError(RuntimeError):
+    """Admission or pinned-build failure requiring an operator change."""
+
+
+PERMANENT_STARTUP_EXIT = 78
+
+
+def admit_runtime(config):
     linux_root()
     from kernel_admission import validate_preemption
 
@@ -295,6 +302,13 @@ def run(config):
             "Current tested attachment configuration requires CAP_SYS_ADMIN"
         )
     verify_build(config)
+
+
+def run(config):
+    try:
+        admit_runtime(config)
+    except (OSError, ValueError, RuntimeError, KeyError) as error:
+        raise PermanentStartupError(str(error)) from error
     directory = Path(config["state_dir"])
     directory.mkdir(mode=0o700, parents=False, exist_ok=True)
     os.chdir(ROOT / "build")
@@ -524,7 +538,12 @@ def main():
     elif args.command == "install":
         install(args.config)
     else:
-        config = configuration(args.config)
+        try:
+            config = configuration(args.config)
+        except (OSError, ValueError, RuntimeError) as error:
+            if args.command == "run":
+                raise PermanentStartupError(str(error)) from error
+            raise
         if args.command == "run":
             run(config)
         elif args.command == "status":
@@ -537,6 +556,9 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
+    except PermanentStartupError as error:
+        print(f"ADMISSION_REFUSED: {error}", file=sys.stderr)
+        sys.exit(PERMANENT_STARTUP_EXIT)
     except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
         print(f"ERROR: {error}", file=sys.stderr)
         sys.exit(1)

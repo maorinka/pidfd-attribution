@@ -200,6 +200,42 @@ try:
     if not (observed == hardening):
         raise RuntimeError(observed)
     report["hardening"] = observed
+    # A stale kernel pin needs an operator rebuild, not a ten-second restart loop.
+    subprocess.run(["systemctl", "stop", "iosec-endpoint"], check=True)
+    manifest_path = Path("/opt/iosec-endpoint/build/manifest.json")
+    original_manifest = manifest_path.read_bytes()
+    try:
+        manifest = json.loads(original_manifest)
+        manifest["pins"]["kernel"] = "deliberately-stale-test-kernel"
+        manifest_path.write_text(json.dumps(manifest))
+        subprocess.run(["systemctl", "start", "iosec-endpoint"], check=False)
+        wait(
+            lambda: run(
+                "systemctl", "show", "iosec-endpoint", "-p", "ExecMainStatus", "--value"
+            )
+            == "78"
+        )
+        restarts = run(
+            "systemctl", "show", "iosec-endpoint", "-p", "NRestarts", "--value"
+        )
+        time.sleep(12)
+        if (
+            run("systemctl", "show", "iosec-endpoint", "-p", "NRestarts", "--value")
+            != restarts
+        ):
+            raise RuntimeError("Permanent admission failure restarted")
+        if (
+            run("systemctl", "show", "iosec-endpoint", "-p", "ActiveState", "--value")
+            != "failed"
+        ):
+            raise RuntimeError("Admission refusal did not remain failed")
+        report["permanent_admission_no_restart"] = True
+        report["permanent_admission_exit"] = 78
+    finally:
+        manifest_path.write_bytes(original_manifest)
+        # Preserve the original failure if the stopped unit has been unloaded.
+        subprocess.run(["systemctl", "reset-failed", "iosec-endpoint"], check=False)
+
     report.update(
         passed=True,
         source_writes=3,

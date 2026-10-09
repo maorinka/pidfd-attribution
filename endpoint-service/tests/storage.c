@@ -25,24 +25,26 @@ int main(int argc, char **argv) {
       vectors[index] =
           (struct iovec){.iov_base = &header, .iov_len = sizeof(header)};
     assert(!direct_commit(&ring, vectors, 128, consumer + 128, 128));
+    assert(!prune_segments());
   }
   assert(output_records == 38400 && consumer == 38400);
   assert(segment_number == 5 && deleted_segments == 2);
   assert(!close_segment());
   char readable[96], linked[96], fifo[96], symlinked[96];
   snprintf(readable, sizeof(readable), "events-%020llu-%s-%010u.bin",
-           start_real_ns, session, 2);
-  snprintf(linked, sizeof(linked), "events-%020llu-%s-%010u.bin", start_real_ns,
-           session, 3);
-  snprintf(fifo, sizeof(fifo), "events-%020llu-%s-%010u.bin", start_real_ns,
+           session_sequence, session, 2);
+  snprintf(linked, sizeof(linked), "events-%020llu-%s-%010u.bin",
+           session_sequence, session, 3);
+  snprintf(fifo, sizeof(fifo), "events-%020llu-%s-%010u.bin", session_sequence,
            session, 90);
   snprintf(symlinked, sizeof(symlinked), "events-%020llu-%s-%010u.bin",
-           start_real_ns, session, 91);
+           session_sequence, session, 91);
   assert(!fchmodat(directory_fd, readable, 0644, 0));
   assert(!linkat(directory_fd, linked, directory_fd, "analyst-export", 0));
   assert(!mkfifoat(directory_fd, fifo, 0600));
   assert(!symlinkat("analyst-export", directory_fd, symlinked));
-  assert(!new_segment() && !new_segment());
+  assert(!new_segment() && !prune_segments());
+  assert(!new_segment() && !prune_segments());
   assert(retention_skipped >= 8);
   struct stat retained;
   assert(!fstatat(directory_fd, readable, &retained, 0) &&

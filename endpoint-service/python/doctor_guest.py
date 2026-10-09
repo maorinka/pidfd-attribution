@@ -73,7 +73,7 @@ def doctor(config=None, runtime=False):
         "lockdown",
         "[confidentiality]" not in value,
         value
-        + "; none/integrity allowed; required BPF load/attach checks decide support",
+        + "; lockdown alone does not establish support; verified preemption and BPF load/attach are also required",
     )
     python = PYTHON
     check(

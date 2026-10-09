@@ -433,17 +433,22 @@ try:
     ):
         raise RuntimeError("Guest control failed in integration_guest.py")
     session = health(state)["session"]
+    segments_before_empty_rotation = len(list(state.glob("events-*.bin")))
+    deleted_before_empty_rotation = health(state)["segments_deleted"]
     for iteration in range(5):
         old = health(state)["segments_created"]
         process.send_signal(signal.SIGHUP)
         wait_for(lambda: health(state).get("segments_created", 0) > old)
     if not (health(state)["session"] == session):
         raise RuntimeError("Guest control failed in integration_guest.py")
-    if not (len(list(state.glob("events-*.bin"))) == 3):
-        raise RuntimeError("Guest control failed in integration_guest.py")
+    if len(list(state.glob("events-*.bin"))) != segments_before_empty_rotation + 5:
+        raise RuntimeError("Empty rotation unexpectedly pruned retained history")
+    if health(state)["segments_deleted"] != deleted_before_empty_rotation:
+        raise RuntimeError("Empty rotation deleted prior event data")
     after_rotation = demo("source-after-rotation")
     time.sleep(0.3)
     verify_writes(state, after_rotation, source=True)
+    wait_for(lambda: len(list(state.glob("events-*.bin"))) == 3)
     stopped = stop(process, state)
     result["source"] = dict(
         health=stopped,
@@ -686,6 +691,51 @@ try:
         same_session=True,
         history_gaps=stopped["history_gaps"],
     )
+
+    result["storage_operations"] = {}
+    for mode in (
+        "event-open",
+        "journal-open",
+        "journal-write",
+        "event-sync",
+        "journal-sync",
+        "directory-sync",
+        "health-sync",
+    ):
+        gate = BASE / (mode + "-full")
+        name = "storage-" + mode
+        process, state, _ = start_sensor(
+            name,
+            environment=dict(
+                os.environ,
+                LD_PRELOAD=str(fault_library),
+                PIDFD_STORAGE_FAULT=str(gate),
+                PIDFD_STORAGE_FAULT_MODE=mode,
+                PIDFD_STORAGE_FAULT_ERRNO="EDQUOT",
+            ),
+        )
+        initial_session = health(state)["session"]
+        gate.touch(mode=0o600)
+        process.send_signal(signal.SIGHUP)
+        log_path = BASE / (name + ".log")
+        wait_for(lambda: "STORAGE_BLOCKED" in log_path.read_text())
+        if process.poll() is not None:
+            raise RuntimeError(f"Storage fault exited the collector: {mode}")
+        gate.unlink()
+        wait_for(lambda: "STORAGE_RECOVERED" in log_path.read_text())
+        application = demo(name)
+        verify_writes(state, application)
+        stopped = stop(process, state)
+        if stopped["session"] != initial_session or stopped["storage_stalls"] < 1:
+            raise RuntimeError(f"Storage recovery lost its session: {mode}")
+        result["storage_operations"][mode] = dict(
+            stayed_alive=True,
+            recovered=True,
+            writes=3,
+            same_session=True,
+            storage_stalls=stopped["storage_stalls"],
+            history_gaps=stopped["history_gaps"],
+        )
 
     process, state, _ = start_sensor("birth-mismatch", capture=True, bpf_stats=True)
     birth_result = BASE / "birth-result.json"

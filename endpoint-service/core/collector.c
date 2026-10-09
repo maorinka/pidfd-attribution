@@ -50,6 +50,7 @@ static struct configuration cfg = {.state_dir = "/var/lib/iosec-endpoint",
 static int directory_fd = -1, lock_fd = -1;
 static char session[33], active_segment[96], boot_id[40];
 static unsigned long long segment_number, session_bytes, deleted_segments;
+static unsigned long long session_sequence;
 static unsigned long long retention_skipped;
 static unsigned long long ring_drops, state_errors, start_ns, start_real_ns;
 static unsigned int attachment_count, cleanup_bits;
@@ -64,9 +65,24 @@ static unsigned long long stats_previous_ns[64], stats_previous_count[64];
 static unsigned long long ring_backlog, transition_bytes;
 #define CAPTURE_JOURNAL_BYTES (1024 * 1024)
 static int new_segment(void);
+static int storage_wait(int error);
+static void storage_recovered(void);
+static volatile sig_atomic_t stopping, rotate_requested;
+static unsigned long long pending_capture_before, pending_capture_after;
+#define STORAGE_RETRY(operation)                                               \
+  ({                                                                           \
+    int storage_result;                                                        \
+    while ((storage_result = (operation)) < 0 && storage_wait(errno) == 0) {   \
+    }                                                                          \
+    if (storage_result >= 0)                                                   \
+      storage_recovered();                                                     \
+    storage_result;                                                            \
+  })
 
 static unsigned long long now_ns(clockid_t clock);
-static int record_capture_mode(unsigned long long before,
+/* Journal append is replayable only after rollback to its committed offset. */
+static int append_capture_mode(int fd, unsigned long long *committed,
+                               unsigned long long before,
                                unsigned long long after) {
   char record[512];
   int length =
@@ -76,25 +92,42 @@ static int record_capture_mode(unsigned long long before,
                "\"backlog_bytes\":%llu}\n",
                before, after, (unsigned long long)capture.epoch,
                capture.effective ? "true" : "false", ring_drops, ring_backlog);
-  if (length < 0 || (size_t)length >= sizeof(record) ||
-      write(transition_fd, record, length) != length ||
-      fdatasync(transition_fd))
+  if (length < 0 || (size_t)length >= sizeof(record)) {
+    errno = EOVERFLOW;
     return -1;
-  transition_bytes += length;
+  }
+  struct iovec vector = {.iov_base = record, .iov_len = (size_t)length};
+  if (direct_write_all(fd, &vector, 1) || fdatasync(fd)) {
+    int error = errno;
+    if (ftruncate(fd, (off_t)*committed) ||
+        lseek(fd, (off_t)*committed, SEEK_SET) < 0)
+      error = EIO;
+    errno = error;
+    return -1;
+  }
+  *committed += (unsigned long long)length;
   return 0;
 }
 static int apply_capture_mode(void) {
   unsigned int key = 0;
   unsigned long long mode = (capture.epoch << 1) | capture.effective;
-  unsigned long long before = now_ns(CLOCK_MONOTONIC);
-  if (bpf_map_update_elem(capture_fd, &key, &mode, BPF_ANY))
+  pending_capture_before = now_ns(CLOCK_MONOTONIC);
+  if (bpf_map_update_elem(capture_fd, &key, &mode, BPF_ANY)) {
+    pending_capture_before = 0;
     return -1;
-  unsigned long long after = now_ns(CLOCK_MONOTONIC);
+  }
+  pending_capture_after = now_ns(CLOCK_MONOTONIC);
+  int result;
   if (transition_bytes + 512 > CAPTURE_JOURNAL_BYTES)
-    return new_segment();
-  return record_capture_mode(before, after);
+    result = STORAGE_RETRY(new_segment());
+  else
+    result = STORAGE_RETRY(append_capture_mode(transition_fd, &transition_bytes,
+                                               pending_capture_before,
+                                               pending_capture_after));
+  if (!result)
+    pending_capture_before = pending_capture_after = 0;
+  return result;
 }
-static volatile sig_atomic_t stopping, rotate_requested;
 
 static unsigned long long now_ns(clockid_t clock) {
   struct timespec time;
@@ -175,7 +208,8 @@ static void skip_retained(const char *name, int error) {
           error);
 }
 /* The directory is private, and only files with the sensor's exact naming
- * grammar may be pruned. Prune before creating a new segment to bound count. */
+ * grammar may be pruned. Call after a successful event commit: opening an
+ * empty replacement must not evict retained history. */
 static int prune_segments(void) {
   int scan_fd = openat(directory_fd, ".", O_DIRECTORY | O_RDONLY | O_CLOEXEC);
   DIR *directory = scan_fd >= 0 ? fdopendir(scan_fd) : NULL;
@@ -225,9 +259,10 @@ static int prune_segments(void) {
   closedir(directory);
   directory = NULL;
   qsort(names, count, sizeof(*names), compare_names);
-  size_t remove_count =
-      count >= cfg.max_segments ? count - cfg.max_segments + 1 : 0;
+  size_t remove_count = count > cfg.max_segments ? count - cfg.max_segments : 0;
   for (size_t i = 0; i < remove_count; i++) {
+    if (!strcmp(names[i], active_segment))
+      continue;
     int fd = openat(directory_fd, names[i], O_PATH | O_CLOEXEC | O_NOFOLLOW);
     if (fd < 0 || secure_file(fd)) {
       int error = errno;
@@ -280,47 +315,198 @@ static int close_segment(void) {
   binary = NULL;
   return rc;
 }
-static int new_segment(void) {
-  if (transition_fd >= 0) {
-    if (close(transition_fd))
+/* Keep the filename grammar, but order sessions with a durable high-water
+ * mark. Seed from existing names so legacy timestamp-prefixed data stays older.
+ * A skipped number after a failed sync is harmless; number reuse is not. */
+static int allocate_session_sequence(void) {
+  unsigned long long high = 0;
+  int fd = openat(directory_fd, ".segment-sequence",
+                  O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+  if (fd >= 0) {
+    char record[22];
+    if (secure_file(fd)) {
+      close(fd);
       return -1;
-    transition_fd = -1;
+    }
+    ssize_t length = read(fd, record, sizeof(record));
+    int error = errno;
+    close(fd);
+    if (length < 0) {
+      errno = error;
+      return -1;
+    }
+    if (length != 21 || record[20] != '\n') {
+      errno = EINVAL;
+      return -1;
+    }
+    for (unsigned int i = 0; i < 20; i++)
+      if (record[i] < '0' || record[i] > '9') {
+        errno = EINVAL;
+        return -1;
+      }
+    record[20] = 0;
+    errno = 0;
+    high = strtoull(record, NULL, 10);
+    if (errno)
+      return -1;
+  } else if (errno != ENOENT)
+    return -1;
+  int scan = openat(directory_fd, ".", O_DIRECTORY | O_RDONLY | O_CLOEXEC);
+  DIR *directory = scan >= 0 ? fdopendir(scan) : NULL;
+  if (!directory) {
+    if (scan >= 0)
+      close(scan);
+    return -1;
   }
-  if (close_segment() || prune_segments())
+  struct dirent *entry;
+  errno = 0;
+  while ((entry = readdir(directory))) {
+    if (!segment_name(entry->d_name))
+      continue;
+    char prefix[21];
+    memcpy(prefix, entry->d_name + 7, 20);
+    prefix[20] = 0;
+    errno = 0;
+    unsigned long long value = strtoull(prefix, NULL, 10);
+    if (errno) {
+      int error = errno;
+      closedir(directory);
+      errno = error;
+      return -1;
+    }
+    if (value > high)
+      high = value;
+  }
+  int error = errno;
+  closedir(directory);
+  if (error) {
+    errno = error;
+    return -1;
+  }
+  if (high == ULLONG_MAX) {
+    errno = EOVERFLOW;
+    return -1;
+  }
+  const char *temp = ".segment-sequence.tmp";
+  /* Exclusive collector.lock ownership permits replacing its own stale temp. */
+  fd = openat(directory_fd, temp, O_CREAT | O_WRONLY | O_CLOEXEC | O_NOFOLLOW,
+              0600);
+  if (fd < 0)
+    return -1;
+  char record[22];
+  snprintf(record, sizeof(record), "%020llu\n", high + 1);
+  struct iovec vector = {.iov_base = record, .iov_len = 21};
+  int result = secure_file(fd) || ftruncate(fd, 0) ||
+               direct_write_all(fd, &vector, 1) || fdatasync(fd);
+  error = errno;
+  if (close(fd) && !result) {
+    result = -1;
+    error = errno;
+  }
+  if (!result &&
+      renameat(directory_fd, temp, directory_fd, ".segment-sequence")) {
+    result = -1;
+    error = errno;
+  }
+  if (!result && fsync(directory_fd)) {
+    result = -1;
+    error = errno;
+  }
+  if (result) {
+    unlinkat(directory_fd, temp, 0);
+    errno = error;
+    return -1;
+  }
+  session_sequence = high + 1;
+  return 0;
+}
+static int sync_segment(void) {
+  if (binary && fdatasync(fileno(binary)))
+    return -1;
+  if (transition_fd >= 0 && fdatasync(transition_fd))
+    return -1;
+  return 0;
+}
+/* Publish the new event/journal pair only after both files and their directory
+ * are synced. Failed creation leaves the active pair and counters untouched. */
+static int new_segment(void) {
+  if (sync_segment())
+    return -1;
+  if (!session_sequence && allocate_session_sequence())
     return -1;
   if (segment_number >= 9999999999ULL) {
     errno = EOVERFLOW;
     return -1;
   }
-  snprintf(active_segment, sizeof(active_segment),
-           "events-%020llu-%s-%010llu.bin", start_real_ns, session,
-           segment_number++);
-  int fd = openat(directory_fd, active_segment,
-                  O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
-  if (fd < 0)
+  char candidate[96], journal[128];
+  snprintf(candidate, sizeof(candidate), "events-%020llu-%s-%010llu.bin",
+           session_sequence, session, segment_number);
+  snprintf(journal, sizeof(journal), "%s.capture.jsonl", candidate);
+  int event_fd =
+      openat(directory_fd, candidate,
+             O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
+  if (event_fd < 0)
     return -1;
-  binary = fdopen(fd, "wb");
-  if (!binary) {
-    close(fd);
-    return -1;
+  FILE *next_binary = fdopen(event_fd, "wb");
+  int next_transition = -1;
+  bool journal_created = false;
+  unsigned long long next_bytes = 0;
+  if (!next_binary)
+    goto fail;
+  if (capture_fd >= 0) {
+    next_transition =
+        openat(directory_fd, journal,
+               O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
+    if (next_transition < 0)
+      goto fail;
+    journal_created = true;
+    unsigned long long observed = now_ns(CLOCK_MONOTONIC);
+    if (secure_file(next_transition) ||
+        append_capture_mode(
+            next_transition, &next_bytes,
+            pending_capture_before ? pending_capture_before : observed,
+            pending_capture_before ? pending_capture_after : observed))
+      goto fail;
   }
+  if (fdatasync(event_fd) || fsync(directory_fd))
+    goto fail;
+  FILE *previous = binary;
+  int previous_transition = transition_fd;
+  session_bytes += previous ? direct_written : 0;
+  binary = next_binary;
+  transition_fd = next_transition;
+  transition_bytes = next_bytes;
+  strcpy(active_segment, candidate);
+  segment_number++;
   direct_written = direct_reserved_end = direct_reserve_calls = 0;
   direct_reserve_state = DIRECT_RESERVE_UNPROBED;
   direct_reserve_errno = 0;
-  direct_reserve_startup(fd);
-  if (capture_fd >= 0) {
-    char journal[128];
-    snprintf(journal, sizeof(journal), "%s.capture.jsonl", active_segment);
-    transition_fd =
-        openat(directory_fd, journal,
-               O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC | O_NOFOLLOW, 0600);
-    transition_bytes = 0;
-    unsigned long long observed = now_ns(CLOCK_MONOTONIC);
-    if (transition_fd < 0 || secure_file(transition_fd) ||
-        record_capture_mode(observed, observed))
-      return -1;
+  direct_reserve_startup(event_fd);
+  /* The old pair was synced before publication. Close is not replayable. */
+  int close_error = 0;
+  if (previous && fclose(previous))
+    close_error = EIO;
+  if (previous_transition >= 0 && close(previous_transition))
+    close_error = EIO;
+  if (close_error) {
+    errno = close_error;
+    return -1;
   }
-  return fsync(directory_fd);
+  return 0;
+fail: {
+  int error = errno;
+  if (next_binary)
+    fclose(next_binary);
+  else
+    close(event_fd);
+  if (next_transition >= 0)
+    close(next_transition);
+  if (journal_created)
+    unlinkat(directory_fd, journal, 0);
+  unlinkat(directory_fd, candidate, 0);
+  errno = error;
+  return -1;
+}
 }
 static int output_prepare(unsigned long long batch) {
   if (batch > cfg.segment_bytes) {
@@ -457,12 +643,19 @@ static int write_health(const char *state, int error) {
   int rc = fflush(out);
   if (!rc)
     rc = fdatasync(fd);
-  if (fclose(out))
+  int saved_error = errno;
+  if (fclose(out) && !rc) {
     rc = -1;
+    saved_error = errno;
+  }
+  errno = saved_error;
   if (!rc)
     rc = renameat(directory_fd, temp, directory_fd, "health.json");
-  if (rc)
+  if (rc) {
+    int error = errno;
     unlinkat(directory_fd, temp, 0);
+    errno = error;
+  }
   return rc;
 }
 static int read_diagnostics(struct bpf_object *obj) {
@@ -477,6 +670,43 @@ static int read_diagnostics(struct bpf_object *obj) {
   cleanup_bits =
       0; /* Retained health field; global scan fallback was removed. */
   return 0;
+}
+static bool sensor_ready;
+static int storage_wait(int error) {
+  if (error != ENOSPC && error != EDQUOT) {
+    errno = error;
+    return -1;
+  }
+  if (!storage_blocked) {
+    storage_stalls++;
+    fprintf(stderr, "STORAGE_BLOCKED errno=%d; preserving committed history\n",
+            error);
+  }
+  storage_blocked = true;
+  if (stats_object && read_diagnostics(stats_object))
+    return -1;
+  if (write_health(sensor_ready ? "running" : "starting", error) &&
+      errno != ENOSPC && errno != EDQUOT)
+    return -1;
+  notify_systemd("WATCHDOG=1\nEXTEND_TIMEOUT_USEC=30000000\nSTATUS=Waiting for "
+                 "storage space");
+  if (stopping) {
+    errno = error;
+    return -1;
+  }
+  struct timespec delay = {.tv_sec = 1};
+  nanosleep(&delay, NULL);
+  if (stopping) {
+    errno = error;
+    return -1;
+  }
+  return 0;
+}
+static void storage_recovered(void) {
+  if (storage_blocked) {
+    storage_blocked = false;
+    fprintf(stderr, "STORAGE_RECOVERED\n");
+  }
 }
 static unsigned long long number(const char *value) {
   char *end;
@@ -655,7 +885,7 @@ int main(int argc, char **argv) {
   struct bpf_link *links[64] = {0};
   struct direct_ring ring = {0};
   int result = 1, failure_errno = 0, policy_fd = -1;
-  CHECK_SENSOR(write_health("starting", 0));
+  CHECK_SENSOR(STORAGE_RETRY(write_health("starting", 0)));
   if (cfg.bpf_stats) {
     errno = 0;
     stats_fd = bpf_enable_stats(BPF_STATS_RUN_TIME);
@@ -748,16 +978,20 @@ int main(int argc, char **argv) {
     }
     links[attachment_count++] = link;
   }
-  CHECK_SENSOR(new_segment() || apply_capture_mode());
+  CHECK_SENSOR(STORAGE_RETRY(new_segment()));
+  CHECK_SENSOR(apply_capture_mode());
   cfg.policy.enabled = 1;
   CHECK_SENSOR(bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
-               read_diagnostics(obj) || write_health("running", 0));
+               read_diagnostics(obj) ||
+               STORAGE_RETRY(write_health("running", 0)));
+  sensor_ready = true;
   printf("READY session=%s attachments=%u capture_python=%u\n", session,
          attachment_count, cfg.policy.capture_python);
   fflush(stdout);
   notify_systemd("READY=1\nSTATUS=Collecting endpoint attribution\nWATCHDOG=1");
   unsigned long long last_health = now_ns(CLOCK_MONOTONIC),
-                     last_sync = last_health;
+                     last_sync = last_health, last_pruned_records = 0,
+                     last_pruned_segment = 0;
   while (!stopping) {
     unsigned long long before_drain = now_ns(CLOCK_MONOTONIC);
     ring_backlog = __atomic_load_n(ring.producer, __ATOMIC_ACQUIRE) -
@@ -770,53 +1004,30 @@ int main(int argc, char **argv) {
                    apply_capture_mode());
     }
     errno = 0;
-    int drain = direct_consume(&ring);
+    int drain = STORAGE_RETRY(direct_consume(&ring));
     malformed_records = ring.malformed_records;
-    while (drain < 0 && (errno == ENOSPC || errno == EDQUOT) && !stopping) {
-      int storage_error = errno;
-      if (!storage_blocked) {
-        storage_stalls++;
-        fprintf(stderr,
-                "STORAGE_BLOCKED errno=%d; retaining pending ring bytes\n",
-                storage_error);
-      }
-      storage_blocked = true;
-      CHECK_SENSOR(read_diagnostics(obj));
-      if (write_health("running", storage_error) && errno != ENOSPC &&
-          errno != EDQUOT) {
-        failure_errno = errno ? errno : EIO;
-        goto cleanup;
-      }
-      notify_systemd("WATCHDOG=1");
-      struct timespec retry = {.tv_sec = 1};
-      nanosleep(&retry, NULL);
-      if (stopping) {
-        errno = storage_error;
-        break;
-      }
-      errno = 0;
-      drain = direct_consume(&ring);
-      malformed_records = ring.malformed_records;
-    }
-    if (drain >= 0 && storage_blocked) {
-      storage_blocked = false;
-      fprintf(stderr, "STORAGE_RECOVERED\n");
-    }
     if (drain < 0) {
       failure_errno = errno ? errno : EIO;
       goto cleanup;
     }
+    if (output_records != last_pruned_records &&
+        segment_number != last_pruned_segment) {
+      CHECK_SENSOR(STORAGE_RETRY(prune_segments()));
+      last_pruned_segment = segment_number;
+    }
+    last_pruned_records = output_records;
     unsigned long long now = now_ns(CLOCK_MONOTONIC);
     if (rotate_requested) {
       rotate_requested = 0;
-      CHECK_SENSOR(new_segment());
+      CHECK_SENSOR(STORAGE_RETRY(new_segment()));
     }
     if (now - last_sync >= (unsigned long long)cfg.sync_ms * 1000000) {
-      CHECK_SENSOR(fdatasync(fileno(binary)));
+      CHECK_SENSOR(STORAGE_RETRY(sync_segment()));
       last_sync = now;
     }
     if (now - last_health >= (unsigned long long)cfg.health_ms * 1000000) {
-      CHECK_SENSOR(read_diagnostics(obj) || write_health("running", 0));
+      CHECK_SENSOR(read_diagnostics(obj) ||
+                   STORAGE_RETRY(write_health("running", 0)));
       notify_systemd("WATCHDOG=1");
       last_health = now;
     }

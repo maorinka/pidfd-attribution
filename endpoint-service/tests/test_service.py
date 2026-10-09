@@ -17,6 +17,9 @@ from service import (
     events,
     segment_session,
     validate_cgroup,
+    run,
+    main,
+    PermanentStartupError,
 )
 from wire import HEADER, FRAME, decode, records
 
@@ -304,6 +307,36 @@ class HealthTests(unittest.TestCase):
             history_gaps=False,
         )
         self.assertEqual(validate_health(valid), valid)
+
+
+class StartupFailureTests(unittest.TestCase):
+    def test_admission_failure_is_permanent(self):
+        with patch(
+            "service.admit_runtime", side_effect=RuntimeError("unverified preemption")
+        ):
+            with self.assertRaises(PermanentStartupError):
+                run(configuration(None))
+
+    def test_invalid_run_config_is_permanent(self):
+        with patch.object(sys, "argv", ["service.py", "run"]):
+            with patch(
+                "service.configuration", side_effect=ValueError("invalid policy")
+            ):
+                with self.assertRaises(PermanentStartupError):
+                    main()
+
+    def test_storage_failure_remains_retryable(self):
+        with patch("service.admit_runtime"):
+            with patch("service.Path.mkdir", side_effect=OSError("storage offline")):
+                with self.assertRaises(OSError):
+                    run(configuration(None))
+
+    def test_unit_prevents_permanent_failure_restart(self):
+        unit = (
+            Path(__file__).resolve().parents[1] / "iosec-endpoint.service"
+        ).read_text()
+        self.assertIn("RestartPreventExitStatus=2 78", unit)
+        self.assertIn("Restart=always", unit)
 
 
 if __name__ == "__main__":

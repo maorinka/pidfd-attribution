@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "e9b90f2bfacb4190b73a5930fd31e5d7cbfc91c3",
+  "scope": "Batch2 endpoint startup policy, transactional live storage recovery and durable retention order; no CPU or fleet qualification",
+  "target": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "lockdown": "[none] integrity confidentiality",
+    "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+    "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "return_depth": {
+      "return_depth_bias": 1,
+      "entry_depths": [
+        0,
+        1
+      ],
+      "return_depths": [
+        2,
+        1
+      ]
+    }
+  },
+  "offline": {
+    "root_tests": 17,
+    "endpoint_tests": 19,
+    "style": "passed"
+  },
+  "storage": {
+    "passed": true,
+    "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+    "rotations": 5,
+    "retained_segments": 3,
+    "input_records": 38400,
+    "decoded_retained_records": 1024,
+    "record_boundaries_preserved": true,
+    "no_preallocated_zero_tail": true,
+    "failed_write_does_not_release_ring": true,
+    "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+    "admin_modified_segments_preserved": true,
+    "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+    "bounded_consumer_backlog_retry": true,
+    "busy_record_no_spin": true,
+    "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1",
+    "recovery_output": "STORAGE_RECOVERY_OK transactional_pair=1 partial_event_rollback_retry=1 partial_journal_rollback_retry=1 reservation_rebuilt=1 all_rotation_faults=1 health_fault=1 quota_wait_retry=1 monotonic_session_order=1 legacy_seed=1 durable_counter_without_segments=1 interrupted_publication=1 corrupt_counter_refused=1",
+    "partial_write_rollback_then_retry": true,
+    "transactional_event_journal_rotation": true,
+    "clock_rollback_session_order": true
+  },
+  "integration": {
+    "passed": true,
+    "identity_writes": 5,
+    "pidfd_writes": 3,
+    "source": {
+      "serial_writes": 3,
+      "threaded_writes": 13,
+      "oracle_frames": 279,
+      "leader_first_exit_writes": 5,
+      "rotation_keeps_session": true,
+      "bounded_segments": true
+    },
+    "storage_recovery": {
+      "partial_write_rolled_back": true,
+      "writes": 3,
+      "same_session": true,
+      "history_gaps": false
+    },
+    "storage_operations": {
+      "event-open": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "journal-open": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "journal-write": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "event-sync": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "journal-sync": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "directory-sync": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      },
+      "health-sync": {
+        "stayed_alive": true,
+        "recovered": true,
+        "writes": 3,
+        "same_session": true,
+        "storage_stalls": 1,
+        "history_gaps": false
+      }
+    },
+    "ring_pressure": {
+      "explicit_history_gap": true,
+      "ring_drops": 36729
+    },
+    "cleanup_ok": true,
+    "modules_unchanged": true,
+    "baseline_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ],
+    "final_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      25,
+      26,
+      27,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38
+    ]
+  },
+  "systemd": {
+    "passed": true,
+    "source_writes": 3,
+    "attachments": 35,
+    "watchdog_notification": true,
+    "reload_rotates": true,
+    "automatic_restart": true,
+    "permanent_admission_no_restart": true,
+    "permanent_admission_exit": 78,
+    "cleanup_ok": true,
+    "baseline_bpf_ids": [
+      2,
+      18,
+      1026,
+      1027,
+      1028,
+      1029,
+      1030,
+      1031,
+      1032,
+      1033,
+      1034,
+      1035,
+      1036,
+      1037,
+      1038
+    ],
+    "final_bpf_ids": [
+      2,
+      18,
+      1026,
+      1027,
+      1028,
+      1029,
+      1030,
+      1031,
+      1032,
+      1033,
+      1034,
+      1035,
+      1036,
+      1037,
+      1038
+    ],
+    "hardening": {
+      "SystemCallArchitectures": "native",
+      "RestrictNamespaces": "yes",
+      "RestrictSUIDSGID": "yes",
+      "PrivateDevices": "yes",
+      "ProtectProc": "invisible"
+    }
+  },
+  "prior_installation_restored": true,
+  "source_sha256": {
+    "endpoint-service/core/collector.c": "84f2e494f12f1010792a033665e2589c47de3f840910fdb65aae297f97d833f7",
+    "endpoint-service/core/direct_ring.h": "2a346bb86e01dd38860da51185e7ddae34f0e20a92ef0fe4434179b9b70d835b",
+    "endpoint-service/iosec-endpoint.service": "e22aecde85e508b6f853484d84881eb65e4ad7d007357523adb2cc6a2332eca1",
+    "endpoint-service/python/doctor_guest.py": "7bffa8c6e4fc39c2c1b027f9439cd9121a2fd0ef82ca113013db702bfac5a481",
+    "endpoint-service/python/service.py": "eef4fcca362dfa8606a640f22c4029fbcd0a7b2abf189f8cd1d4251ea30fa946",
+    "endpoint-service/tests/check_storage.py": "5b772d37674c9ce82859b9cad1b1a8c0507f86ed110a21f9f7c6eda071aec047",
+    "endpoint-service/tests/integration_guest.py": "737b5c02a4736ba96f31289c1f1e35e9c14215a4fe09511d10173e9bd46524b1",
+    "endpoint-service/tests/storage.c": "cf8f013c8d453c9c3508bbc4efdbc15bd36495213c9cbe78756bf5fc4ac1f03e",
+    "endpoint-service/tests/storage_fault.c": "aac784c25699f9084288251c5419522234ac12152fd32b1d7edaaf398665707d",
+    "endpoint-service/tests/storage_recovery.c": "97932d3acc1ed7eed1e1f903e2db62a12ee160b53a392bebe2631158116dbd68",
+    "endpoint-service/tests/systemd_guest.py": "43ee001e5a29b411959efa978e19ce801bda2a25a02de41e9b8971b85954dfbd",
+    "endpoint-service/tests/test_service.py": "4cb333f02c22285b73b7b3e7b60790131f82f89be4e04ea484453b5db12e1508"
+  },
+  "built_sources": {
+    "reader.bpf.c": "528b1f611711adf20c06a54db840720d9e6aa800492e3a41bfdbb1b535e9ca83",
+    "collector.c": "84f2e494f12f1010792a033665e2589c47de3f840910fdb65aae297f97d833f7",
+    "direct_ring.h": "2a346bb86e01dd38860da51185e7ddae34f0e20a92ef0fe4434179b9b70d835b",
+    "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+    "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+    "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+    "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+    "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+    "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+    "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+    "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+    "capture_controller.h": "4cf68b1856cd2eed0441e4a1b2f4e03481cda118d0b57241dddfadf6b0163db9",
+    "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411"
+  },
+  "built_artifacts": {
+    "collector": "5a8e4d783de39f9a1e96bdbad789116c9a1acc2bb07e200d53d2a3510d665afb",
+    "reader.bpf.o": "a57a2f292ec7cf0d9c8a439319ba0fbac02dcff601bd2b0a5193c087313cf127"
+  },
+  "private_report_sha256": {
+    "storage": "2d4c40ced9f490716fdda3ce373d64b00d9db866b654167a4b1d08d1e7984914",
+    "integration": "36941d38f19a06e40b87449b258b428f66c247a8673fb36c02df0a347eda3be3",
+    "systemd": "ab42c063e4e5709f4d811393683032ba39112412a89ae20130a4131c4856e228",
+    "manifest": "307bb978a7893be965de2395383b5a3054800f4a440c5c522575b7d90ba0f81b"
+  },
+  "rejected_attempts": [
+    {
+      "control": "storage fixture",
+      "reason": "Test still constructed two filenames with realtime prefixes; corrected for sequence names."
+    },
+    {
+      "control": "integration retention",
+      "reason": "Historical assertion expected empty SIGHUP rotations to prune old data; replaced with preservation-then-prune checks."
+    },
+    {
+      "control": "systemd",
+      "reason": "reset-failed on a normally stopped/unloaded unit returned nonzero before admission case; removed unnecessary reset and avoided masking original error in cleanup."
+    },
+    {
+      "control": "extra legacy sequence test build",
+      "reason": "Test-only legacy prefix declaration was missing; corrected before successful final storage run."
+    }
+  ],
+  "limits": [
+    "Preemption admission remains unchanged; no firmware Secure Boot test or new kernel test in this batch.",
+    "Shutdown stays bounded; pending ring bytes are reported when storage cannot recover before exit. Corrupt envelopes, failed rollback and non-space errors still stop collection.",
+    "Filename order seeds above legacy prefixes; legacy sessions retain their previous relative ordering. Temporary extra segments before a successful event commit/prune are allowed.",
+    "Fault controls exercise syscall failures and interrupted counter publication, not physical power-loss or filesystem crash durability.",
+    "No claim of reduced BPF overhead, scoped uprobes, or production endpoint EDR readiness."
+  ]
+}

@@ -118,42 +118,77 @@
     {
       "id": "R003",
       "area": "deployment",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Restart=always with no start limit retries permanent admission/build-pin failures every ten seconds, including after kernel upgrades.",
       "next_step": "Distinct permanent-error exit code plus RestartPreventExitStatus; clarify doctor individual lockdown result versus overall admission.",
-      "evidence": ""
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "Permanent run admission/build/config failures use exit78; shipped unit prevents restart on2/78. Offline admission/config tests and installed stale-kernel test passed; ordinary SIGKILL restart still passed."
+        }
+      ]
     },
     {
       "id": "R004",
       "area": "storage",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "ENOSPC/EDQUOT recovery covers event drain but not all journal, sync, SIGHUP rotation, and journal-rotation paths. Restarts can prune retained history repeatedly.",
       "next_step": "Transactional storage state machine; fault injection at every storage operation; preserve retained history across retries.",
-      "evidence": ""
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "Shared runtime disk/quota retry covers event output, journal append/rotation, sync, SIGHUP and health publication, with watchdog and startup timeout extension. Live seven-operation EDQUOT controls and event ENOSPC control passed. Shutdown stays bounded; irrecoverable/non-space errors remain terminal."
+        }
+      ]
     },
     {
       "id": "R005",
       "area": "storage",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Partially failed segment/journal creation can leave binary active without a usable capture journal.",
       "next_step": "Publish active state only when both files and initial journal are usable; unwind or retain explicit retry state.",
-      "evidence": ""
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "New event/journal pair is published after initialization and sync; failed creation unwinds owned candidates and preserves old active pair/counters. Hosted-compatible pure C creation/write/sync fault controls passed."
+        }
+      ]
     },
     {
       "id": "R006",
       "area": "storage",
-      "status": "reported-unverified",
+      "status": "fixed-tested",
       "finding": "Rollback ftruncate releases preallocation while direct_reserved_end may still claim it is reserved.",
       "next_step": "Reset/reconcile reservation bookkeeping and test allocation after rollback.",
-      "evidence": ""
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "Successful truncate rollback resets reserved_end to committed EOF; a successful partial-write rollback/retry control verifies renewed reservation on supporting filesystems and no ring release/duplicate records."
+        }
+      ]
     },
     {
       "id": "R007",
       "area": "storage",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Retention sorts realtime-prefixed filenames; backwards wall-clock steps can delete newer sessions first.",
       "next_step": "Use durable ordering across sessions/restarts; test clock rollback, legacy files, crash recovery. Session-local counter alone is insufficient.",
-      "evidence": ""
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "Durable session high-water mark seeds above legacy names; sequence ordering survives simulated clock rollback, missing segments, and a failed directory sync after counter rename. Corrupt counters fail closed. Legacy ordering is retained; physical power-loss testing remains outside scope."
+        }
+      ]
     },
     {
       "id": "R008",
@@ -467,12 +502,19 @@
     {
       "id": "R037",
       "area": "ci",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Hosted storage check does not prove successful partial-write rollback followed by retry; guest test does.",
       "next_step": "Move pure userspace fault-injection success case to hosted CI; retain guest end-to-end test.",
       "evidence": "",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "resolution_history": [
+        {
+          "batch": 2,
+          "evidence": "validation/review-batch2.json",
+          "detail": "Hosted storage entrypoint now compiles gated fault library and real collector recovery controls, and decodes retained events/journals to reject duplicate retry output. Linux run passed; hosted result recorded after push."
+        }
       ]
     },
     {
@@ -850,7 +892,7 @@
     }
   ],
   "review_collection_complete": true,
-  "next_work": "Batch2: permanent admission restart policy and transactional storage/recovery/retention. Do not weaken runtime preemption admission.",
+  "next_work": "Batch3: measure whole-host hook/uprobe cost and saturation; choose narrowly scoped changes with attribution regression controls. Preserve unresolved coverage, deployment and module-surface findings.",
   "implementation_batches": [
     {
       "batch": 1,
@@ -858,6 +900,13 @@
       "evidence": "validation/review-batch1.json",
       "remaining": "Batch2 reliability and later coverage/performance work remain open.",
       "source_commit": "b9880b827ffd24aaf5c52814f89d5b0dffce549d"
+    },
+    {
+      "batch": 2,
+      "status": "validated-awaiting-push",
+      "evidence": "validation/review-batch2.json",
+      "remaining": "Probe cost, coverage, saturation and backend consolidation remain open; no CPU qualification."
     }
-  ]
+  ],
+  "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."
 }

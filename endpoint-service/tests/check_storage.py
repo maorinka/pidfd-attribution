@@ -107,6 +107,64 @@ with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
     result["bounded_consumer_backlog_retry"] = True
     result["busy_record_no_spin"] = True
     result["consumer_output"] = consumer_output.strip()
+    fault_library = directory / "storage-fault.so"
+    subprocess.run(
+        [
+            "gcc",
+            "-shared",
+            "-fPIC",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            str(ROOT / "tests/storage_fault.c"),
+            "-ldl",
+            "-o",
+            str(fault_library),
+        ],
+        check=True,
+    )
+    recovery = directory / "storage-recovery"
+    subprocess.run(
+        [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            *BPF_INCLUDES,
+            "-I" + str(ROOT / "build"),
+            str(ROOT / "tests/storage_recovery.c"),
+            *BPF_LIBS,
+            "-o",
+            str(recovery),
+        ],
+        check=True,
+    )
+    recovery_directory = directory / "recovery"
+    recovery_directory.mkdir(mode=0o700)
+    recovery_output = subprocess.check_output(
+        [str(recovery), str(recovery_directory)],
+        text=True,
+        env=dict(os.environ, LD_PRELOAD=str(fault_library)),
+    )
+    recovery_events = []
+    recovery_transitions = []
+    for path in sorted(recovery_directory.glob("events-*.bin")):
+        with path.open("rb") as stream:
+            recovery_events.extend(event for _, event in records(stream))
+        journal = path.with_name(path.name + ".capture.jsonl")
+        recovery_transitions.extend(
+            json.loads(line) for line in journal.read_text().splitlines()
+        )
+    assert len(recovery_events) == 2
+    assert all(event["stage"] == 9 for event in recovery_events)
+    assert sum(item["before_monotonic_ns"] == 11 for item in recovery_transitions) == 1
+    assert sum(item["before_monotonic_ns"] == 13 for item in recovery_transitions) == 1
+    result["recovery_output"] = recovery_output.strip()
+    result["partial_write_rollback_then_retry"] = True
+    result["transactional_event_journal_rotation"] = True
+    result["clock_rollback_session_order"] = True
     (ROOT / "evidence").mkdir(exist_ok=True)
     (ROOT / "evidence/storage.json").write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result, indent=2))

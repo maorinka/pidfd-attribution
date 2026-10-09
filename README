@@ -100,7 +100,17 @@ collector. Partial event writes are rolled back before a disk/quota-full retry.
 During storage blockage the service retains pending ring bytes, services its
 watchdog, and retries each second. Ring overflow remains an explicit loss. A full
 filesystem may also prevent fresh health files; status then becomes stale.
-Automatic restarts continue at ten-second intervals until the fault is resolved.
+Event writes, capture-journal appends, rotation, sync and health publication use
+the same disk/quota-full wait policy. A new event/journal pair becomes active only
+after both files and the directory are synced. Retention runs after new event
+output; empty startup/rotation attempts do not evict retained history. The limit
+can temporarily be exceeded before that commit and prune. Session filenames use
+a durable sequence, seeded above legacy names, so new sessions retain their order
+even if the clock moves backwards. Existing legacy sessions keep their old order.
+Permanent configuration, admission and pinned-build refusals exit 78 (invalid
+collector options exit 2); systemd leaves them failed until an operator fixes and
+starts the service. Transient collector failures still restart after ten seconds.
+The preemption and lockdown admission rules are unchanged.
 Published evidence normalizes local host identities while preserving original
 artifact hashes.
 

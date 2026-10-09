@@ -200,6 +200,8 @@ static int direct_commit(struct direct_ring *r, struct iovec *iov, int count,
         errno = EIO;
         return -1;
       }
+      /* Truncation can release KEEP_SIZE extents beyond the committed EOF. */
+      direct_reserved_end = direct_written;
       errno = error;
       return -1;
     }
