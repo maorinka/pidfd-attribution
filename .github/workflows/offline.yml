@@ -22,6 +22,8 @@ jobs:
       - run: |
           gcc -std=c11 -Wall -Wextra -Werror endpoint-service/tests/capture_controller.c -o /tmp/capture-controller
           /tmp/capture-controller
+          gcc -std=gnu11 -Wall -Wextra -Werror tests/fixture_child.c -o /tmp/fixture-child
+          /tmp/fixture-child
   storage:
     runs-on: ubuntu-24.04
     steps:

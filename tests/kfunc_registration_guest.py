@@ -13,10 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 from settings import ARCH, BPF_INCLUDES, BPF_LIBS, PREPARED
 
-assert sys.platform == "linux" and os.geteuid() == 0
+if not (sys.platform == "linux" and os.geteuid() == 0):
+    raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
 module = ROOT / "evidence/build/iosec_native.ko"
-assert module.is_file() and not Path("/sys/module/iosec_native").exists()
-assert "[none]" in Path("/sys/kernel/security/lockdown").read_text()
+if not (module.is_file() and not Path("/sys/module/iosec_native").exists()):
+    raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
+if not ("[none]" in Path("/sys/kernel/security/lockdown").read_text()):
+    raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
 base = Path(tempfile.mkdtemp(prefix="pidfd-kfunc-scope-", dir="/var/tmp"))
 base.chmod(0o700)
 obj, loader = base / "probe.bpf.o", base / "loader"
@@ -80,7 +83,10 @@ try:
                 .read_text()
                 .strip()
             )
-            assert parameter == ("Y" if enabled else "N")
+            if not (parameter == ("Y" if enabled else "N")):
+                raise RuntimeError(
+                    "Guest control failed in kfunc_registration_guest.py"
+                )
             trial = subprocess.run(
                 [str(loader), str(obj)], capture_output=True, text=True
             )
@@ -94,13 +100,15 @@ try:
                 )
             )
             if enabled:
-                assert trial.returncode == 0, trial.stderr
+                if not (trial.returncode == 0):
+                    raise RuntimeError(trial.stderr)
             else:
-                assert (
+                if not (
                     trial.returncode != 0
                     and "iosec_map_zero" in trial.stderr
                     and "not allowed" in trial.stderr
-                ), trial.stderr
+                ):
+                    raise RuntimeError(trial.stderr)
         finally:
             deadline = time.monotonic() + 10
             while (
@@ -109,7 +117,8 @@ try:
             ):
                 time.sleep(0.05)
             subprocess.run(["rmmod", "iosec_native"], check=True)
-        assert ids() == baseline
+        if not (ids() == baseline):
+            raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
     report["passed"] = True
 finally:
     report["cleanup_ok"] = (

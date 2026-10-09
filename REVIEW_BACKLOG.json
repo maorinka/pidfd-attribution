@@ -1,0 +1,861 @@
+{
+  "schema_version": 1,
+  "purpose": "Persistent cumulative review ledger. Add new items or append evidence; never silently drop prior findings. No claim every reviewer statement is verified.",
+  "baseline_commit": "bfb12492235ec31d046074ac9a59863777134feb",
+  "authorization": "User requested preservation/list only; this ledger does not authorize history rewriting or imply remaining fixes completed.",
+  "status_definitions": {
+    "reported-unverified": "Reviewer claim retained; source/runtime verification needed",
+    "confirmed-open": "Confirmed code behavior or acknowledged limitation; unresolved",
+    "fixed-tested": "Implemented and validated within stated scope",
+    "partially-fixed": "Some components fixed, remaining risk recorded",
+    "open-design": "Requires behavior/trust contract decision"
+  },
+  "review_sources": [
+    "Repeated historical review referencing710d942 and older layout",
+    "Review of61f0248: ordering/admission/exec/storage/CPU and repository issues",
+    "Review ofbfb1249: disk-full transactions/restart loop/global probes/privacy",
+    "Cross-cgroup/module/aliasing coverage review",
+    "Latest three-track review: fget_task ERR_PTR, fused_read_str, stale evidence, unused surface and endpoint CI",
+    "Final HEAD bfb1249 end-to-end endpoint review with shared/fixture sub-reviews; reviewer reports offline, storage and controller tests passed locally."
+  ],
+  "validation": {
+    "local_offline": {
+      "root_tests": 13,
+      "endpoint_tests": 15,
+      "style": "passed"
+    },
+    "hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/37997479238",
+    "kernel_6_8": "Live supported VM tests passed; tracked evidence validation/kernel-lifecycle-review.json",
+    "kernel_7_0": "Ordering bias0 and isolated module-free correctness/source controls passed; full/lazy deployment refused",
+    "integrity_lockdown": "Policy test reproduced debugfs EPERM, admission refused; firmware Secure Boot not tested",
+    "killercoda": {
+      "archive": "user-provided pidfd-reports.tar.gz, reviewed locally, not committed",
+      "kernel": "6.8.0-146-generic",
+      "architecture": "x86_64",
+      "python": "3.12.3",
+      "storage_passed": true,
+      "integration_passed": true,
+      "core_hashes_match": true,
+      "bpf_ids_restored": true,
+      "modules_unchanged": true,
+      "source_oracle_frames": 279,
+      "nonleader_exec_cycles": 4,
+      "storage_recovery_writes": 3,
+      "normal_identity_source_drops": 0,
+      "deliberate_overload_drops": 36729,
+      "uprobe_miss_counters": null,
+      "lockdown": "none",
+      "limits": "No firmware Secure Boot, full/lazy safety, systemd-suite report or fleet CPU proof in downloaded archive."
+    },
+    "batch1": {
+      "evidence": "validation/review-batch1.json",
+      "root_tests": 17,
+      "endpoint_tests": 15,
+      "optimized_root_tests": 17,
+      "hosted_ci": "pending push"
+    }
+  },
+  "recommended_batches": [
+    [
+      "R009",
+      "R011",
+      "R012",
+      "R008",
+      "R013",
+      "R014",
+      "R019",
+      "R020"
+    ],
+    [
+      "R003",
+      "R004",
+      "R005",
+      "R006",
+      "R007",
+      "R037"
+    ],
+    [
+      "R001",
+      "R029",
+      "R030",
+      "R048",
+      "R052"
+    ],
+    [
+      "R039",
+      "R002",
+      "R026",
+      "R028",
+      "R055"
+    ],
+    [
+      "R033",
+      "R034",
+      "R035",
+      "R036",
+      "R038",
+      "R046"
+    ]
+  ],
+  "items": [
+    {
+      "id": "R001",
+      "area": "coverage",
+      "status": "confirmed-open",
+      "finding": "Exact caller-cgroup filtering drops pidfd_getfd acquisitions by outside callers, including excluded_tgid. Current scope is actors, not tracked-object provenance.",
+      "next_step": "Define actor/object scope separately; test cross-cgroup transfers in both directions and collector exclusion.",
+      "evidence": "Confirmed task_is_monitored gate in endpoint syscall_begin."
+    },
+    {
+      "id": "R002",
+      "area": "deployment",
+      "status": "confirmed-open",
+      "finding": "Dynamic preemption query can fail under integrity lockdown or absent debugfs; current backend cannot safely admit these hosts.",
+      "next_step": "Remove scratch execution assumption or find authoritative runtime verification; do not use boot arguments alone as proof.",
+      "evidence": "Integrity policy test on 6.8 reproduced EPERM; firmware Secure Boot not tested."
+    },
+    {
+      "id": "R003",
+      "area": "deployment",
+      "status": "confirmed-open",
+      "finding": "Restart=always with no start limit retries permanent admission/build-pin failures every ten seconds, including after kernel upgrades.",
+      "next_step": "Distinct permanent-error exit code plus RestartPreventExitStatus; clarify doctor individual lockdown result versus overall admission.",
+      "evidence": ""
+    },
+    {
+      "id": "R004",
+      "area": "storage",
+      "status": "confirmed-open",
+      "finding": "ENOSPC/EDQUOT recovery covers event drain but not all journal, sync, SIGHUP rotation, and journal-rotation paths. Restarts can prune retained history repeatedly.",
+      "next_step": "Transactional storage state machine; fault injection at every storage operation; preserve retained history across retries.",
+      "evidence": ""
+    },
+    {
+      "id": "R005",
+      "area": "storage",
+      "status": "confirmed-open",
+      "finding": "Partially failed segment/journal creation can leave binary active without a usable capture journal.",
+      "next_step": "Publish active state only when both files and initial journal are usable; unwind or retain explicit retry state.",
+      "evidence": ""
+    },
+    {
+      "id": "R006",
+      "area": "storage",
+      "status": "reported-unverified",
+      "finding": "Rollback ftruncate releases preallocation while direct_reserved_end may still claim it is reserved.",
+      "next_step": "Reset/reconcile reservation bookkeeping and test allocation after rollback.",
+      "evidence": ""
+    },
+    {
+      "id": "R007",
+      "area": "storage",
+      "status": "confirmed-open",
+      "finding": "Retention sorts realtime-prefixed filenames; backwards wall-clock steps can delete newer sessions first.",
+      "next_step": "Use durable ordering across sessions/restarts; test clock rollback, legacy files, crash recovery. Session-local counter alone is insufficient.",
+      "evidence": ""
+    },
+    {
+      "id": "R008",
+      "area": "fixture-loader",
+      "status": "fixed-tested",
+      "finding": "Fixture loader early returns after fork can leave stopped children or unmonitored running children.",
+      "next_step": "One cleanup path that kills/reaps owned child and destroys links/maps on every error; inject failures.",
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Common loader exit cleans owned child before releasing links/object; guest exits5/6/7 and native stopped/running control passed."
+        }
+      ]
+    },
+    {
+      "id": "R009",
+      "area": "privacy",
+      "status": "fixed-tested",
+      "finding": "Published review-refactor-first-attempt.log contains local user paths; sanitizer and privacy gate inspect JSON only.",
+      "next_step": "Cover all tracked/public evidence formats, including nested logs; sanitize retained failure without discarding it.",
+      "evidence": "Confirmed current log paths; historical JSONs were sanitized in bfb1249.",
+      "additional_reviews": [
+        "final-bfb1249"
+      ],
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "All evidence files recursively covered; retained log sanitized. New nested JSON/log idempotence control passed."
+        }
+      ]
+    },
+    {
+      "id": "R010",
+      "area": "privacy",
+      "status": "reported-unverified",
+      "finding": "Prior git commits retain local paths and SSH host public keys; review cites 7 commits and 16c3e67.",
+      "next_step": "Audit history; decide separately whether to rewrite public history. Paths/public keys are identifying metadata, not private credentials.",
+      "evidence": ""
+    },
+    {
+      "id": "R011",
+      "area": "tests",
+      "status": "fixed-tested",
+      "finding": "test_public_evidence.py lacks unittest.main; direct invocation runs no tests, though discovery runs it. Pattern coverage is narrow.",
+      "next_step": "Add main entry point; test sanitizer behavior and all publication formats.",
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Direct test main added; recursive evidence scanner and sanitization controls passed."
+        }
+      ]
+    },
+    {
+      "id": "R012",
+      "area": "validation",
+      "status": "fixed-tested",
+      "finding": "Safety/validation checks use assert and disappear under -O or PYTHONOPTIMIZE: privilege, staging ownership/mode, hashes, lockdown, cleanup audits, oracle checks.",
+      "next_step": "Explicit raises for required checks; run negative controls with optimization enabled. Distinguish test assertions from runtime gates.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ],
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "329 explicit RuntimeError checks replace asserts in runtime drivers/shared verifiers/owned guest controls. Optimized root suite17passed; fixtures and C test assertions are not blanket converted."
+        }
+      ]
+    },
+    {
+      "id": "R013",
+      "area": "fixture-loader",
+      "status": "fixed-tested",
+      "finding": "Fixed-size program-link array previously lacked bounds check; shared fixture collector now checks capacity. Some map-FD calls remain unchecked.",
+      "next_step": "Keep existing bound check; check every required map FD before use.",
+      "evidence": "Bounds check confirmed in shared/core/fixture_collector.c.",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Shared collector bounds retained; required map FDs checked; empty-map audit requires ENOENT. Three live backends/relevant controls passed."
+        }
+      ]
+    },
+    {
+      "id": "R014",
+      "area": "fixture-loader",
+      "status": "fixed-tested",
+      "finding": "BPF-supplied file/function fields printed with unbounded %s; current producer termination is relied upon.",
+      "next_step": "Use explicit field-width limits when printing strings.",
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Fixture string printing bounded by actual file/function field widths; guest controls passed."
+        }
+      ]
+    },
+    {
+      "id": "R015",
+      "area": "python-binding",
+      "status": "fixed-tested",
+      "finding": "Return handlers see different depth ordering across kernels; unconditional subtraction broke newer kernels.",
+      "next_step": "Preserve runtime calibration and kernel/BTF pins; extend matrix.",
+      "evidence": "bfb1249: bias1 on 6.8, bias0 on 7.0; normal/missing-return oracle controls passed. 7.0 tests isolated, not deployment-qualified."
+    },
+    {
+      "id": "R016",
+      "area": "lifecycle",
+      "status": "fixed-tested",
+      "finding": "Non-leader exec left state keyed by old thread ID.",
+      "next_step": "Keep old_pid cleanup regression.",
+      "evidence": "bfb1249: four exec cycles passed in VM and Killercoda."
+    },
+    {
+      "id": "R017",
+      "area": "parser",
+      "status": "fixed-tested",
+      "finding": "Malformed payload terminated collection unnecessarily.",
+      "next_step": "Keep bounded skip/count; invalid envelope remains fatal.",
+      "evidence": "bfb1249 C parser tests and Killercoda passed."
+    },
+    {
+      "id": "R018",
+      "area": "storage",
+      "status": "fixed-tested-limited",
+      "finding": "Partial writev rollback and main-path disk/quota-full retry.",
+      "next_step": "Extend tests beyond current write path; see R004-R006.",
+      "evidence": "bfb1249 guest injection and Killercoda: three writes retained in same session. Hosted tests do not yet prove partial-write/rollback/retry success."
+    },
+    {
+      "id": "R019",
+      "area": "core",
+      "status": "fixed-tested",
+      "finding": "reference_bound stores fget_task ERR_PTR as file identity/origins key in all three readers; later checks reportedly reject it.",
+      "next_step": "Verify target hook return contract; add null/error pointer guard and negative control.",
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Supported6.8 source returns NULL rather than ERR_PTR; added defensive pointer-range normalization in all readers and avoids null origins lookup. Positive/negative acquisition controls passed."
+        }
+      ]
+    },
+    {
+      "id": "R020",
+      "area": "serializer",
+      "status": "fixed-tested-limited",
+      "finding": "Module fused_read_str fallback copies full field after NUL, potentially disclosing trailing process bytes or faulting at mapping end; other backends length+1 then zero tail.",
+      "next_step": "Compare exact bytes; share bounded string helper or align behavior; test guard-page and post-NUL contents.",
+      "evidence": "",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "String helpers aligned to length-bounded read and zero tail; three extracted production helpers tested at guard pages with dirty tails. Root helper currently unused by native live capture, so original live-disclosure claim not established. Real capture string suites passed."
+        }
+      ]
+    },
+    {
+      "id": "R021",
+      "area": "module",
+      "status": "confirmed-open",
+      "finding": "Tracing helper registration is host-wide; copy/zero helpers rely on verifier pointer/size contracts. Scope/security implications need review.",
+      "next_step": "Prefer module-free deployment; verify contracts and feasible registration scope. Program name alone is forgeable; arbitrary kernel-write exploit is not established.",
+      "evidence": ""
+    },
+    {
+      "id": "R022",
+      "area": "module",
+      "status": "reported-unverified",
+      "finding": "Reviewer alleges partial-init kfunc registrations are not unwound; exit function is empty.",
+      "next_step": "Check kernel owner/unload and failed-init cleanup semantics before concluding stale registration. Empty exit alone is insufficient evidence.",
+      "evidence": ""
+    },
+    {
+      "id": "R023",
+      "area": "module",
+      "status": "fixed-partial",
+      "finding": "Tests-only SCHED_CLS kfunc registration was unconditional; now gated by enable_test_kfuncs=false default. Legacy UNSPEC group remains type-filtered, not pipeline-scoped.",
+      "next_step": "Retain gate; audit legacy and tracing surface.",
+      "evidence": "Current registration code confirms parameter gate."
+    },
+    {
+      "id": "R024",
+      "area": "module",
+      "status": "reported-unverified",
+      "finding": "iosec_native_read8 sleepable kfunc reportedly has no caller.",
+      "next_step": "Search all generated controls and object dependencies; remove unused registration/function if confirmed.",
+      "evidence": ""
+    },
+    {
+      "id": "R025",
+      "area": "memory",
+      "status": "reported-unverified",
+      "finding": "Module wire_scratch map reportedly unused and retained to preserve fixture map count19.",
+      "next_step": "Remove if dead; make map audits derive required map inventory instead of preserving dead objects.",
+      "evidence": ""
+    },
+    {
+      "id": "R026",
+      "area": "performance",
+      "status": "confirmed-open",
+      "finding": "Global CPython entry/return uprobes impose traps on excluded processes mapping selected executable; finite per-task return-instance budget also affected.",
+      "next_step": "Measure costs and missed callbacks; design process-scoped discovery/attachment without coverage races. Not every Python frame enters EvalFrameDefault on 3.11+.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R027",
+      "area": "performance",
+      "status": "partially-fixed",
+      "finding": "Hot global hooks: sys_enter, fd_install, __fput, openat cleanup, mmput, and slab-free fallback. Hash deletes/lookups and indexed full-slot scans still cost unrelated workloads.",
+      "next_step": "Measure per-hook host-wide overhead; eliminate proven unnecessary operations without losing retirement.",
+      "evidence": "bfb1249 conditional fd_install/index cleanup deletes; global attachment costs remain.",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R028",
+      "area": "capacity",
+      "status": "confirmed-open",
+      "finding": "Exact identity maps and per-thread/cache maps can exhaust on host-wide workloads; state_entries sizes several maps separately, not fd capacity. Reviews cite128 thread slots and2048 origins.",
+      "next_step": "Inventory actual configurable map sizes; measure workload capacity; lifecycle retirement/admission budget and explicit losses. Do not simply LRU exact identity maps.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R029",
+      "area": "aliasing",
+      "status": "reported-unverified",
+      "finding": "Only fcntl F_DUPFD/F_DUPFD_CLOEXEC alias paths tracked; dup/dup2/dup3 may leave stale rejected context (accepted=0).",
+      "next_step": "Test alias replacement and slot provenance; add coverage or document rejected-record semantics. Replace command literals with named constants.",
+      "evidence": ""
+    },
+    {
+      "id": "R030",
+      "area": "concurrency",
+      "status": "confirmed-open",
+      "finding": "real_slot unlocked fdtable reads and exec_reconcile deletion may lose valid history during shared-table/RCU swaps.",
+      "next_step": "Review synchronization/revalidation; report history loss explicitly; document in main coverage, not only benchmark scope.",
+      "evidence": ""
+    },
+    {
+      "id": "R031",
+      "area": "portability",
+      "status": "confirmed-open",
+      "finding": "pidfd_getfd number438 hardcoded in readers while write has architecture macro.",
+      "next_step": "Use IOSEC_NR_GETFD for supported architectures. Third architecture already fails #error; silent third-arch build claim is incorrect.",
+      "evidence": ""
+    },
+    {
+      "id": "R032",
+      "area": "python-support",
+      "status": "confirmed-open",
+      "finding": "Interpreter binary must itself export required CPython symbols; separate libpython/shared-library adapter unsupported. Doctor ELF/version checks may be weak.",
+      "next_step": "Verify target binary/version/symbols rather than doctor interpreter; document symbol-location requirement. Ubuntu/Killercoda3.12 passed, so not all distro builds fail.",
+      "evidence": ""
+    },
+    {
+      "id": "R033",
+      "area": "maintenance",
+      "status": "confirmed-open",
+      "finding": "Three reader programs and several Python drivers remain hand-maintained with semantic drift; history timeouts differ20/120 seconds. Shared symlinks do not eliminate all duplication.",
+      "next_step": "Extract common semantics where practical; document intentional backend differences; add precise shared-section checks. Do not demand whole-program equivalence across intentional wire/policy differences.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R034",
+      "area": "evidence",
+      "status": "confirmed-open",
+      "finding": "Historical reports pin older or uncommitted source trees; cannot be read as current regression evidence.",
+      "next_step": "Index reports by tested source revision/hash, status and supersedes; retain honest failures. Check which recorded hashes exist in history.",
+      "evidence": ""
+    },
+    {
+      "id": "R035",
+      "area": "manifest",
+      "status": "reported-unverified",
+      "finding": "Root source_manifest omits arch.h and endpoint-service; module-free reportedly includes arch.h.",
+      "next_step": "Audit actual pinning path; cover backend/shared dependencies and generated artifacts.",
+      "evidence": ""
+    },
+    {
+      "id": "R036",
+      "area": "ci",
+      "status": "confirmed-open",
+      "finding": "No automated guest workflow for flagship endpoint integration/systemd suites; existing kernel workflows manual and cover fixture backends.",
+      "next_step": "Add opt-in endpoint workflow and kernel matrix; retain distinction between hosted compilation and actual BPF attachment.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R037",
+      "area": "ci",
+      "status": "confirmed-open",
+      "finding": "Hosted storage check does not prove successful partial-write rollback followed by retry; guest test does.",
+      "next_step": "Move pure userspace fault-injection success case to hosted CI; retain guest end-to-end test.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R038",
+      "area": "ci",
+      "status": "confirmed-open",
+      "finding": "check_bpf_equivalence.py and check_core_relocations.py are not wired into checks/docs.",
+      "next_step": "Audit applicability and run meaningful checks; bytecode equivalence inappropriate for intentional semantic differences.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R039",
+      "area": "scratch",
+      "status": "confirmed-open",
+      "finding": "Per-CPU scratch ownership/nesting assumption not fully established; admission rejects full/lazy/RT but is not proof against all interrupt/nested execution. Slab fallback may matter.",
+      "next_step": "Redesign ownership or document/prove supported hooks and execution invariants; stress concurrent programs and migration. Do not weaken gate based only on stress pass.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R040",
+      "area": "shutdown",
+      "status": "partially-fixed",
+      "finding": "Destroying links is not callback-quiescence proof; final bounded drain can busy-spin and race a late submission.",
+      "next_step": "Establish producer quiescence protocol, bounded yielding and honest final-loss accounting.",
+      "evidence": "bfb1249 removed false waiting claim and reports observed remaining ring bytes; late unseen submissions still unproven."
+    },
+    {
+      "id": "R041",
+      "area": "calibration",
+      "status": "confirmed-open",
+      "finding": "Exact global BPF-set audit rejects unrelated concurrent program loads; finally audit error can hide original calibration failure.",
+      "next_step": "Keep ownership audit discipline; preserve primary failure with chained audit context; define behavior for external drift.",
+      "evidence": ""
+    },
+    {
+      "id": "R042",
+      "area": "stability",
+      "status": "reported-unverified",
+      "finding": "Retained6.8 attach/detach guest panic at do_filp_open+0x1 with last unloaded module may resemble text-poke race; cause inconclusive.",
+      "next_step": "Retain rejection; repeat controlled attach/detach stress and investigate kernel/module provenance before attributing cause.",
+      "evidence": ""
+    },
+    {
+      "id": "R043",
+      "area": "service-hardening",
+      "status": "open-design",
+      "finding": "No SystemCallFilter; suggestions include PrivateTmp, ProtectHome=true, MemoryDenyWriteExecute. CAP_SYS_ADMIN still required for tested global uprobes.",
+      "next_step": "Test compatible restrictions; document powerful capabilities and compromise boundary. Sandbox provides containment, not elimination of root risk.",
+      "evidence": ""
+    },
+    {
+      "id": "R044",
+      "area": "service",
+      "status": "reported-unverified",
+      "finding": "SIGHUP before collector handlers can terminate Python preflight.",
+      "next_step": "Handle signal startup window deliberately; test reload during admission/build checks and restart policy.",
+      "evidence": ""
+    },
+    {
+      "id": "R045",
+      "area": "installation",
+      "status": "confirmed-open",
+      "finding": "Partial installation leaves existing /opt directory and retry refuses; root-owned evidence/.deps written into checkout.",
+      "next_step": "Transactional install with safe recovery; separate generated/root-owned artifacts from source tree.",
+      "evidence": ""
+    },
+    {
+      "id": "R046",
+      "area": "docs",
+      "status": "open-preference",
+      "finding": "Markdown remains blanket ignored by user request; no documented disclosure channel, only one SPDX header, provenance and evidence volume remain noisy.",
+      "next_step": "Keep user Markdown preference unless changed; plain-text security/disclosure guidance; assess license/SPDX and move authorship history out of code.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R047",
+      "area": "module-build",
+      "status": "confirmed-open",
+      "finding": "Checked-in core/module/config.h contains hardcoded interpreter offsets despite generated build configuration.",
+      "next_step": "Make example unmistakable or guard manual misuse; preserve generated authoritative layout.",
+      "evidence": ""
+    },
+    {
+      "id": "R048",
+      "area": "compat",
+      "status": "open-design",
+      "finding": "Open hooks do not share native/compat gate used for write/acquire; compat opener can plant history. ARM compat/x32 remain unproven.",
+      "next_step": "Define intended open-history coverage and add controls before changing behavior.",
+      "evidence": ""
+    },
+    {
+      "id": "R049",
+      "area": "health",
+      "status": "fixed-tested",
+      "finding": "Partial/malformed health or segment names previously produced traceback.",
+      "next_step": "Keep validation and malformed inputs in offline suite.",
+      "evidence": "Prior fixes; current15 endpoint tests pass."
+    },
+    {
+      "id": "R050",
+      "area": "binding",
+      "status": "partially-fixed",
+      "finding": "Missed callbacks and PyThreadState reuse weaken source guarantees; quantitative arbitrary-miss bound not proven. Epoch transitions previously invalidated live bindings.",
+      "next_step": "Retain birth guard and continuity; collect tracefs miss counters when available; preserve unattested-source caveats.",
+      "evidence": "Live reuse/normal/missing-return and recovery controls passed; Killercoda miss counters null."
+    },
+    {
+      "id": "R051",
+      "area": "diagnostics",
+      "status": "fixed-tested",
+      "finding": "Cache exhaustion previously latched identity history loss; cleanup fallback previously sticky global scans.",
+      "next_step": "Keep separate cache diagnostics and indexed cleanup admission rejection.",
+      "evidence": "61f0248/bfb1249 pressure controls, including Killercoda, passed; global indexed scans still cost."
+    },
+    {
+      "id": "R052",
+      "area": "coverage",
+      "status": "confirmed-open",
+      "finding": "Only write(2) recorded, not writev/pwrite/sendfile/copy_file_range/io_uring/mmap; raw opening path prefix bypassable by relative/symlink/alternate paths; cgroup exact ID excludes descendants.",
+      "next_step": "Keep explicit coverage contract; plan extensions with negative controls and overhead measurement.",
+      "evidence": ""
+    },
+    {
+      "id": "R053",
+      "area": "wire",
+      "status": "reported-unverified",
+      "finding": "Endpoint label_count=0 may mean unmeasured rather than no labels; hardcoded wire-copy sizes/unused variables and stale process filters reported in older reviews.",
+      "next_step": "Recheck current source; use explicit semantics/sentinel and named ABI constants where applicable.",
+      "evidence": ""
+    },
+    {
+      "id": "R054",
+      "area": "harness",
+      "status": "partially-fixed",
+      "finding": "Old /tmp execution tail, source-text rewriting/exec decoder, hardcoded python3.14, brittle readelf flags and sudo env stripping reported previously.",
+      "next_step": "Verify each remaining harness behavior; shared decoder/import refactor already done.",
+      "evidence": "Current measurement runner imports shared benchmark; controls import shared records. No claim all original harness issues fixed."
+    },
+    {
+      "id": "R055",
+      "area": "performance",
+      "status": "confirmed-open",
+      "finding": "No current representative fleet CPU qualification. Fixture screen about1.338% one core omitted some kernel work; historical QEMU churn regressions material.",
+      "next_step": "Measure whole-host CPU and workload throughput with identity/source/off/overload modes, account global hooks and BPF runtime, report hardware and uncertainty.",
+      "evidence": "",
+      "additional_reviews": [
+        "final-bfb1249"
+      ]
+    },
+    {
+      "id": "R056",
+      "area": "tests",
+      "status": "open-design",
+      "finding": "Review says stale AI reviews under validation weaken evidence category; current/failure/evaluation artifacts need clear roles.",
+      "next_step": "Distinguish actual runtime tests, static review opinions, performance screens and provenance in evidence index.",
+      "evidence": ""
+    },
+    {
+      "id": "R057",
+      "area": "misc",
+      "status": "reported-unverified",
+      "finding": "Older findings: direct_ring include-order globals, boot_id JSON format reliance, pathname retention TOCTOU in root-only dir, run_guest dead imports/duplicate hashes, unused offsets/allowed sets.",
+      "next_step": "Recheck current tree; retain root-only-dir assumptions and explicit ABI validation. These are not confirmed exploitable issues.",
+      "evidence": ""
+    },
+    {
+      "id": "R058",
+      "area": "python-binding",
+      "status": "reported-unverified",
+      "finding": "Reviewer proposes one-shot same-birth/same-tstate entry binding, removing uretprobe and return-depth calibration; assumes tstate stable for OS-thread lifetime and current_frame NULL means native context.",
+      "next_step": "Validate subinterpreters, state deletion/recreation on a live thread, native writes, missed callbacks, pointer reuse and interrupted transitions before removing proven retirement logic. Birth alone does not prove PyThreadState lifetime.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R059",
+      "area": "python-binding",
+      "status": "reported-unverified",
+      "finding": "Proposal to resolve tstate at write time via _PyRuntime/native_thread_id on3.11+, eliminating uprobes.",
+      "next_step": "Check interpreter ownership, bounded enumeration, subinterpreters, shared libpython, runtime mutations, memory faults and performance across3.10-3.14. Proposal is not a validated solution.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R060",
+      "area": "performance",
+      "status": "reported-unverified",
+      "finding": "Write capture repeatedly copies large events, walks up to16frames and decodes line tables; proposal to cache per-thread stack using frame/instruction-chain hash.",
+      "next_step": "Measure actual dominant paths; use collision-safe exact validation and invalidation for mutable code/strings, mm/task birth and interpreter reuse. Preserve unattested flags and fault behavior.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R061",
+      "area": "performance",
+      "status": "reported-unverified",
+      "finding": "python_code_type reportedly computed twice per frame; proposal compute once per capture.",
+      "next_step": "Verify stable capture context and mm lifetime, then measure reduced reads without changing type validation.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R062",
+      "area": "wire",
+      "status": "reported-unverified",
+      "finding": "Every write re-emits opener/acquirer frames; proposal emit live frames plus references to earlier OPEN/INSTALL snapshots.",
+      "next_step": "Version wire ABI and decoder; define missing base records after drops, restart, retention and out-of-order processing. Dedup is semantic change, not free cleanup. Quantify bandwidth at actual frame counts.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R063",
+      "area": "capacity",
+      "status": "reported-unverified",
+      "finding": "Reviewer worst-case estimate:9.8KB records,8MiB ring roughly850records,10k writes/s about98MB/s,8x16MiB retention roughly1.3seconds.",
+      "next_step": "Verify max wire size versus internal event size and record mix; measure disk throughput, retention and adaptive losses. These are estimates, not observed rates.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R064",
+      "area": "performance",
+      "status": "reported-unverified",
+      "finding": "Proposal TASK_STORAGE for monitored flag and per-thread staging, to avoid hash overhead/map saturation and exit deletes;9,760-byte value limit unverified.",
+      "next_step": "Check helper availability/prog-type permissions, allocation failure, value limits, lifetime on fork/exec, memory budget and lookup costs across supported kernels. Do not assume one pointer dereference.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R065",
+      "area": "cleanup",
+      "status": "reported-unverified",
+      "finding": "Proposal replace slab-free fallback with fentry/put_files_struct and files->count.counter==1; reviewer says symbol always exported.",
+      "next_step": "Check actual BTF attachment and concurrency: observing count1 at entry is not by itself proof of final release. Test shared files_struct refcount races and pre-free ordering before replacing cleanup.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R066",
+      "area": "capacity",
+      "status": "reported-unverified",
+      "finding": "Reviewer says cleanup indexes saturate because entries persist to object destruction; proposes refcounts per slot or LRU.",
+      "next_step": "Verify lifecycle saturation reproducer; refcount every alias/fork/close/exec path and preserve pointer-reuse guards. LRU eviction must not silently discard exact cleanup identity knowledge.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R067",
+      "area": "source-capture",
+      "status": "reported-unverified",
+      "finding": "Line table beyond4KiB or no-line kind15 reportedly aborts whole walk, losing outer frames; proposal emit line0 with explicit flag and continue.",
+      "next_step": "Confirm parser semantics and emitted flags; add large module/no-line/malformed table controls. Intentional wire/source behavior change requires oracle adaptation.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R068",
+      "area": "source-cache",
+      "status": "reported-unverified",
+      "finding": "Line cache reportedly keys per call site, retains full4KiB table and becomes ineffective after2,048sites; proposal per-(mm,code) decoded bounds array.",
+      "next_step": "Reconcile current LRU/sizing with report; validate mm/code reuse, mutable tables and memory budget. Benchmark per-code cache before replacement.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R069",
+      "area": "validation",
+      "status": "fixed-tested",
+      "finding": "regression_verifier reportedly writes constant True for eight report claims after bare assert checks.",
+      "next_step": "Replace mandatory asserts with explicit checks and derive report results from executed controls; ensure optimized Python cannot produce false passing reports.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "resolution_history": [
+        {
+          "batch": 1,
+          "evidence": "validation/review-batch1.json",
+          "detail": "Mandatory regression gates explicit; report claims depend on completed profiles and preserved source/binary hashes, rechecked by offline oracles."
+        }
+      ]
+    },
+    {
+      "id": "R070",
+      "area": "ci",
+      "status": "reported-unverified",
+      "finding": "Reviewer reports four tests/*_guest.py controls invoked nowhere and README validation coverage may exceed run.sh coverage.",
+      "next_step": "Inventory every owned guest control and workflow; wire meaningful controls or accurately document standalone scope. Identify exact four scripts before treating claim as confirmed.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R071",
+      "area": "ci",
+      "status": "reported-unverified",
+      "finding": "Proposal hosted push-time BPF object/fixture-loader/module compile job; current hosted storage job does compile endpoint collector but attaches no BPF.",
+      "next_step": "Supply trustworthy representative generated BTF/layout fixtures or generation environment; separate build checks from runtime verifier/attachment qualification. Kernel module headers/toolchain need pinned matrix.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R072",
+      "area": "maintenance",
+      "status": "reported-unverified",
+      "finding": "Proposal single driver set with runtime-prefix settings and single BPF source with backend conditional switches; symlink chains fragile in flattened archives/Windows checkouts.",
+      "next_step": "Collapse proven common drivers first; preserve intentional module/upstream,policy and wire differences. Document git/symlink checkout requirements and validate supported packaging.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R073",
+      "area": "evidence",
+      "status": "reported-unverified",
+      "finding": "Proposal keep latest report per target and move older evidence to release assets/evidence branch; report estimates47percent tracked bytes.",
+      "next_step": "Index freshness first; preserve failures and reproducibility links. Do not delete evidence or publish release assets merely on this suggestion.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R074",
+      "area": "installation",
+      "status": "reported-unverified",
+      "finding": "Installer reportedly redownloads pinned libbpf each run and installs kernel headers for module-free backend.",
+      "next_step": "Check idempotence/cache integrity; distinguish native module from upstream backend dependencies before trimming.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R075",
+      "area": "python-support",
+      "status": "reported-unverified",
+      "finding": "run.sh Ubuntu-release mapping reportedly makes3.11/3.13 unreachable despite supported layout range.",
+      "next_step": "Separate tested default interpreter from configurable target selection; verify target executable+matching headers and expose explicit configuration.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    },
+    {
+      "id": "R076",
+      "area": "service-capacity",
+      "status": "reported-unverified",
+      "finding": "LimitNOFILE256 reportedly tight for35programs+35links+approximately20maps.",
+      "next_step": "Measure peak open descriptors including calibration/load/rotation/error paths; set bounded headroom and test under unit limit.",
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+    }
+  ],
+  "review_conflicts": [
+    {
+      "topic": "Endpoint storage correctness",
+      "positions": [
+        "Final review reports no functional endpoint bugs and sound rollback/pruning/shutdown.",
+        "Earlier bfb1249 review identifies incomplete ENOSPC coverage, partial journal creation, reservation bookkeeping and clock-rollback retention."
+      ],
+      "resolution": "Positive static assessment does not close concrete failure hypotheses. Keep R004-R007/R040 open until fault/clock/concurrency tests adjudicate."
+    },
+    {
+      "topic": "Kernel-module unregister semantics",
+      "positions": [
+        "One review alleges missing unregister/partial-init unwind.",
+        "Final reviewer reports registration and unload ordering sound."
+      ],
+      "resolution": "R022 remains unverified; inspect kernel-owned registration lifecycle before implementing manual cleanup."
+    },
+    {
+      "topic": "PyThreadState lifetime",
+      "positions": [
+        "Current design calibrates return depth and retires/revalidates interpreter bindings.",
+        "Final review proposes removing returns based on stable tstate per OS thread."
+      ],
+      "resolution": "Do not infer interpreter-state lifetime from task birth. R058/R059 require live-thread reuse/subinterpreter/native-context controls."
+    },
+    {
+      "topic": "Cleanup index eviction",
+      "positions": [
+        "Reviews propose LRU or refcounts for saturation.",
+        "Existing exact identity design requires correct retirement and no pointer-reuse false join."
+      ],
+      "resolution": "No automatic LRU conversion. Test safe identity lifecycle under eviction/admission pressure."
+    },
+    {
+      "topic": "Evidence freshness",
+      "positions": [
+        "Historical reports are explicitly hash-pinned and retained.",
+        "Reviews cannot reproduce some uncommitted-tree hashes and caution against treating them as HEAD tests."
+      ],
+      "resolution": "Retain reports; add current/historical/rejected index and source provenance. Current kernel-lifecycle report and reviewed Killercoda archive have bounded claims."
+    }
+  ],
+  "review_collection_complete": true,
+  "next_work": "Batch2: permanent admission restart policy and transactional storage/recovery/retention. Do not weaken runtime preemption admission.",
+  "implementation_batches": [
+    {
+      "batch": 1,
+      "status": "validated",
+      "evidence": "validation/review-batch1.json",
+      "remaining": "Batch2 reliability and later coverage/performance work remain open."
+    }
+  ]
+}

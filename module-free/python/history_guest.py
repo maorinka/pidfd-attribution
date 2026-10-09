@@ -18,7 +18,8 @@ def sha256_file(path):
 
 build = json.loads((EVIDENCE_DIR.parents[1] / "build.json").read_text())
 for name in ("loader", "reader.bpf.o"):
-    assert sha256_file(RUNTIME_DIR / name) == build[name]
+    if not (sha256_file(RUNTIME_DIR / name) == build[name]):
+        raise RuntimeError("Validation failed: history_guest.py:21")
 env = dict(
     os.environ,
     PIDFD_FIXTURE=str(SOURCE_DIR / "fixtures/history_fixture.py"),
@@ -43,12 +44,16 @@ except subprocess.TimeoutExpired:
     raise
 (EVIDENCE_DIR / "run.log").write_text(stdout)
 (EVIDENCE_DIR / "stderr.log").write_text(stderr)
-assert p.returncode == 0, stderr[-2000:]
-assert "MAPS_EMPTY 1" in stdout and stdout.count("MAP_EMPTY ") == 19
+if not (p.returncode == 0):
+    raise RuntimeError(stderr[-2000:])
+if not ("MAPS_EMPTY 1" in stdout and stdout.count("MAP_EMPTY ") == 19):
+    raise RuntimeError("Validation failed: history_guest.py:47")
 m = re.search(r"^WRITE_HISTORY_CONTROL (.+)$", stdout, re.M)
-assert m
+if not (m):
+    raise RuntimeError("Validation failed: history_guest.py:49")
 app = json.loads(m[1])
-assert app["closed_while_blocked"] and app["written"] == 4096
+if not (app["closed_while_blocked"] and app["written"] == 4096):
+    raise RuntimeError("Validation failed: history_guest.py:51")
 finals = [
     x
     for x in events(EVIDENCE_DIR / "records.bin")
@@ -57,9 +62,11 @@ finals = [
     and x.inode == app["inode"]
     and x.live.pid_tid == ((app["pid"] << 32) | app["tid"])
 ]
-assert len(finals) == 1
+if not (len(finals) == 1):
+    raise RuntimeError("Validation failed: history_guest.py:60")
 event = finals[0]
-assert event.accepted == event.complete == 1 and event.inner == event.result == 4096
+if not (event.accepted == event.complete == 1 and event.inner == event.result == 4096):
+    raise RuntimeError("Validation failed: history_guest.py:62")
 actors = {
     role: dict(
         pid_tid=getattr(event, role).pid_tid,
@@ -69,7 +76,10 @@ actors = {
     )
     for role in ("opener", "acquirer", "live")
 }
-assert all(a["count"] > 0 and a["flags"] == 0 and a["birth"] for a in actors.values())
+if not (
+    all(a["count"] > 0 and a["flags"] == 0 and a["birth"] for a in actors.values())
+):
+    raise RuntimeError("Validation failed: history_guest.py:72")
 report = dict(
     passed=True,
     application=app,

@@ -4,7 +4,8 @@ from pathlib import Path
 import os, subprocess, sys
 
 fixture = Path(sys.argv[1]).resolve()
-assert fixture.is_file()
+if not (fixture.is_file()):
+    raise RuntimeError("Validation failed: fixture_guest.py:7")
 evidence = __import__("settings").ROOT / "evidence"
 env = dict(
     os.environ, PIDFD_FIXTURE=str(fixture), PIDFD_BINARY=str(evidence / "fixture.bin")

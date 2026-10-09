@@ -8,7 +8,8 @@ import struct
 
 HEADER = struct.Struct("<4I6Q2q6I" + "QQII" * 3 + "4Q16s")
 FRAME = struct.Struct("<128s64sii")
-assert HEADER.size == 224 and FRAME.size == 200
+if not (HEADER.size == 224 and FRAME.size == 200):
+    raise RuntimeError("Validation failed: wire.py:11")
 MAX_RECORD = HEADER.size + 48 * FRAME.size
 STAGES = {
     1: "open",

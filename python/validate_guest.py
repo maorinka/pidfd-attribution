@@ -27,9 +27,8 @@ parser.add_argument(
     help="Owned Python fixture for run; exits when fixture exits",
 )
 args = parser.parse_args()
-assert (
-    sys.platform == "linux" and os.geteuid() == 0
-), "Run through ./run.sh in the owned Linux guest"
+if not (sys.platform == "linux" and os.geteuid() == 0):
+    raise RuntimeError("Run through ./run.sh in the owned Linux guest")
 # Reject pre-created writable or foreign staging directories before any
 # root build/copy/load operation. Keep the lock inside the protected parent.
 runtime = Path("/var/tmp/pidfd-standalone")
@@ -73,7 +72,8 @@ protected = {
     str(SOURCE_DIR / row["file"]): sha256_file(SOURCE_DIR / row["file"])
     for row in source_manifest["production_files"]
 }
-assert not Path("/sys/module/iosec_native").exists(), "An existing module is loaded"
+if not (not Path("/sys/module/iosec_native").exists()):
+    raise RuntimeError("An existing module is loaded")
 baseline_ids = {
     p["id"]
     for p in json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
@@ -101,9 +101,8 @@ def step(name, driver, *arguments, scoped=False):
     print(name + " running", flush=True)
     with (EVIDENCE_DIR / (name + ".log")).open("w") as output:
         result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT)
-    assert (
-        result.returncode == 0
-    ), f'{name} failed; see {EVIDENCE_DIR / (name + ".log")}'
+    if not (result.returncode == 0):
+        raise RuntimeError(f'{name} failed; see {EVIDENCE_DIR / (name + ".log")}')
     print(name + " passed", flush=True)
 
 
@@ -118,7 +117,8 @@ if args.action == "build":
     sys.exit(0)
 step("correctness", "run_collector_path_guest.py", scoped=True)
 if args.action == "run":
-    assert args.fixture and args.fixture.is_file(), "run requires --fixture PATH"
+    if not (args.fixture and args.fixture.is_file()):
+        raise RuntimeError("run requires --fixture PATH")
     # Module lifetime and cleanup remain managed by the same scope wrapper.
     step("fixture", "fixture_guest.py", args.fixture.resolve(), scoped=True)
     print("Fixture output: " + str(EVIDENCE_DIR / "fixture.log"))
@@ -141,13 +141,18 @@ one_core = [
     for s in cpu["samples"]
     if s["profile"] == "serial" and s["mode"] == "hardened"
 ]
-assert len(one_core) == 5
-assert statistics.median(one_core) == cpu["summary"]["added_cpu_pct_one_core_median"]
+if not (len(one_core) == 5):
+    raise RuntimeError("Validation failed: validate_guest.py:144")
+if not (statistics.median(one_core) == cpu["summary"]["added_cpu_pct_one_core_median"]):
+    raise RuntimeError("Validation failed: validate_guest.py:145")
 for path, digest in protected.items():
-    assert sha256_file(Path(path)) == digest, "Original changed: " + path
-assert not Path("/sys/module/iosec_native").exists()
+    if not (sha256_file(Path(path)) == digest):
+        raise RuntimeError("Original changed: " + path)
+if not (not Path("/sys/module/iosec_native").exists()):
+    raise RuntimeError("Validation failed: validate_guest.py:148")
 remaining = json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
-assert {p["id"] for p in remaining} == baseline_ids, "BPF program set changed"
+if not ({p["id"] for p in remaining} == baseline_ids):
+    raise RuntimeError("BPF program set changed")
 report = dict(
     passed=True,
     scope="Locally generated pinned inputs; bounded fixtures and steady-state CPU screen",

@@ -70,7 +70,8 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
                     _, status, u = os.wait4(p.pid, 0)
                     p.returncode = os.waitstatus_to_exitcode(status)
                 elapsed = time.monotonic() - start
-                assert p.returncode == 0, (tag, p.returncode)
+                if not (p.returncode == 0):
+                    raise RuntimeError((tag, p.returncode))
                 app = json.loads(appfile.read_text())
                 text = (TIMED / (tag + ".log")).read_text()
                 collector = 0
@@ -92,7 +93,10 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
                     m = re.search(
                         r"STEADY_COLLECTOR cpu_seconds=([\d.]+) writes=(\d+)", text
                     )
-                    assert m and int(m[2]) == app["writes"]
+                    if not (m and int(m[2]) == app["writes"]):
+                        raise RuntimeError(
+                            "Validation failed: collector_benchmark.py:95"
+                        )
                     collector = float(m[1])
                 else:
                     checked = {"uninstrumented": True}
@@ -118,10 +122,13 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
                     tmp_binary, archived_binary = TIMED / (tag + ".bin"), RUN / (
                         tag + ".bin"
                     )
-                    assert (
+                    if not (
                         hashlib.sha256(tmp_binary.read_bytes()).hexdigest()
                         == hashlib.sha256(archived_binary.read_bytes()).hexdigest()
-                    )
+                    ):
+                        raise RuntimeError(
+                            "Validation failed: collector_benchmark.py:121"
+                        )
                     tmp_binary.unlink()
                 print(tag, json.dumps(checked), flush=True)
     base = {

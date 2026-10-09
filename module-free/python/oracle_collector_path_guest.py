@@ -31,7 +31,8 @@ logs = list((e / "regression/evidence").glob("pidfd-source-*.log")) + list(
 for log in sorted(logs):
     name = "-".join(log.relative_to(e).parts) + ".bin"
     rows = text_events(log.read_text())
-    assert rows, f"No attribution records in {log}"
+    if not (rows):
+        raise RuntimeError(f"No attribution records in {log}")
     expanded = b"".join(bytes(row) for row in rows)
     (x / name).write_bytes(expanded)
     bindings[name] = {

@@ -29,6 +29,9 @@
     },
     {
       "file": "core/cleanup_retirement.bpf.h"
+    },
+    {
+      "file": "core/fixture_child.h"
     }
   ]
 }

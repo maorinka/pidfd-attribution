@@ -1248,8 +1248,9 @@ int BPF_PROG(reference_bound, struct task_struct *task, unsigned int fd,
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
-    e->file = (unsigned long long)ret;
-    struct event *o = bpf_map_lookup_elem(&origins, &e->file);
+    unsigned long long file = (unsigned long long)ret;
+    e->file = file && file < 0xfffffffffffff001ULL ? file : 0;
+    struct event *o = e->file ? bpf_map_lookup_elem(&origins, &e->file) : 0;
     if (o) {
       if (copy_source(&e->opener, &o->opener)) {
         e->opener.count = 0;

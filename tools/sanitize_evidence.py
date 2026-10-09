@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normalize local host identities in published JSON while retaining hashes."""
+"""Normalize identities in published evidence while retaining artifact hashes."""
 
 import json
 from pathlib import Path
@@ -49,23 +49,42 @@ def normalize(value):
     return value
 
 
+def evidence_files(root=ROOT):
+    for relative in (
+        "validation",
+        "module-free/validation",
+        "endpoint-service/validation",
+    ):
+        directory = root / relative
+        if directory.exists():
+            yield from sorted(path for path in directory.rglob("*") if path.is_file())
+
+
+def sanitize_file(path):
+    text = path.read_text()
+    if path.suffix == ".json":
+        original = json.loads(text)
+        public = normalize(original)
+        if public == original:
+            return False
+        if isinstance(public, dict):
+            public["publication_redaction"] = (
+                "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
+            )
+        text = json.dumps(public, indent=2) + "\n"
+    else:
+        public = public_text(text)
+        if public == text:
+            return False
+        text = public
+    path.write_text(text)
+    return True
+
+
 def main():
     changed = 0
-    for directory in (
-        ROOT / "validation",
-        ROOT / "module-free/validation",
-        ROOT / "endpoint-service/validation",
-    ):
-        for path in directory.glob("*.json"):
-            original = json.loads(path.read_text())
-            public = normalize(original)
-            if public != original:
-                if isinstance(public, dict):
-                    public["publication_redaction"] = (
-                        "Local user paths, VM hostnames and SSH host identities normalized; recorded hashes refer to original artifacts."
-                    )
-                path.write_text(json.dumps(public, indent=2) + "\n")
-                changed += 1
+    for path in evidence_files():
+        changed += sanitize_file(path)
     print(f"Normalized {changed} evidence files")
 
 

@@ -22,12 +22,10 @@ sys.path.insert(0, str(ROOT / "python"))
 from service import configuration
 from wire import records
 
-assert not Path(
-    "/opt/iosec-endpoint"
-).exists(), "Existing installation must not be replaced by a test"
-assert not Path(
-    "/etc/iosec-endpoint.json"
-).exists(), "Existing fleet config must not be replaced by a test"
+if not (not Path("/opt/iosec-endpoint").exists()):
+    raise RuntimeError("Existing installation must not be replaced by a test")
+if not (not Path("/etc/iosec-endpoint.json").exists()):
+    raise RuntimeError("Existing fleet config must not be replaced by a test")
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-systemd-test-", dir="/var/tmp"))
 (BASE / "files").mkdir()
 config = configuration()
@@ -105,18 +103,22 @@ try:
     initial_ids = ids()
     report["installation_bpf_ids"] = installation_ids
     subprocess.run(["systemctl", "start", "iosec-endpoint"], check=True, timeout=180)
-    assert run("systemctl", "is-active", "iosec-endpoint") == "active"
+    if not (run("systemctl", "is-active", "iosec-endpoint") == "active"):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     current = wait(running_health)
     pid = int(run("systemctl", "show", "iosec-endpoint", "-p", "MainPID", "--value"))
-    assert pid == current["pid"]
+    if not (pid == current["pid"]):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     cap = int(
         re.search(
             r"^CapEff:\s+([0-9a-f]+)", Path(f"/proc/{pid}/status").read_text(), re.M
         )[1],
         16,
     )
-    assert cap & (1 << 21) and not cap & (1 << 16)
-    assert current["attachments"] == 35
+    if not (cap & (1 << 21) and not cap & (1 << 16)):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
+    if not (current["attachments"] == 35):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     watchdog = int(
         run(
             "systemctl",
@@ -127,7 +129,8 @@ try:
             "--value",
         )
     )
-    assert watchdog > 0
+    if not (watchdog > 0):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     result_path = BASE / "demo.json"
     env = dict(
         os.environ,
@@ -150,7 +153,8 @@ try:
                 and event["inode"] == application["inode"]
                 and event["accepted"]
             )
-    assert len(writes) == 3 and all(e["source_complete"] for e in writes)
+    if not (len(writes) == 3 and all(e["source_complete"] for e in writes)):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     old_segments = health()["segments_created"]
     subprocess.run(["systemctl", "reload", "iosec-endpoint"], check=True)
     wait(lambda: health().get("segments_created", 0) > old_segments)
@@ -160,15 +164,17 @@ try:
         check=True,
     )
     restarted = wait(lambda: running_health(old_session))
-    assert restarted["pid"] != pid
-    assert (
+    if not (restarted["pid"] != pid):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
+    if not (
         int(run("systemctl", "show", "iosec-endpoint", "-p", "NRestarts", "--value"))
         >= 1
-    )
+    ):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     subprocess.run(
         [sys.executable, "/opt/iosec-endpoint/python/service.py", "status"], check=True
     )
-    assert (
+    if not (
         run(
             "systemctl",
             "show",
@@ -178,7 +184,8 @@ try:
             "--value",
         )
         == "yes"
-    )
+    ):
+        raise RuntimeError("Guest control failed in systemd_guest.py")
     hardening = {
         "SystemCallArchitectures": "native",
         "RestrictNamespaces": "yes",
@@ -190,7 +197,8 @@ try:
         name: run("systemctl", "show", "iosec-endpoint", "-p", name, "--value")
         for name in hardening
     }
-    assert observed == hardening, observed
+    if not (observed == hardening):
+        raise RuntimeError(observed)
     report["hardening"] = observed
     report.update(
         passed=True,
@@ -215,4 +223,5 @@ finally:
     report["passed"] = report["passed"] and report["cleanup_ok"]
     (ROOT / "evidence/systemd.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2), flush=True)
-    assert report["cleanup_ok"], report
+    if not (report["cleanup_ok"]):
+        raise RuntimeError(report)

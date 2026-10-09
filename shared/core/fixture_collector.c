@@ -10,6 +10,7 @@
 #include "source_protocol.h"
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
+#include <errno.h>
 #include <signal.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -54,8 +55,10 @@ static int print_source_event(void *ctx, void *data, size_t size) {
     printf("ACTOR role=%s pid_tid=%llu birth=%llu count=%u flags=%u\n",
            roles[j], s->pid_tid, s->birth, s->count, s->flags);
     for (unsigned i = 0; i < s->count && i < IOSEC_SOURCE_FRAMES; i++)
-      printf("FRAME %u %s:%d %s bytecode=%d\n", i, s->frames[i].file,
-             s->frames[i].line, s->frames[i].function, s->frames[i].bytecode);
+      printf("FRAME %u %.*s:%d %.*s bytecode=%d\n", i,
+             (int)sizeof(s->frames[i].file), s->frames[i].file,
+             s->frames[i].line, (int)sizeof(s->frames[i].function),
+             s->frames[i].function, s->frames[i].bytecode);
   }
   fflush(stdout);
   return 0;
@@ -110,19 +113,40 @@ static int consume_wire_sample(void *ctx, void *data, size_t size) {
   return rc;
 }
 #include "direct_ring.h"
+#include "fixture_child.h"
 #include "python_layout.h"
+static int required_map_fd(struct bpf_object *object, const char *name) {
+  int fd = bpf_object__find_map_fd_by_name(object, name);
+  if (fd < 0)
+    fprintf(stderr, "Required BPF map missing: %s\n", name);
+  return fd;
+}
 static int map_is_empty(int fd) {
   unsigned long long key[16];
-  return bpf_map_get_next_key(fd, NULL, &key) != 0;
+  if (fd < 0)
+    return 0;
+  if (!bpf_map_get_next_key(fd, NULL, &key))
+    return 0;
+  return errno == ENOENT;
 }
 int main(int argc, char **argv) {
+  int result = 1, count = 0, failures = 0;
+  pid_t child = -1;
+  struct bpf_object *obj = NULL;
+  struct bpf_link *links[COLLECTOR_MAX_LINKS] = {0};
+  struct direct_ring direct = {0};
+  struct ring_buffer *ring = NULL;
   const char *bin = getenv("PIDFD_BINARY");
   if (bin) {
     binary = fopen(bin, "wb");
-    if (!binary)
-      return 11;
-    if (setvbuf(binary, collector_outbuf, _IOFBF, sizeof(collector_outbuf)))
-      return 11;
+    if (!binary) {
+      result = 11;
+      goto cleanup;
+    }
+    if (setvbuf(binary, collector_outbuf, _IOFBF, sizeof(collector_outbuf))) {
+      result = 11;
+      goto cleanup;
+    }
   }
   if (bin)
     direct_reserve_startup(
@@ -132,13 +156,18 @@ int main(int argc, char **argv) {
                             degraded states keep original-path output. */
   int native = argc > 1 && !strcmp(argv[1], "native");
   int check_only = argc > 1 && !strcmp(argv[1], "attach-check");
-  struct bpf_object *obj = bpf_object__open_file("reader.bpf.o", NULL);
-  if (libbpf_get_error(obj) || bpf_object__load(obj))
-    return 1;
-  if (bpf_map_freeze(bpf_object__find_map_fd_by_name(obj, "zero_bytes")))
-    return 13;
-  struct bpf_link *links[COLLECTOR_MAX_LINKS];
-  int count = 0, failures = 0;
+  obj = bpf_object__open_file("reader.bpf.o", NULL);
+  if (libbpf_get_error(obj)) {
+    obj = NULL;
+    goto cleanup;
+  }
+  if (bpf_object__load(obj))
+    goto cleanup;
+  int zero_fd = required_map_fd(obj, "zero_bytes");
+  if (zero_fd < 0 || bpf_map_freeze(zero_fd)) {
+    result = 13;
+    goto cleanup;
+  }
   struct bpf_program *p;
   bpf_object__for_each_program(p, obj) {
 #ifdef IOSEC_TEST_MISSED_RETURNS
@@ -148,10 +177,10 @@ int main(int argc, char **argv) {
 #endif
     if ((size_t)count >= sizeof(links) / sizeof(links[0])) {
       fprintf(stderr, "Too many BPF programs for the attachment array\n");
-      for (int i = 0; i < count; i++)
-        bpf_link__destroy(links[i]);
-      bpf_object__close(obj);
-      return 2;
+      {
+        result = 2;
+        goto cleanup;
+      }
     }
     if (!strcmp(bpf_program__name(p), "seed_thread") ||
         !strcmp(bpf_program__name(p), "eval_return")) {
@@ -170,7 +199,10 @@ int main(int argc, char **argv) {
       failures++;
       if (!check_only) {
         fflush(stdout);
-        return 2;
+        {
+          result = 2;
+          goto cleanup;
+        }
       }
     } else {
       if (check_only)
@@ -182,25 +214,31 @@ int main(int argc, char **argv) {
   if (check_only) {
     printf("ATTACH_SUMMARY ok=%d failed=%d\n", count, failures);
     fflush(stdout);
-    for (int i = 0; i < count; i++)
-      bpf_link__destroy(links[i]);
-    bpf_object__close(obj);
-    return failures ? 1 : 0;
+    result = failures ? 1 : 0;
+    goto cleanup;
   }
-  struct direct_ring direct = {0};
-  struct ring_buffer *ring = NULL;
-  int event_fd = bpf_object__find_map_fd_by_name(obj, "events");
+  int event_fd = required_map_fd(obj, "events");
+  int subjects_fd = required_map_fd(obj, "subjects");
+  int diagnostics_fd = required_map_fd(obj, "diagnostics");
+  if (event_fd < 0 || subjects_fd < 0 || diagnostics_fd < 0)
+    goto cleanup;
   if (binary) {
-    if (direct_open(&direct, event_fd))
-      return 3;
+    if (direct_open(&direct, event_fd)) {
+      result = 3;
+      goto cleanup;
+    }
   } else {
     ring = ring_buffer__new(event_fd, consume_wire_sample, NULL, NULL);
-    if (!ring)
-      return 3;
+    if (!ring) {
+      result = 3;
+      goto cleanup;
+    }
   }
-  pid_t child = fork();
-  if (child < 0)
-    return 4;
+  child = fork();
+  if (child < 0) {
+    result = 4;
+    goto cleanup;
+  }
   if (!child) {
     raise(SIGSTOP);
     if (native)
@@ -212,28 +250,70 @@ int main(int argc, char **argv) {
     _exit(127);
   }
   int status;
-  if (waitpid(child, &status, WUNTRACED) != child || !WIFSTOPPED(status))
-    return 5;
+  pid_t stopped;
+  do {
+    stopped = waitpid(child, &status, WUNTRACED);
+  } while (stopped < 0 && errno == EINTR);
+  if (stopped == child && (WIFEXITED(status) || WIFSIGNALED(status)))
+    child = -1;
+  if (stopped <= 0 || child <= 0 || !WIFSTOPPED(status)) {
+    result = 5;
+    goto cleanup;
+  }
+#if defined(IOSEC_TEST_CHILD_FAILURE) && IOSEC_TEST_CHILD_FAILURE != 7
+  /* Fault injection only in separately compiled owned guest controls. */
+  fprintf(stderr, "TEST_CHILD pid=%u\n", (unsigned)child);
+  result = IOSEC_TEST_CHILD_FAILURE;
+  goto cleanup;
+#endif
   unsigned long long pid = child, one = 1;
-  if (bpf_map_update_elem(bpf_object__find_map_fd_by_name(obj, "subjects"),
-                          &pid, &one, BPF_ANY))
-    return 6;
+  if (bpf_map_update_elem(subjects_fd, &pid, &one, BPF_ANY)) {
+    result = 6;
+    goto cleanup;
+  }
   printf("CHILD pid=%u\n", (unsigned)child);
   fflush(stdout);
-  kill(child, SIGCONT);
-  while (waitpid(child, &status, WNOHANG) == 0) {
+  if (kill(child, SIGCONT)) {
+    result = 6;
+    goto cleanup;
+  }
+#if defined(IOSEC_TEST_CHILD_FAILURE) && IOSEC_TEST_CHILD_FAILURE == 7
+  fprintf(stderr, "TEST_CHILD pid=%u\n", (unsigned)child);
+  result = IOSEC_TEST_CHILD_FAILURE;
+  goto cleanup;
+#endif
+  for (;;) {
+    pid_t waited = waitpid(child, &status, WNOHANG);
+    if (waited == child) {
+      child = -1;
+      break;
+    }
+    if (waited < 0) {
+      if (errno == EINTR)
+        continue;
+      result = 5;
+      goto cleanup;
+    }
     usleep(COLLECTOR_POLL_US);
-    if ((binary ? direct_consume(&direct) : ring_buffer__consume(ring)) < 0)
-      return 7;
-    if (binary && fflush(binary))
-      return 7;
+    if ((binary ? direct_consume(&direct) : ring_buffer__consume(ring)) < 0) {
+      result = 7;
+      goto cleanup;
+    }
+    if (binary && fflush(binary)) {
+      result = 7;
+      goto cleanup;
+    }
   }
   for (int i = 0; i < COLLECTOR_FINAL_DRAINS; i++) {
     usleep(COLLECTOR_FINAL_POLL_US);
-    if ((binary ? direct_consume(&direct) : ring_buffer__consume(ring)) < 0)
-      return 7;
-    if (binary && fflush(binary))
-      return 7;
+    if ((binary ? direct_consume(&direct) : ring_buffer__consume(ring)) < 0) {
+      result = 7;
+      goto cleanup;
+    }
+    if (binary && fflush(binary)) {
+      result = 7;
+      goto cleanup;
+    }
   }
   if (steady_events > 1)
     getrusage(RUSAGE_SELF,
@@ -241,8 +321,10 @@ int main(int argc, char **argv) {
                                1+complete-writes once any stage-9 record was
                                packed, else 0. Same ignore-on-error as the
                                per-batch calls it replaces. */
-  if (!WIFEXITED(status) || WEXITSTATUS(status))
-    return 8;
+  if (!WIFEXITED(status) || WEXITSTATUS(status)) {
+    result = 8;
+    goto cleanup;
+  }
   const char *names[] = {
       "origins",  "opening",        "acquiring",     "writing",
       "aliasing", "slots",          "subjects",      "threads",
@@ -251,7 +333,7 @@ int main(int argc, char **argv) {
       "shadows",  "fused_opener",   "fused_lineval"};
   int dirty = 0;
   for (int i = 0; (size_t)i < sizeof(names) / sizeof(names[0]); i++) {
-    int ok = map_is_empty(bpf_object__find_map_fd_by_name(obj, names[i]));
+    int ok = map_is_empty(required_map_fd(obj, names[i]));
     printf("MAP_EMPTY %s %d\n", names[i], ok);
     dirty |= !ok;
   }
@@ -259,9 +341,10 @@ int main(int argc, char **argv) {
   printf("CLEANUP_FALLBACK 0\n");
   unsigned long long value;
   for (unsigned int key = 0; key < IOSEC_DIAG_COUNT; key++) {
-    if (bpf_map_lookup_elem(bpf_object__find_map_fd_by_name(obj, "diagnostics"),
-                            &key, &value))
-      return 10;
+    if (bpf_map_lookup_elem(diagnostics_fd, &key, &value)) {
+      result = 10;
+      goto cleanup;
+    }
     printf("DIAGNOSTIC %u %llu\n", key, value);
     unsigned long long expected =
         (key == 1 && argc > 1 && !strcmp(argv[1], "pressure")) ? 1 : 0;
@@ -272,15 +355,19 @@ int main(int argc, char **argv) {
          "calls=%llu fallback_errno=%d\n",
          direct_reserve_state, DIRECT_RESERVE_CHUNK, direct_written,
          direct_reserved_end, direct_reserve_calls, direct_reserve_errno);
+  result = dirty ? 9 : 0;
+cleanup:
+  if (fixture_retire_child(&child) && !result)
+    result = 5;
   direct_close(&direct);
   ring_buffer__free(ring);
   for (int i = 0; i < count; i++)
     bpf_link__destroy(links[i]);
   bpf_object__close(obj);
-  if (binary && fclose(binary))
-    return 12;
+  if (binary && fclose(binary) && !result)
+    result = 12;
   printf("STEADY_COLLECTOR cpu_seconds=%.9f writes=%llu\n",
          rusage_cpu_seconds(&steady_end) - rusage_cpu_seconds(&steady_start),
          steady_events ? steady_events - 1 : 0);
-  return dirty ? 9 : 0;
+  return result;
 }

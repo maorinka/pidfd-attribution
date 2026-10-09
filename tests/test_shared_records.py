@@ -77,7 +77,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
     def test_map_count_is_a_parameter_not_a_source_pattern(self):
         verifier = WorkloadVerifier("/unused", expected_empty_maps=3)
         self.assertEqual(verifier.expected_empty_maps, 3)
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             verifier.verify(
                 "live", Path("/unused"), "MAP_EMPTY a 1\nMAPS_EMPTY 1\n", {}
             )

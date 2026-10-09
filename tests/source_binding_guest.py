@@ -29,7 +29,8 @@ sys.path.insert(0, str(backend / "python"))
 from settings import BPF_INCLUDES, BPF_LIBS, PYTHON, PYTHON_CONFIG
 from support.collector_records import events, stack
 
-assert os.geteuid() == 0 and sys.platform == "linux"
+if not (os.geteuid() == 0 and sys.platform == "linux"):
+    raise RuntimeError("Guest control failed in source_binding_guest.py")
 base = Path(tempfile.mkdtemp(prefix="pidfd-binding-", dir="/var/tmp"))
 base.chmod(0o700)
 for source in (backend / "evidence/build").iterdir():
@@ -113,9 +114,11 @@ try:
             text=True,
             timeout=180,
         )
-        assert attachment.returncode == 0, attachment.stdout + attachment.stderr
+        if not (attachment.returncode == 0):
+            raise RuntimeError(attachment.stdout + attachment.stderr)
         return_attached = "ATTACH_OK prog=eval_return " in attachment.stdout
-        assert return_attached == (not missed), attachment.stdout
+        if not (return_attached == (not missed)):
+            raise RuntimeError(attachment.stdout)
 
         raw, result = base / (mode + ".bin"), base / (mode + ".json")
         env = dict(
@@ -135,14 +138,21 @@ try:
             timeout=180,
         )
         (base / (mode + ".log")).write_text(trial.stdout + trial.stderr)
-        assert trial.returncode == 0, trial.stdout + trial.stderr
-        assert "MAPS_EMPTY 1" in trial.stdout
-        assert trial.stdout.count("MAP_EMPTY ") == 19
-        assert "DIAGNOSTIC 0 0" in trial.stdout and "DIAGNOSTIC 1 0" in trial.stdout
+        if not (trial.returncode == 0):
+            raise RuntimeError(trial.stdout + trial.stderr)
+        if not ("MAPS_EMPTY 1" in trial.stdout):
+            raise RuntimeError("Guest control failed in source_binding_guest.py")
+        if not (trial.stdout.count("MAP_EMPTY ") == 19):
+            raise RuntimeError("Guest control failed in source_binding_guest.py")
+        if not ("DIAGNOSTIC 0 0" in trial.stdout and "DIAGNOSTIC 1 0" in trial.stdout):
+            raise RuntimeError("Guest control failed in source_binding_guest.py")
         app = json.loads(result.read_text())
         rows = events(raw)
         writes = [e for e in rows if e.stage == 9 and e.inode == app["inode"]]
-        assert len(writes) == 65 and all(e.accepted and e.result == 1 for e in writes)
+        if not (
+            len(writes) == 65 and all(e.accepted and e.result == 1 for e in writes)
+        ):
+            raise RuntimeError("Guest control failed in source_binding_guest.py")
         complete = [e for e in writes if e.complete]
         wrong = [
             e
@@ -150,11 +160,14 @@ try:
             if not e.live.count
             or stack(e.live)[0][:2] != (str(base / "fixture.py"), "run_control")
         ]
-        assert not wrong, "Complete write incorrectly bound to a retired/foreign source"
-        assert writes[0].complete, "Source-positive control failed"
-        assert (
-            app["reused_addresses"] > 0
-        ), "Allocator did not exercise state-address reuse"
+        if not (not wrong):
+            raise RuntimeError(
+                "Complete write incorrectly bound to a retired/foreign source"
+            )
+        if not (writes[0].complete):
+            raise RuntimeError("Source-positive control failed")
+        if not (app["reused_addresses"] > 0):
+            raise RuntimeError("Allocator did not exercise state-address reuse")
         expanded = base / (mode + "-expanded")
         expanded.mkdir()
         (expanded / "records.bin").write_bytes(b"".join(bytes(e) for e in rows))
@@ -198,7 +211,8 @@ try:
                 raw_sha256=hashlib.sha256(raw.read_bytes()).hexdigest(),
             )
         )
-        assert ids() == baseline
+        if not (ids() == baseline):
+            raise RuntimeError("Guest control failed in source_binding_guest.py")
     report["passed"] = True
 finally:
     report["final_bpf_ids"] = ids()

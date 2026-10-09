@@ -80,7 +80,8 @@ report = dict(
     bpf_object_sha256=hashlib.sha256((base / "reader.bpf.o").read_bytes()).hexdigest(),
 )
 try:
-    assert trial.returncode == 0, trial.stdout + trial.stderr
+    if not (trial.returncode == 0):
+        raise RuntimeError(trial.stdout + trial.stderr)
     result = json.loads(application.read_text())
     rows = list(events(raw))
     opened = [
@@ -90,11 +91,14 @@ try:
         and event.opener.pid_tid >> 32 == result["pid"]
         and event.inode == result["inode"]
     ]
-    assert (
-        opened
-    ), "Lost admission when the leader exited before its worker opened the file"
-    assert "MAPS_EMPTY 1" in trial.stdout
-    assert ids() == baseline
+    if not (opened):
+        raise RuntimeError(
+            "Lost admission when the leader exited before its worker opened the file"
+        )
+    if not ("MAPS_EMPTY 1" in trial.stdout):
+        raise RuntimeError("Guest control failed in leader_exit_guest.py")
+    if not (ids() == baseline):
+        raise RuntimeError("Guest control failed in leader_exit_guest.py")
     report.update(
         passed=True,
         opens_after_leader_exit=len(opened),

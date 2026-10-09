@@ -56,14 +56,19 @@ class Event(c.Structure):
     )
 
 
-assert sys.version_info[:2] in (
-    (3, 10),
-    (3, 11),
-    (3, 12),
-    (3, 13),
-    (3, 14),
-), sys.version
-assert c.sizeof(Event) == 9760, c.sizeof(Event)
+if not (
+    sys.version_info[:2]
+    in (
+        (3, 10),
+        (3, 11),
+        (3, 12),
+        (3, 13),
+        (3, 14),
+    )
+):
+    raise RuntimeError(sys.version)
+if not (c.sizeof(Event) == 9760):
+    raise RuntimeError(c.sizeof(Event))
 directory = Path(sys.argv[1])
 code_cache = {}
 hashes = {}
@@ -108,20 +113,25 @@ checked_records = checked_frames = checked_stacks = 0
 inputs = {}
 for binary in sorted(directory.glob("*.bin")):
     data = binary.read_bytes()
-    assert len(data) % c.sizeof(Event) == 0, binary
+    if not (len(data) % c.sizeof(Event) == 0):
+        raise RuntimeError(binary)
     inputs[binary.name] = hashlib.sha256(data).hexdigest()
     for offset in range(0, len(data), c.sizeof(Event)):
         event = Event.from_buffer_copy(data, offset)
         checked_records += 1
         for role in ["opener", "acquirer", "live"]:
             source = getattr(event, role)
-            assert source.count <= 16
+            if not (source.count <= 16):
+                raise RuntimeError("Validation failed: bytecode_oracle_guest.py:118")
             if source.count:
                 checked_stacks += 1
             for frame in source.frames[: source.count]:
                 path = bytes(frame.file).decode()
                 name = bytes(frame.function).decode()
-                assert frame.bytecode >= 0 and frame.bytecode % 2 == 0
+                if not (frame.bytecode >= 0 and frame.bytecode % 2 == 0):
+                    raise RuntimeError(
+                        "Validation failed: bytecode_oracle_guest.py:124"
+                    )
                 index = frame.bytecode // 2
                 candidates = codes(path).get(name, [])
                 actual = {
@@ -129,17 +139,21 @@ for binary in sorted(directory.glob("*.bin")):
                     for positions in candidates
                     if index < len(positions)
                 }
-                assert frame.line in actual, dict(
-                    binary=binary.name,
-                    role=role,
-                    file=path,
-                    function=name,
-                    bytecode=frame.bytecode,
-                    reported_line=frame.line,
-                    compiled_position_lines=list(actual),
-                )
+                if not (frame.line in actual):
+                    raise RuntimeError(
+                        dict(
+                            binary=binary.name,
+                            role=role,
+                            file=path,
+                            function=name,
+                            bytecode=frame.bytecode,
+                            reported_line=frame.line,
+                            compiled_position_lines=list(actual),
+                        )
+                    )
                 checked_frames += 1
-assert checked_records and checked_frames, "No binary records checked"
+if not (checked_records and checked_frames):
+    raise RuntimeError("No binary records checked")
 report = dict(
     status="passed",
     oracle="Offline matching CPython compile/co_positions (3.11+) or co_lines (3.10) at exact captured bytecode offset; no execution of fixture",

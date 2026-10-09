@@ -41,16 +41,22 @@ p = subprocess.run(
 )
 (EVIDENCE_DIR / "run.log").write_text(p.stdout)
 (EVIDENCE_DIR / "stderr.log").write_text(p.stderr)
-assert p.returncode == 0, p.stderr[-2000:]
-assert "MAPS_EMPTY 1" in p.stdout
+if not (p.returncode == 0):
+    raise RuntimeError(p.stderr[-2000:])
+if not ("MAPS_EMPTY 1" in p.stdout):
+    raise RuntimeError("Validation failed: compat_guest.py:45")
 match = re.search(r"^COMPAT_CONTROL (.+)$", p.stdout, re.M)
-assert match
+if not (match):
+    raise RuntimeError("Validation failed: compat_guest.py:47")
 rows = events(EVIDENCE_DIR / "records.bin")
 acquired = [x for x in rows if x.stage == 6]
 writes = [x for x in rows if x.stage == 9]
-assert len(acquired) == len(writes) == 1, (len(acquired), len(writes))
-assert acquired[0].accepted == acquired[0].complete == 1
-assert writes[0].accepted == writes[0].complete == 1 and writes[0].result == 1
+if not (len(acquired) == len(writes) == 1):
+    raise RuntimeError((len(acquired), len(writes)))
+if not (acquired[0].accepted == acquired[0].complete == 1):
+    raise RuntimeError("Validation failed: compat_guest.py:52")
+if not (writes[0].accepted == writes[0].complete == 1 and writes[0].result == 1):
+    raise RuntimeError("Validation failed: compat_guest.py:53")
 expanded = EVIDENCE_DIR / "expanded"
 expanded.mkdir(exist_ok=True)
 (expanded / "records.bin").write_bytes(b"".join(bytes(x) for x in rows))

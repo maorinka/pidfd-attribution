@@ -224,7 +224,8 @@ for i, cmd in enumerate(
         cmd, cwd=RUNTIME_DIR, capture_output=True, text=True, timeout=120
     )
     (EVIDENCE_DIR / f"step-{i}.log").write_text(p.stdout + p.stderr)
-    assert p.returncode == 0, p.stderr[-2000:]
+    if not (p.returncode == 0):
+        raise RuntimeError(p.stderr[-2000:])
     print(p.stdout, end="")
 for n in ["strings.bpf.c", "strings.bpf.o", "loader.c", "loader", "vmlinux.h"]:
     shutil.copy2(RUNTIME_DIR / n, EVIDENCE_DIR / n)

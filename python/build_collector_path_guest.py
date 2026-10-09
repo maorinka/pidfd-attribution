@@ -25,7 +25,8 @@ p = subprocess.run(
     timeout=120,
 )
 (EVIDENCE_DIR / "make.log").write_text(p.stdout + p.stderr)
-assert p.returncode == 0, p.stderr[-2000:]
+if not (p.returncode == 0):
+    raise RuntimeError(p.stderr[-2000:])
 env = dict(
     os.environ,
     PAHOLE="pahole",
@@ -72,9 +73,10 @@ with (EVIDENCE_DIR / "btf.log").open("w") as output:
             text=True,
             timeout=120,
         )
-        assert p.returncode == 0, "BTF generation failed; see " + str(
-            EVIDENCE_DIR / "btf.log"
-        )
+        if not (p.returncode == 0):
+            raise RuntimeError(
+                "BTF generation failed; see " + str(EVIDENCE_DIR / "btf.log")
+            )
 (EVIDENCE_DIR / "module").mkdir(exist_ok=True)
 for name in [
     "Makefile",

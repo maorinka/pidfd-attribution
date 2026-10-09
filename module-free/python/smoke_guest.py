@@ -41,16 +41,22 @@ for profile in ("serial", "threads"):
         for event in records
         if event.stage == 9 and event.inode == application["inode"]
     ]
-    assert len(writes) == application["writes"]
+    if not (len(writes) == application["writes"]):
+        raise RuntimeError("Validation failed: smoke_guest.py:44")
     for event in writes:
-        assert (
+        if not (
             event.accepted == event.complete == 1 and event.result == event.inner == 1
-        )
-        assert all(
-            getattr(event, role).count and not getattr(event, role).flags
-            for role in ("opener", "acquirer", "live")
-        )
-        assert stack(event.live)[0][1] == "write_leaf"
+        ):
+            raise RuntimeError("Validation failed: smoke_guest.py:46")
+        if not (
+            all(
+                getattr(event, role).count and not getattr(event, role).flags
+                for role in ("opener", "acquirer", "live")
+            )
+        ):
+            raise RuntimeError("Validation failed: smoke_guest.py:49")
+        if not (stack(event.live)[0][1] == "write_leaf"):
+            raise RuntimeError("Validation failed: smoke_guest.py:53")
     profiles.append(
         dict(
             profile=profile,

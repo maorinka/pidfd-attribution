@@ -41,8 +41,10 @@ def preflight():
         ).stdout.splitlines()
         if str(os.getpid()) != l.split()[0] and "pgrep" not in l
     ]
-    assert not busy, f"other trial processes running: {busy}"
-    assert set(programs()) <= ALLOWED, programs()
+    if not (not busy):
+        raise RuntimeError(f"other trial processes running: {busy}")
+    if not (set(programs()) <= ALLOWED):
+        raise RuntimeError(programs())
 
 
 def build():
@@ -61,6 +63,7 @@ def build():
     for n in [
         "reader.bpf.c",
         "loader.c",
+        "fixture_child.h",
         "direct_ring.h",
         "arch.h",
         "source_protocol.h",
@@ -99,13 +102,15 @@ def build():
         for line in symbols.splitlines()
         if " UND " in line and len(line.split()) > 7
     ]
-    assert not undefined, f"Unexpected external symbols: {undefined}"
+    if not (not undefined):
+        raise RuntimeError(f"Unexpected external symbols: {undefined}")
     sections = subprocess.check_output(
         ["readelf", "-SW", str(B / "reader.bpf.o")],
         text=True,
         stderr=subprocess.DEVNULL,
     )
-    assert ".ksyms" not in sections, "Custom kfunc dependency is forbidden"
+    if not (".ksyms" not in sections):
+        raise RuntimeError("Custom kfunc dependency is forbidden")
     (EVIDENCE_DIR / "upstream-only.json").write_text(
         json.dumps(
             dict(
@@ -135,6 +140,7 @@ def build():
     names = [
         "reader.bpf.c",
         "loader.c",
+        "fixture_child.h",
         "config.h",
         "python_layout.h",
         "kernel_layout.h",
@@ -182,16 +188,18 @@ def attach_check():
     fails = [l for l in p.stdout.splitlines() if l.startswith("ATTACH_FAIL")]
     report = dict(exit_code=p.returncode, attached=oks, failed=fails)
     (EVIDENCE_DIR / "attach-check.json").write_text(json.dumps(report, indent=2) + "\n")
-    assert p.returncode == 0, f"collector-batch attach failures: {fails}"
-    assert (
-        len(oks) == 35
-    ), f"expected 35 attached programs (30 base + 4 sleepable fused fentry.s + 2 openat fused-cleanup), got {len(oks)}"
+    if not (p.returncode == 0):
+        raise RuntimeError(f"collector-batch attach failures: {fails}")
+    if not (len(oks) == 35):
+        raise RuntimeError(
+            f"expected 35 attached programs (30 base + 4 sleepable fused fentry.s + 2 openat fused-cleanup), got {len(oks)}"
+        )
     sleepable = [l for l in oks if "fentry.s" in l]
-    assert len(sleepable) == 4, f"expected 4 sleepable warm hooks, got {sleepable}"
+    if not (len(sleepable) == 4):
+        raise RuntimeError(f"expected 4 sleepable warm hooks, got {sleepable}")
     binding = [l for l in oks if "prog=eval_return" in l]
-    assert (
-        binding and "sec=uretprobe" in binding[0] and ".s" not in binding[0]
-    ), f"eval_return must be nonsleepable binding-only: {binding}"
+    if not (binding and "sec=uretprobe" in binding[0] and ".s" not in binding[0]):
+        raise RuntimeError(f"eval_return must be nonsleepable binding-only: {binding}")
     return report
 
 
@@ -201,11 +209,12 @@ def regression():
     (tree / "build").mkdir(exist_ok=True)
     (tree / "evidence").mkdir(exist_ok=True)
     lineage = tree / "experiments/pidfd_lineage"
-    for n in ["reader.bpf.c", "loader.c", "direct_ring.h"]:
+    for n in ["reader.bpf.c", "loader.c", "fixture_child.h", "direct_ring.h"]:
         shutil.copy2(RUNTIME_DIR / n, lineage / n)
     for n in [
         "reader.bpf.c",
         "loader.c",
+        "fixture_child.h",
         "config.h",
         "reader.bpf.o",
         "fentry.bpf.o",
@@ -256,6 +265,7 @@ def regression():
         for n in [
             "reader.bpf.c",
             "loader.c",
+            "fixture_child.h",
             "fixture.py",
             "control.c",
             "share.c",
@@ -316,7 +326,8 @@ def held():
     (EVIDENCE_DIR / "held-baseline" / "runner.log").write_text(
         f"exit={p.returncode}\nstdout:\n{p.stdout}\nstderr:\n{p.stderr}\n"
     )
-    assert p.returncode == 0, p.stderr[-2000:]
+    if not (p.returncode == 0):
+        raise RuntimeError(p.stderr[-2000:])
     return json.loads(
         (EVIDENCE_DIR / "held-baseline" / "verification.json").read_text()
     )

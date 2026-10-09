@@ -18,12 +18,15 @@ results = []
 for depth in [4, 10, 11]:
     text = (RUNTIME_DIR / f"deep-{depth}.log").read_text()
     app = json.loads((RUNTIME_DIR / f"deep-{depth}.json").read_text())
-    assert text.count("MAP_EMPTY ") == 19 and "MAPS_EMPTY 1" in text
+    if not (text.count("MAP_EMPTY ") == 19 and "MAPS_EMPTY 1" in text):
+        raise RuntimeError("Validation failed: verify_deep_collector_path_guest.py:21")
     diagnostics = dict(re.findall(r"DIAGNOSTIC (\d+) (\d+)", text))
-    assert {key: diagnostics[key] for key in ("0", "1")} == {"0": "0", "1": "0"}
+    if not ({key: diagnostics[key] for key in ("0", "1")} == {"0": "0", "1": "0"}):
+        raise RuntimeError("Validation failed: verify_deep_collector_path_guest.py:23")
     rows = text_events(text)
     finals = [e for e in rows if e.stage == 9]
-    assert len(finals) == app["writes"] == 3
+    if not (len(finals) == app["writes"] == 3):
+        raise RuntimeError("Validation failed: verify_deep_collector_path_guest.py:26")
     (install,) = [e for e in rows if e.stage == 6 and e.accepted]
     checked = 0
     for event in rows:
@@ -31,13 +34,25 @@ for depth in [4, 10, 11]:
             s = getattr(event, role)
             if not s.count:
                 continue
-            assert s.pid_tid and s.birth
+            if not (s.pid_tid and s.birth):
+                raise RuntimeError(
+                    "Validation failed: verify_deep_collector_path_guest.py:34"
+                )
             frames = stack(s)
-            assert s.flags == (32 if role == "live" and depth == 11 else 0)
+            if not (s.flags == (32 if role == "live" and depth == 11 else 0)):
+                raise RuntimeError(
+                    "Validation failed: verify_deep_collector_path_guest.py:36"
+                )
             for i, (path, fn, line, bc) in enumerate(frames):
-                assert path == str(fixture) and bc >= 0 and bc % 2 == 0
+                if not (path == str(fixture) and bc >= 0 and bc % 2 == 0):
+                    raise RuntimeError(
+                        "Validation failed: verify_deep_collector_path_guest.py:38"
+                    )
                 node = tree if fn == "<module>" else functions[fn]
-                assert fn == "<module>" or node.lineno <= line <= node.end_lineno
+                if not (fn == "<module>" or node.lineno <= line <= node.end_lineno):
+                    raise RuntimeError(
+                        "Validation failed: verify_deep_collector_path_guest.py:40"
+                    )
                 calls = [
                     n
                     for n in ast.walk(node)
@@ -52,29 +67,62 @@ for depth in [4, 10, 11]:
                         "acquire_leaf": "syscall",
                     }[fn]
                 )
-                assert any(callee(n) == expected for n in calls), (
-                    depth,
-                    fn,
-                    line,
-                    expected,
-                )
+                if not (any(callee(n) == expected for n in calls)):
+                    raise RuntimeError(
+                        (
+                            depth,
+                            fn,
+                            line,
+                            expected,
+                        )
+                    )
             checked += 1
     for e in finals:
-        assert e.accepted and e.result == e.inner == 1
-        assert e.file == install.file and e.inode == app["inode"]
-        assert e.target == app["target"] and e.targetbirth == install.targetbirth
-        assert e.files == install.files and e.generation >= install.generation
-        assert stack(e.opener) == stack(install.opener)
-        assert stack(e.acquirer) == stack(install.acquirer)
-        assert e.live.pid_tid >> 32 == app["pid"]
+        if not (e.accepted and e.result == e.inner == 1):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:63"
+            )
+        if not (e.file == install.file and e.inode == app["inode"]):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:64"
+            )
+        if not (e.target == app["target"] and e.targetbirth == install.targetbirth):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:65"
+            )
+        if not (e.files == install.files and e.generation >= install.generation):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:66"
+            )
+        if not (stack(e.opener) == stack(install.opener)):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:67"
+            )
+        if not (stack(e.acquirer) == stack(install.acquirer)):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:68"
+            )
+        if not (e.live.pid_tid >> 32 == app["pid"]):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:69"
+            )
         expected = (
             ["write_leaf", "write_middle", "write_outer"]
             + ["deep"] * (depth + 1)
             + ["run", "<module>"]
         )
-        assert [f[1] for f in stack(e.live)] == expected[:16]
-        assert e.live.count == min(depth + 6, 16)
-        assert e.complete == (depth <= 10)
+        if not ([f[1] for f in stack(e.live)] == expected[:16]):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:75"
+            )
+        if not (e.live.count == min(depth + 6, 16)):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:76"
+            )
+        if not (e.complete == (depth <= 10)):
+            raise RuntimeError(
+                "Validation failed: verify_deep_collector_path_guest.py:77"
+            )
     results.append(
         dict(
             depth=depth,

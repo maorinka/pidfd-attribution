@@ -1,7 +1,7 @@
 Traceback (most recent call last):
-  File "/Users/maorhadad/projects/pidfd-attribution/measure_collector_path_guest.py", line 5, in <module>
+  File "/workspace/pidfd-attribution/measure_collector_path_guest.py", line 5, in <module>
     from support.collector_benchmark import benchmark
-  File "/Users/maorhadad/projects/pidfd-attribution/support/collector_benchmark.py", line 20, in <module>
+  File "/workspace/pidfd-attribution/support/collector_benchmark.py", line 20, in <module>
     def benchmark(run_directory, runtime, python, expected_empty_maps=expected_empty_maps):
                                                                       ^^^^^^^^^^^^^^^^^^^
 NameError: name 'expected_empty_maps' is not defined

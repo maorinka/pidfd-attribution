@@ -55,7 +55,8 @@ def loop(fd, count, compute, rate):
         value = 0
         for j in range(compute):
             value = (value * 1103515245 + j + 12345) & 0x7FFFFFFF
-        assert write_outer(fd) == 1
+        if not (write_outer(fd) == 1):
+            raise RuntimeError("Validation failed: demo.py:58")
         if rate:
             time.sleep(max(0, started + (i + 1) / rate - time.monotonic()))
 
@@ -76,7 +77,8 @@ def run():
         parent.close()
         fd = open_outer(path)
         child.send(str(fd).encode())
-        assert child.recv(16) == b"exit"
+        if not (child.recv(16) == b"exit"):
+            raise RuntimeError("Validation failed: demo.py:79")
         os.close(fd)
         child.close()
         os._exit(0)
@@ -84,10 +86,12 @@ def run():
     targetfd = int(parent.recv(32))
     pidfd = os.pidfd_open(target)
     fd = acquire_outer(pidfd, targetfd)
-    assert fd >= 0, ctypes.get_errno()
+    if not (fd >= 0):
+        raise RuntimeError(ctypes.get_errno())
     inode = os.fstat(fd).st_ino
     parent.send(b"exit")
-    assert os.waitpid(target, 0) == (target, 0)
+    if not (os.waitpid(target, 0) == (target, 0)):
+        raise RuntimeError("Validation failed: demo.py:90")
     parent.close()
     os.close(pidfd)
     cpu = time.process_time_ns()
@@ -110,9 +114,11 @@ def run():
             thread.start()
         for thread in threads:
             thread.join()
-        assert not errors, errors
+        if not (not errors):
+            raise RuntimeError(errors)
         # A thread exiting must not silently stop watching its whole process.
-        assert write_outer(fd) == 1
+        if not (write_outer(fd) == 1):
+            raise RuntimeError("Validation failed: demo.py:115")
         expected = 4 * count + 1
     elif profile == "processes":
         for _ in range(4):
@@ -123,15 +129,18 @@ def run():
                 os._exit(0)
             workers.append(childpid)
         for childpid in workers:
-            assert os.waitpid(childpid, 0) == (childpid, 0)
-        assert write_outer(fd) == 1
+            if not (os.waitpid(childpid, 0) == (childpid, 0)):
+                raise RuntimeError("Validation failed: demo.py:126")
+        if not (write_outer(fd) == 1):
+            raise RuntimeError("Validation failed: demo.py:127")
         expected = 4 * count + 1
     else:
         loop(fd, count, compute, rate)
         expected = count
     application_cpu_ns = time.process_time_ns() - cpu
     wall_ns = time.monotonic_ns() - start
-    assert os.fstat(fd).st_size == expected
+    if not (os.fstat(fd).st_size == expected):
+        raise RuntimeError("Validation failed: demo.py:134")
     os.close(fd)
     path.unlink()
     root.rmdir()

@@ -10,7 +10,8 @@ from shared.python.validation_lock import validation_lock
 validation_fd = validation_lock()
 module = EVIDENCE_DIR / "build/iosec_native.ko"
 script = Path(sys.argv[1])
-assert script.is_file()
+if not (script.is_file()):
+    raise RuntimeError("Validation failed: collector_path_scope_guest.py:13")
 allowed = {
     "lima_ticker",
     "sd_devices",
@@ -22,10 +23,13 @@ programs = lambda: json.loads(
     subprocess.check_output(["bpftool", "-j", "prog", "show"])
 )
 baseline_ids = {p["id"] for p in programs()}
-assert not Path("/sys/module/iosec_native").exists()
+if not (not Path("/sys/module/iosec_native").exists()):
+    raise RuntimeError("Validation failed: collector_path_scope_guest.py:25")
 lockdown = Path("/sys/kernel/security/lockdown")
-assert not lockdown.exists() or lockdown.read_text().startswith("[none]")
-assert Path("/proc/sys/kernel/modules_disabled").read_text().strip() == "0"
+if not (not lockdown.exists() or lockdown.read_text().startswith("[none]")):
+    raise RuntimeError("Validation failed: collector_path_scope_guest.py:27")
+if not (Path("/proc/sys/kernel/modules_disabled").read_text().strip() == "0"):
+    raise RuntimeError("Validation failed: collector_path_scope_guest.py:28")
 scopes = EVIDENCE_DIR / "scopes"
 scopes.mkdir(exist_ok=True)
 report = dict(
@@ -38,7 +42,8 @@ report = dict(
     full_goal_complete=False,
 )
 p = subprocess.run(["insmod", str(module)], capture_output=True, text=True)
-assert p.returncode == 0, p.stderr
+if not (p.returncode == 0):
+    raise RuntimeError(p.stderr)
 try:
     p = subprocess.run(
         [str(__import__("settings").PYTHON), str(script)] + sys.argv[2:],
@@ -60,6 +65,8 @@ finally:
         remaining_programs=programs(),
     )
     (scopes / (script.stem + ".json")).write_text(json.dumps(report, indent=2) + "\n")
-    assert p_remove.returncode == 0, p_remove.stderr
-assert {p["id"] for p in programs()} == baseline_ids, "BPF program set changed"
+    if not (p_remove.returncode == 0):
+        raise RuntimeError(p_remove.stderr)
+if not ({p["id"] for p in programs()} == baseline_ids):
+    raise RuntimeError("BPF program set changed")
 sys.exit(report["exit_code"])

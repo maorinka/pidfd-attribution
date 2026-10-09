@@ -58,10 +58,12 @@ for index, command in enumerate(commands):
         command, cwd=RUNTIME_DIR, capture_output=True, text=True, timeout=180
     )
     (EVIDENCE_DIR / f"step-{index}.log").write_text(result.stdout + result.stderr)
-    assert (
-        result.returncode == 0
-    ), f'Encoder step {index} failed; see {EVIDENCE_DIR / f"step-{index}.log"}'
-assert "ENCODER_CASES 147 INVALID_COUNT_CASES 3" in result.stdout
+    if not (result.returncode == 0):
+        raise RuntimeError(
+            f'Encoder step {index} failed; see {EVIDENCE_DIR / f"step-{index}.log"}'
+        )
+if not ("ENCODER_CASES 147 INVALID_COUNT_CASES 3" in result.stdout):
+    raise RuntimeError("Validation failed: encoder_guest.py:64")
 report = dict(
     passed=True,
     record_lengths=49,

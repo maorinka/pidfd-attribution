@@ -81,7 +81,8 @@ class WireHeader(c.Structure):
     )
 
 
-assert c.sizeof(WireHeader) == 176 and c.sizeof(Frame) == 200
+if not (c.sizeof(WireHeader) == 176 and c.sizeof(Frame) == 200):
+    raise RuntimeError("Validation failed: collector_records.py:84")
 
 
 def callee(call):
@@ -178,34 +179,41 @@ class WorkloadVerifier:
         self.trees = {}
 
     def check_source(self, source):
-        assert (
+        if not (
             0 < source.count <= 16
             and not source.flags
             and source.pid_tid
             and source.birth
-        )
+        ):
+            raise RuntimeError("Validation failed: collector_records.py:181")
         frames = stack(source)
-        assert frames[-1][1] in ("<module>", "_bootstrap")
+        if not (frames[-1][1] in ("<module>", "_bootstrap")):
+            raise RuntimeError("Validation failed: collector_records.py:188")
         import threading
 
         for index, (path, function, line, bytecode) in enumerate(frames):
-            assert path in (str(self.workload_path), threading.__file__)
+            if not (path in (str(self.workload_path), threading.__file__)):
+                raise RuntimeError("Validation failed: collector_records.py:192")
             if path not in self.trees:
                 self.trees[path] = ast.parse(Path(path).read_text())
             tree = self.trees[path]
             if function != "<module>":
-                assert any(
-                    isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and node.name == function
-                    and node.lineno <= line <= node.end_lineno
-                    for node in ast.walk(tree)
-                ), (function, line)
+                if not (
+                    any(
+                        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                        and node.name == function
+                        and node.lineno <= line <= node.end_lineno
+                        for node in ast.walk(tree)
+                    )
+                ):
+                    raise RuntimeError((function, line))
             calls = [
                 node
                 for node in ast.walk(tree)
                 if isinstance(node, ast.Call) and node.lineno == line
             ]
-            assert calls and bytecode >= 0 and bytecode % 2 == 0
+            if not (calls and bytecode >= 0 and bytecode % 2 == 0):
+                raise RuntimeError("Validation failed: collector_records.py:208")
             expected = (
                 frames[index - 1][1]
                 if index
@@ -215,25 +223,32 @@ class WorkloadVerifier:
                     "acquire_leaf": "syscall",
                 }[function]
             )
-            assert any(callee(node) == expected for node in calls) or (
-                path.endswith("/threading.py")
-                and function == "run"
-                and expected == "worker"
-                and any(callee(node) == "_target" for node in calls)
-            ), (function, line, expected)
+            if not (
+                any(callee(node) == expected for node in calls)
+                or (
+                    path.endswith("/threading.py")
+                    and function == "run"
+                    and expected == "worker"
+                    and any(callee(node) == "_target" for node in calls)
+                )
+            ):
+                raise RuntimeError((function, line, expected))
         return tuple(frames)
 
     def verify(self, mode, binary, text, app, strict=True):
-        assert "Traceback" not in text
-        assert (
+        if not ("Traceback" not in text):
+            raise RuntimeError("Validation failed: collector_records.py:227")
+        if not (
             text.count("MAP_EMPTY ") == self.expected_empty_maps
             and "MAPS_EMPTY 1" in text
-        )
+        ):
+            raise RuntimeError("Validation failed: collector_records.py:228")
         diagnostics = {
             int(key): int(value)
             for key, value in re.findall(r"DIAGNOSTIC (\d+) (\d+)", text)
         }
-        assert {key: diagnostics[key] for key in (0, 1)} == {0: 0, 1: 0}, diagnostics
+        if not ({key: diagnostics[key] for key in (0, 1)} == {0: 0, 1: 0}):
+            raise RuntimeError(diagnostics)
         rows = text_events(text) if mode == "live-text" else events(binary)
         finals = [
             event for event in rows if event.stage == 9 and event.inode == app["inode"]
@@ -245,9 +260,11 @@ class WorkloadVerifier:
         ]
         matched = len(finals) == app["writes"] and len(good) == app["writes"]
         if strict:
-            assert matched, (len(finals), app["writes"])
+            if not (matched):
+                raise RuntimeError((len(finals), app["writes"]))
         installed = [event for event in rows if event.stage == 6 and event.accepted]
-        assert len(installed) == 1
+        if not (len(installed) == 1):
+            raise RuntimeError("Validation failed: collector_records.py:250")
         origin = self.source_checker(installed[0].opener)
         acquire = self.source_checker(installed[0].acquirer)
         checked_stacks = 0
@@ -260,20 +277,35 @@ class WorkloadVerifier:
                     self.source_checker(source)
                     checked_stacks += 1
             if event.stage in (7, 8, 9) and event.inode == app["inode"]:
-                assert stack(event.opener) == list(origin) and stack(
-                    event.acquirer
-                ) == list(acquire)
-                assert event.file == installed[0].file and event.target == app["target"]
-                assert event.generation >= installed[0].generation
+                if not (
+                    stack(event.opener) == list(origin)
+                    and stack(event.acquirer) == list(acquire)
+                ):
+                    raise RuntimeError("Validation failed: collector_records.py:263")
+                if not (
+                    event.file == installed[0].file and event.target == app["target"]
+                ):
+                    raise RuntimeError("Validation failed: collector_records.py:266")
+                if not (event.generation >= installed[0].generation):
+                    raise RuntimeError("Validation failed: collector_records.py:267")
                 if mode == "labels":
-                    assert (
+                    if not (
                         not event.live.count
                         and event.live.flags == 64
                         and not event.complete
-                    )
+                    ):
+                        raise RuntimeError(
+                            "Validation failed: collector_records.py:269"
+                        )
                 elif strict:
-                    assert event.live.count and not event.live.flags
-                    assert event.complete == int(event.accepted)
+                    if not (event.live.count and not event.live.flags):
+                        raise RuntimeError(
+                            "Validation failed: collector_records.py:275"
+                        )
+                    if not (event.complete == int(event.accepted)):
+                        raise RuntimeError(
+                            "Validation failed: collector_records.py:276"
+                        )
         return dict(
             records=len(rows),
             writes=len(finals),

@@ -30,14 +30,18 @@ for profile in ["serial", "threads"]:
     rows = events(e / (profile + ".bin"))
     finals = [x for x in rows if x.stage == 9]
     app = json.loads((e / (profile + ".json")).read_text())
-    assert len(finals) == app["writes"]
+    if not (len(finals) == app["writes"]):
+        raise RuntimeError("Validation failed: held_collector_path_guest.py:33")
     for x in finals:
-        assert (
+        if not (
             x.complete and x.accepted and x.result == x.inner == 1 and not x.live.flags
-        )
-        assert stack(x.live)[0][1] == "write_leaf" and stack(x.live)[0][0] == str(
-            g / "held_fixture.py"
-        )
+        ):
+            raise RuntimeError("Validation failed: held_collector_path_guest.py:35")
+        if not (
+            stack(x.live)[0][1] == "write_leaf"
+            and stack(x.live)[0][0] == str(g / "held_fixture.py")
+        ):
+            raise RuntimeError("Validation failed: held_collector_path_guest.py:38")
     (expanded / (profile + ".bin")).write_bytes(b"".join(bytes(x) for x in rows))
     checks.append({"profile": profile, "complete_writes": len(finals)})
 subprocess.run(

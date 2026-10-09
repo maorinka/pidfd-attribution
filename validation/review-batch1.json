@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "bfb12492235ec31d046074ac9a59863777134feb",
+  "scope": "Batch1 defensive gates, fixture lifecycle, defensive file identity and bounded string helpers; not deployment/performance qualification",
+  "offline": {
+    "root_tests": 17,
+    "endpoint_tests": 15,
+    "optimized_root_tests": 17,
+    "style": "passed",
+    "explicit_runtime_and_guest_checks": 329,
+    "native_child_control": "stopped/running child reaped, repeated retirement harmless",
+    "string_helper_control": "three actual helpers compiled with read/loop stubs; lengths0-200,64/128-byte fields, embedded NUL, guard page and dirty tails. Does not model BPF scheduling/verifier."
+  },
+  "kernel": "6.8.0-142-generic",
+  "architecture": "x86_64",
+  "checks": {
+    "native_correctness": {
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "build": {
+        "reader.bpf.c": "8ec13a818efefec15f1c6a6d5fb760b6af97e58bb20000b52976b3de254d4a54",
+        "loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+        "fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "ed83893259a38f5b4ba977eb82ccca23810a4eab5431b15c78b77dbaca321032",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "reader.bpf.o": "c15f7baeb9bc4575a8f4a6eb6bb22a350e1f6b201a8534950dee35ca57789ea5",
+        "fentry.bpf.o": "c15f7baeb9bc4575a8f4a6eb6bb22a350e1f6b201a8534950dee35ca57789ea5",
+        "loader": "e75ccd14b8f85721b442a65d711dabbbb562e3afe52e471005200b8b139697c1",
+        "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+        "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+        "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+        "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+        "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+        "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+        "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+        "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+        "/usr/bin/python3.12": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+      },
+      "regression_passed": true,
+      "held_passed": true,
+      "attach_exit": 0,
+      "deep_status": "passed"
+    },
+    "module_free_correctness": {
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "build": {
+        "reader.bpf.c": "edb3f6faac2c7587f9a8e66300549a601f00a1d9f328f9a5ae9e28f8e6e86b3d",
+        "loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+        "fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "ed83893259a38f5b4ba977eb82ccca23810a4eab5431b15c78b77dbaca321032",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "reader.bpf.o": "1871b1c4291c59c704d6db2816225a5abc56d681b746fbddc24b324dc334f318",
+        "fentry.bpf.o": "1871b1c4291c59c704d6db2816225a5abc56d681b746fbddc24b324dc334f318",
+        "loader": "e75ccd14b8f85721b442a65d711dabbbb562e3afe52e471005200b8b139697c1",
+        "direct_ring.h": "97045577eccf9fb05ae8e9c18e05f5ad3b5f25f1aee2b79eb1ec2fe819ea6f27",
+        "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+        "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+        "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+        "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+        "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+        "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+        "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+        "/usr/bin/python3.12": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+      },
+      "regression_passed": true,
+      "held_passed": true,
+      "attach_exit": 0,
+      "deep_status": "passed"
+    },
+    "native_strings": {
+      "passed": true,
+      "real_kernel_capture": true,
+      "owned_synthetic_metadata": true,
+      "guard_page_cases": 44,
+      "malformed_cases": 11,
+      "partial_cold_cases": 17,
+      "checks": [
+        "Exact200byte frame including zero tails",
+        "Short/exact-limit/over-limit filename and function",
+        "Embedded NUL and empty strings",
+        "Both string objects end immediately before PROT_NONE page",
+        "All15unused frames zero",
+        "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+        "Exactly8B file/function payloads and linetable bytes recover across cold page",
+        "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+        "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+      ],
+      "module_sha256": "12c8a7baaed77aba6d1ac632642d28850d9065286c8fc7d6fefc9fedc5fffd36",
+      "artifacts": {
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "loader.c": "0d27b3fd1675dec2025b89a21226230429a9dd926c5441318d062c0201924f63",
+        "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174",
+        "strings.bpf.o": "95e127a6d9351b7ea4c4d8cc3574d453a9e00cee64acdd1c378263e3240b84d0",
+        "step-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "strings.bpf.c": "4a87038996b3cd6b2c2ce929f53c92a784034f72cf0c87ba352cb6b27da6d4f0",
+        "loader": "51c143702de5615c2655a20cc4458ccc8966a98e9f41d7f44b9d945a01f39cab"
+      },
+      "full_goal_complete": false
+    },
+    "module_free_strings": {
+      "passed": true,
+      "real_kernel_capture": true,
+      "owned_synthetic_metadata": true,
+      "guard_page_cases": 44,
+      "malformed_cases": 11,
+      "partial_cold_cases": 17,
+      "checks": [
+        "Exact200byte frame including zero tails",
+        "Short/exact-limit/over-limit filename and function",
+        "Embedded NUL and empty strings",
+        "Both string objects end immediately before PROT_NONE page",
+        "All15unused frames zero",
+        "Unmapped eight-byte rootframe/code-type/linetable-length reads return explicit error flags65",
+        "Exactly8B file/function payloads and linetable bytes recover across cold page",
+        "Root frame-pointer reads at all seven unaligned cross-page splits recover exact frames",
+        "Frame/code/Unicode-header/string and eight-byte tstate-frame/code-type/linetable-length reads straddle resident then absent PTE; full output recovered and cold PTE faulted in"
+      ],
+      "backend": "module-free",
+      "artifacts": {
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754",
+        "loader.c": "d7e5b892713e9bd69abb93a7c013123e853cc8f0d9f3f39963b153210f3b9151",
+        "step-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "step-2.log": "a81d8020a55367651969f3baa402b6ae8a4e957f782b1f4f1e0857bb74e17174",
+        "strings.bpf.o": "5bd45c33ee60a56fd5f05f5bc54a49f50f1f824316f139c76a033c01631fca5b",
+        "step-0.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "strings.bpf.c": "830d2d62ed60cb768074d2416d8f2344418bc44aef1e984bfff7d5d871903a13",
+        "loader": "ed7bb4e6c6ebd064b0b74642f578316052931c4670226021d44a7b561570887a"
+      },
+      "full_goal_complete": false
+    },
+    "fixture_failures": {
+      "passed": true,
+      "kernel": "6.8.0-142-generic",
+      "failures": [
+        {
+          "exit_code": 5,
+          "child_reaped": true,
+          "bpf_ids_restored": true
+        },
+        {
+          "exit_code": 6,
+          "child_reaped": true,
+          "bpf_ids_restored": true
+        },
+        {
+          "exit_code": 7,
+          "child_reaped": true,
+          "bpf_ids_restored": true
+        }
+      ],
+      "cleanup_ok": true,
+      "source_sha256": {
+        "shared/core/fixture_collector.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+        "shared/core/fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+        "tests/fixture_failures_guest.py": "776503f13000bd6da7286c05ebd0b34f4d097775db60f33b1bf4f59ab5b02229"
+      }
+    },
+    "endpoint_storage": {
+      "passed": true,
+      "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+      "rotations": 5,
+      "retained_segments": 3,
+      "input_records": 38400,
+      "decoded_retained_records": 1024,
+      "record_boundaries_preserved": true,
+      "no_preallocated_zero_tail": true,
+      "failed_write_does_not_release_ring": true,
+      "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+      "admin_modified_segments_preserved": true,
+      "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+      "bounded_consumer_backlog_retry": true,
+      "busy_record_no_spin": true,
+      "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1"
+    },
+    "endpoint_integration": {
+      "passed": true,
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "nonleader_exec": {
+        "iterations": 4,
+        "old_thread_state_retired": true
+      },
+      "outermost_return": {
+        "binding_present_during_eval": true,
+        "binding_retired_before_task_exit": true,
+        "empty_shadow": true
+      },
+      "storage_recovery": {
+        "partial_write_rolled_back": true,
+        "writes": 3,
+        "same_session": true,
+        "history_gaps": false
+      },
+      "cleanup_ok": true,
+      "modules_unchanged": true,
+      "sources": {
+        "reader.bpf.c": "528b1f611711adf20c06a54db840720d9e6aa800492e3a41bfdbb1b535e9ca83",
+        "collector.c": "818ff7cc5c872a08865ed663b031cbc6ba122fa6bfd380bb0b724a278b3742fb",
+        "direct_ring.h": "dcff674b36d07acd9fc6b8ae59e473e81558ae5a1826d0685aa902a730664738",
+        "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411",
+        "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f"
+      }
+    }
+  },
+  "final_oracle_reports_sha256": {
+    "native-final-oracle.log": "518c8ce58ffc4e11415d23af37ec2de590d73135172fa5655da1e794b6915643",
+    "module-free-final-oracle.log": "33db7318fbeec18d80dc295ff9e5c1c1470bf7fb522bbf236f0b5b3901ab2d34"
+  },
+  "rejected_attempts": [
+    {
+      "artifact": "native-correctness-first-attempt.log",
+      "sha256": "66f1cfc6e7e00afeb11cb968b777cf7457bdf892e1eefa69f0d79218913790b9",
+      "reason": "New fixture_child.h was hashed without being copied into lineage fixture directory; corrected. Scope also detected external BPF-set drift during guest startup; audit not relaxed."
+    },
+    {
+      "artifact": "endpoint-integration-lock-rejection.log",
+      "sha256": "4b0424657392bb6a3209d651c0ee50dc1cda95a48369d0e71fc0865330ff8bcc",
+      "reason": "Coordinator overlapped loader control and endpoint run. Shared lock refused attachment before running; corrected by sequential execution."
+    }
+  ],
+  "source_sha256": {
+    "core/fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+    "core/reader.bpf.c": "8ec13a818efefec15f1c6a6d5fb760b6af97e58bb20000b52976b3de254d4a54",
+    "endpoint-service/core/reader.bpf.c": "528b1f611711adf20c06a54db840720d9e6aa800492e3a41bfdbb1b535e9ca83",
+    "endpoint-service/python/demo.py": "dfe1622c0883d1bac2069c808db856e7b3bb07902dbdd875d385449a182dca95",
+    "endpoint-service/python/wire.py": "61f8accc650a5a719db2c71a9e7504a89b8665528044d8ff8632c0e87d5e96a8",
+    "endpoint-service/tests/integration_guest.py": "b5a9d0a58e866bdafbbb8ef7651e4b03ae7c436f0adb5625881dfdd7a656ea65",
+    "endpoint-service/tests/systemd_guest.py": "3a447713290f18a31a3d67fcc9b45b8ee486935bf10a4c67aabb6417946bf710",
+    "module-free/core/fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+    "module-free/core/reader.bpf.c": "edb3f6faac2c7587f9a8e66300549a601f00a1d9f328f9a5ae9e28f8e6e86b3d",
+    "module-free/python/compat_guest.py": "d6cc6b6fd92f74ec42eb883dbf6f94ad45f4db6672115bbf9337366c43bde4f1",
+    "module-free/python/encoder_guest.py": "940be4db41642b455e45fa5ac74f0f5176e6d43d3a7556d74f1d2b72d0523cb0",
+    "module-free/python/fixture_guest.py": "131243e836306d1ad7bc078c850e0257197731d23877cbdd5b7b4bd7aae0ad41",
+    "module-free/python/held_collector_path_guest.py": "5454dc60bda9eb819a984faec17065c0ae4c689194c7397503a9d9a754c1c9e8",
+    "module-free/python/history_guest.py": "4a8be47f90a1e631117389d6f123c1859235b76a11ba17042ee1c98832a5f4eb",
+    "module-free/python/oracle_collector_path_guest.py": "4ff1b634ab58de1e71a79df3513f85663b35ecdb21d3cd8de9722a221110e057",
+    "module-free/python/run_collector_path_guest.py": "9aed740dce2a7394e10f2a2df3ac799806920e4130014271df6d78ef4ef8d623",
+    "module-free/python/smoke_guest.py": "e9cedfe15c8914e5fa8cfe37607bd6135c13fa7bdb185c5ec1c542b2d488313d",
+    "module-free/python/strings_collector_path_guest.py": "99f7de78804197db2afc0b14fd02ff89215f8b10629383dac7e7afe59f0ea552",
+    "module-free/python/validate_guest.py": "88e2b4255975e3850a0b57dc743cb55474e4e8619f508f80e9465b83020ae867",
+    "module-free/python/verify_deep_collector_path_guest.py": "e5d185a8f29729d1afbc48de57920c86308629bb481325aa10fdd226452768df",
+    "python/build_collector_path_guest.py": "abc7f860c96b416628837447efaa13d439d963e54fc2427986b0bb119ea9a0db",
+    "python/collector_path_scope_guest.py": "afde85fa0272ee55344a06beba0f4c40d9befbd4a5d64f3b77aa66b30561d74e",
+    "python/compat_guest.py": "3a00d006e5990156113df203565b5707e0a8ac1286b33d4daf89c8799e531b9c",
+    "python/fixture_guest.py": "58bf27d12f32335e2d874bc0a2c2fa6f276e842bde0d7aaf28bd2bd233e8fccb",
+    "python/held_collector_path_guest.py": "773d35818e5fe489c3ee26717d5922df64ce35abe9168a8868af61411496dedf",
+    "python/history_guest.py": "450dea040cf6757b0805f31db77a2e9ec528ebed0137766e26fde446fe7d1921",
+    "python/run_collector_path_guest.py": "32045ebab265468f10f206ca28850e01d86f7e12dc1c83b54f8d7cf857b27dd0",
+    "python/strings_collector_path_guest.py": "2db1a9875426072a3ee10fd07e60de9c9de9e223a75794af1aa9c8526c4dc98f",
+    "python/support/bytecode_oracle_guest.py": "606ed92d7d6aaa445b6ed724ae1e5ce995e512a44d26628f047245553051b814",
+    "python/validate_guest.py": "249c1c1c29bfcf0f0d6cb171faa2e5edd44fb4d27ddb577779531c1c8548d7a1",
+    "python/verify_deep_collector_path_guest.py": "8abfbafc0e81207feb87d25de1491a3ac3e7c46a99a08855c874b61e6383ff1c",
+    "shared/core/fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+    "shared/core/fixture_collector.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+    "shared/python/collector_benchmark.py": "76041d5e592624ab0f352d2c02be8b8f22fe07f64a8552453e4c5731ee7dc2bf",
+    "shared/python/collector_records.py": "231be89a008bf8f6a628f4260fb50c905dda607a8a22f109de522385ea4328ad",
+    "shared/python/regression_verifier.py": "73da03a1fc516950e892baffa0174c1489c79928c63d56faa2e293d0e3f0a7cf",
+    "tests/fixture_child.c": "41abadfcb9bfc528ba3c76038b7b1526377509e9f7e4b496e81400c3c453ca64",
+    "tests/fixture_failures_guest.py": "776503f13000bd6da7286c05ebd0b34f4d097775db60f33b1bf4f59ab5b02229",
+    "tests/kfunc_registration_guest.py": "2422c436fba1343fb34b982dca3de50117cd14c44a7cb89444169df5078c18bd",
+    "tests/leader_exit_guest.py": "da1ab04ba36aad5055771c1c4ca13ba7399e0ffccbd6fe30788dd0892aad1e10",
+    "tests/source_binding_guest.py": "761b01b6d54ffd522f350daddc3cd822dcc09d6e08c3d89636c6a53dd7996eb7",
+    "tools/sanitize_evidence.py": "a0993140c0b206cec30cb35d2ba230e25dd95c7833eda92f0e440d992ea4fc5b"
+  },
+  "guest_source_match": {
+    "core/fixture_child.h": true,
+    "core/reader.bpf.c": true,
+    "endpoint-service/core/reader.bpf.c": true,
+    "endpoint-service/python/demo.py": true,
+    "endpoint-service/python/wire.py": true,
+    "endpoint-service/tests/integration_guest.py": true,
+    "endpoint-service/tests/systemd_guest.py": true,
+    "module-free/core/fixture_child.h": true,
+    "module-free/core/reader.bpf.c": true,
+    "module-free/python/compat_guest.py": true,
+    "module-free/python/encoder_guest.py": true,
+    "module-free/python/fixture_guest.py": true,
+    "module-free/python/held_collector_path_guest.py": true,
+    "module-free/python/history_guest.py": true,
+    "module-free/python/oracle_collector_path_guest.py": true,
+    "module-free/python/run_collector_path_guest.py": true,
+    "module-free/python/smoke_guest.py": true,
+    "module-free/python/strings_collector_path_guest.py": true,
+    "module-free/python/validate_guest.py": true,
+    "module-free/python/verify_deep_collector_path_guest.py": true,
+    "python/build_collector_path_guest.py": true,
+    "python/collector_path_scope_guest.py": true,
+    "python/compat_guest.py": true,
+    "python/fixture_guest.py": true,
+    "python/held_collector_path_guest.py": true,
+    "python/history_guest.py": true,
+    "python/run_collector_path_guest.py": true,
+    "python/strings_collector_path_guest.py": true,
+    "python/support/bytecode_oracle_guest.py": true,
+    "python/validate_guest.py": true,
+    "python/verify_deep_collector_path_guest.py": true,
+    "shared/core/fixture_child.h": true,
+    "shared/core/fixture_collector.c": true,
+    "shared/python/collector_benchmark.py": true,
+    "shared/python/collector_records.py": true,
+    "shared/python/regression_verifier.py": true,
+    "tests/fixture_child.c": true,
+    "tests/fixture_failures_guest.py": true,
+    "tests/kfunc_registration_guest.py": true,
+    "tests/leader_exit_guest.py": true,
+    "tests/source_binding_guest.py": true,
+    "tools/sanitize_evidence.py": true
+  },
+  "limitations": [
+    "Integrity lockdown/full/lazy/RT support, storage transactions, cross-cgroup policy and fleet CPU qualification remain open.",
+    "Supported6.8 fget_task returns file or NULL, not ERR_PTR. Error-pointer check is defensive; failed acquisitions retain zero identity.",
+    "Root fused_read_str helper is not the current module-backed live capture path; native kfunc capture remains unchanged.",
+    "Historical reports and public git history are not rewritten."
+  ]
+}

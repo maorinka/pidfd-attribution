@@ -118,17 +118,22 @@ def stop(process, state, crash=False, expect_gaps=False):
     process.wait(timeout=30)
     active.remove(process)
     if not crash:
-        assert process.returncode == 0, process.returncode
+        if not (process.returncode == 0):
+            raise RuntimeError(process.returncode)
         current = health(state)
-        assert (
+        if not (
             current["state"] == "stopped" and current["history_gaps"] == expect_gaps
-        ), current
+        ):
+            raise RuntimeError(current)
     wait_for(lambda: programs() == baseline_programs, timeout=30)
     current_modules = modules()
-    assert current_modules == baseline_modules, dict(
-        added=sorted(set(current_modules) - set(baseline_modules)),
-        removed=sorted(set(baseline_modules) - set(current_modules)),
-    )
+    if not (current_modules == baseline_modules):
+        raise RuntimeError(
+            dict(
+                added=sorted(set(current_modules) - set(baseline_modules)),
+                removed=sorted(set(baseline_modules) - set(current_modules)),
+            )
+        )
     return health(state)
 
 
@@ -168,8 +173,9 @@ def verify_writes(state, application, source=False):
         and e["target_pid"] == application["target"]
         and e["actors"]["acquirer"]["pid"] == application["pid"]
     ]
-    assert len(writes) == application["writes"], (len(writes), application)
-    assert (
+    if not (len(writes) == application["writes"]):
+        raise RuntimeError((len(writes), application))
+    if not (
         len(
             {
                 (e["file_identity"], e["generation"], e["target_birth_ns"])
@@ -177,26 +183,38 @@ def verify_writes(state, application, source=False):
             }
         )
         == 1
-    )
-    assert all(e["result"] == e["inner_result"] == 1 for e in writes)
-    assert all(
-        e["actors"]["opener"]["pid"]
-        and e["actors"]["acquirer"]["pid"]
-        and e["actors"]["writer"]["pid"]
-        for e in writes
-    )
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (all(e["result"] == e["inner_result"] == 1 for e in writes)):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (
+        all(
+            e["actors"]["opener"]["pid"]
+            and e["actors"]["acquirer"]["pid"]
+            and e["actors"]["writer"]["pid"]
+            for e in writes
+        )
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     if source:
-        assert all(e["source_complete"] for e in writes), writes
-        assert all(
-            all(a["frames"] and not a["source_flags"] for a in e["actors"].values())
-            for e in writes
-        )
+        if not (all(e["source_complete"] for e in writes)):
+            raise RuntimeError(writes)
+        if not (
+            all(
+                all(a["frames"] and not a["source_flags"] for a in e["actors"].values())
+                for e in writes
+            )
+        ):
+            raise RuntimeError("Guest control failed in integration_guest.py")
     else:
-        assert all(
-            not e["source_complete"]
-            and all(not a["frames"] for a in e["actors"].values())
-            for e in writes
-        )
+        if not (
+            all(
+                not e["source_complete"]
+                and all(not a["frames"] for a in e["actors"].values())
+                for e in writes
+            )
+        ):
+            raise RuntimeError("Guest control failed in integration_guest.py")
     return writes
 
 
@@ -235,16 +253,19 @@ def oracle(events):
                             start <= bytecode < end and line == frame["line"]
                             for start, end, line in code.co_lines()
                         )
-                assert matched, frame
+                if not (matched):
+                    raise RuntimeError(frame)
                 checked += 1
-    assert checked > 0
+    if not (checked > 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     return checked
 
 
 def named_map(name):
     maps = json.loads(subprocess.check_output(["bpftool", "-j", "map", "show"]))
     found = [row for row in maps if row["name"] == name]
-    assert len(found) == 1, found
+    if not (len(found) == 1):
+        raise RuntimeError(found)
     return found[0]
 
 
@@ -270,11 +291,13 @@ def map_value(name, key):
     row = named_map(name)
     library = map_library()
     fd = library.bpf_map_get_fd_by_id(row["id"])
-    assert fd >= 0
+    if not (fd >= 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     value = ctypes.create_string_buffer(row["bytes_value"])
     try:
         if library.bpf_map_lookup_elem(fd, ctypes.create_string_buffer(key), value):
-            assert ctypes.get_errno() == errno.ENOENT
+            if not (ctypes.get_errno() == errno.ENOENT):
+                raise RuntimeError("Guest control failed in integration_guest.py")
             return None
         return value.raw
     finally:
@@ -285,7 +308,8 @@ def fill_map(name):
     row = named_map(name)
     library = map_library()
     fd = library.bpf_map_get_fd_by_id(row["id"])
-    assert fd >= 0
+    if not (fd >= 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     value = ctypes.create_string_buffer(row["bytes_value"])
     inserted = 0
     try:
@@ -294,7 +318,8 @@ def fill_map(name):
             if library.bpf_map_update_elem(
                 fd, ctypes.create_string_buffer(key), value, 1
             ):
-                assert ctypes.get_errno() == errno.E2BIG
+                if not (ctypes.get_errno() == errno.E2BIG):
+                    raise RuntimeError("Guest control failed in integration_guest.py")
                 break
             inserted += 1
     finally:
@@ -303,8 +328,10 @@ def fill_map(name):
 
 
 def pipe_marker(fd, marker):
-    assert select.select([fd], [], [], 30)[0], "native checkpoint timed out"
-    assert os.read(fd, 1) == marker
+    if not (select.select([fd], [], [], 30)[0]):
+        raise RuntimeError("native checkpoint timed out")
+    if not (os.read(fd, 1) == marker):
+        raise RuntimeError("Guest control failed in integration_guest.py")
 
 
 baseline_programs = programs()
@@ -343,11 +370,15 @@ try:
     active.append(worker)
     wait_for(lambda: (BASE / "ready").exists(), timeout=10)
     process, state, config = start_sensor("identity")
-    assert health(state)["attachments"] == 29, health(state)
+    if not (health(state)["attachments"] == 29):
+        raise RuntimeError(health(state))
     duplicate = subprocess.run(
         collector_command(config), cwd=ROOT / "build", capture_output=True, timeout=10
     )
-    assert duplicate.returncode != 0 and b"exclusive collector lock" in duplicate.stderr
+    if not (
+        duplicate.returncode != 0 and b"exclusive collector lock" in duplicate.stderr
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     (BASE / "go").touch()
     worker.wait(timeout=10)
     active.remove(worker)
@@ -361,9 +392,11 @@ try:
         for e in read_events(state)
         if e["stage"] == 9 and e["inode"] == native_inode and e["accepted"]
     ]
-    assert len(native_writes) == 5 and all(
-        e["actors"]["writer"]["pid"] == worker.pid for e in native_writes
-    )
+    if not (
+        len(native_writes) == 5
+        and all(e["actors"]["writer"]["pid"] == worker.pid for e in native_writes)
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["identity"] = dict(
         health=stopped,
         independent_existing_process_writes=len(native_writes),
@@ -377,7 +410,8 @@ try:
     active.append(worker)
     wait_for(lambda: (BASE / "ready").exists(), timeout=10)
     process, state, _ = start_sensor("source", capture=True)
-    assert health(state)["attachments"] == 35
+    if not (health(state)["attachments"] == 35):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     (BASE / "go").touch()
     worker.wait(timeout=10)
     active.remove(worker)
@@ -393,16 +427,20 @@ try:
         for e in read_events(state)
         if e["stage"] == 9 and e["inode"] == native_inode and e["accepted"]
     ]
-    assert len(surviving) == 5 and all(
-        e["actors"]["writer"]["pid"] == worker.pid for e in surviving
-    )
+    if not (
+        len(surviving) == 5
+        and all(e["actors"]["writer"]["pid"] == worker.pid for e in surviving)
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     session = health(state)["session"]
     for iteration in range(5):
         old = health(state)["segments_created"]
         process.send_signal(signal.SIGHUP)
         wait_for(lambda: health(state).get("segments_created", 0) > old)
-    assert health(state)["session"] == session
-    assert len(list(state.glob("events-*.bin"))) == 3
+    if not (health(state)["session"] == session):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (len(list(state.glob("events-*.bin"))) == 3):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     after_rotation = demo("source-after-rotation")
     time.sleep(0.3)
     verify_writes(state, after_rotation, source=True)
@@ -422,7 +460,8 @@ try:
     old_session = health(state)["session"]
     stop(process, state, crash=True)
     process, state, _ = start_sensor("restart")
-    assert health(state)["session"] != old_session
+    if not (health(state)["session"] != old_session):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     application = demo("restart-demo")
     time.sleep(0.3)
     stop(process, state)
@@ -464,7 +503,8 @@ try:
     application = demo("cache-pressure")
     verify_writes(state, application, source=True)
     stopped = stop(process, state)
-    assert stopped["cache_pressure"] > 0 and stopped["state_errors"] == 0
+    if not (stopped["cache_pressure"] > 0 and stopped["state_errors"] == 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["cache_pressure"] = dict(
         filled_entries=filled,
         cache_pressure=stopped["cache_pressure"],
@@ -477,12 +517,16 @@ try:
     demo("index-pressure")
     time.sleep(0.2)
     stopped = stop(process, state, expect_gaps=True)
-    assert stopped["cleanup_index_failures"] > 0
-    assert stopped["cleanup_scans"] == 0
+    if not (stopped["cleanup_index_failures"] > 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (stopped["cleanup_scans"] == 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     installs = [event for event in read_events(state) if event["stage"] == 4]
-    assert installs and all(
-        event["actors"]["acquirer"]["source_flags"] & 128 for event in installs
-    )
+    if not (
+        installs
+        and all(event["actors"]["acquirer"]["source_flags"] & 128 for event in installs)
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["cleanup_index_pressure"] = dict(
         filled_entries=filled,
         rejected_admission=True,
@@ -530,14 +574,18 @@ try:
     key = struct.pack("<Q", (fixture.pid << 32) | fixture.pid)
     try:
         pipe_marker(notify_read, b"I")
-        assert map_value("threads", key) is not None
+        if not (map_value("threads", key) is not None):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         os.write(release_write, b"x")
         pipe_marker(notify_read, b"R")
-        assert map_value("threads", key) is None
+        if not (map_value("threads", key) is None):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         shadow = map_value("shadows", key)
-        assert shadow is not None and not any(shadow[: 64 * 8 + 4])
+        if not (shadow is not None and not any(shadow[: 64 * 8 + 4])):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         os.write(release_write, b"x")
-        assert fixture.wait(timeout=30) == 0
+        if not (fixture.wait(timeout=30) == 0):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         active.remove(fixture)
     finally:
         os.close(notify_read)
@@ -562,13 +610,16 @@ try:
         )
         active.append(fixture)
         before = json.loads(fixture.stdout.readline())
-        assert before["pid"] != before["tid"]
+        if not (before["pid"] != before["tid"]):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         old_key = struct.pack("<Q", (before["pid"] << 32) | before["tid"])
-        assert map_value("threads", old_key) is not None
+        if not (map_value("threads", old_key) is not None):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         fixture.stdin.write("x")
         fixture.stdin.flush()
         after = json.loads(fixture.stdout.readline())
-        assert after["pid"] == before["pid"] == after["tid"]
+        if not (after["pid"] == before["pid"] == after["tid"]):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         for name in (
             "threads",
             "shadows",
@@ -583,11 +634,13 @@ try:
             "duplicating",
             "execclosing",
         ):
-            assert map_value(name, old_key) is None, name
+            if not (map_value(name, old_key) is None):
+                raise RuntimeError(name)
         fixture.stdin.write("x")
         fixture.stdin.flush()
         fixture.communicate(timeout=30)
-        assert fixture.returncode == 0
+        if not (fixture.returncode == 0):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         active.remove(fixture)
     stop(process, state)
     result["nonleader_exec"] = dict(iterations=4, old_thread_state_retired=True)
@@ -619,12 +672,14 @@ try:
     gate.touch(mode=0o600)
     application = demo("storage-recovery")
     wait_for(lambda: health(state).get("storage_blocked") is True)
-    assert process.poll() is None
+    if not (process.poll() is None):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     gate.unlink()
     wait_for(lambda: health(state).get("storage_blocked") is False)
     verify_writes(state, application)
     stopped = stop(process, state)
-    assert stopped["session"] == initial_session and stopped["storage_stalls"] == 1
+    if not (stopped["session"] == initial_session and stopped["storage_stalls"] == 1):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["storage_recovery"] = dict(
         partial_write_rolled_back=True,
         writes=3,
@@ -710,7 +765,8 @@ try:
     fixture.stdin.write("x")
     fixture.stdin.flush()
     fixture.communicate(timeout=30)
-    assert fixture.returncode == 0
+    if not (fixture.returncode == 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     wait_for(lambda: health(state).get("binding_invalidations", 0) > 0)
     stopped = stop(process, state)
     application = json.loads(birth_result.read_text())
@@ -721,13 +777,19 @@ try:
         and event["inode"] == application["inode"]
         and event["emitter"]["pid"] == application["pid"]
     ]
-    assert len(birth_writes) == 3 and all(event["accepted"] for event in birth_writes)
-    assert birth_writes[0]["source_complete"]
-    assert (
+    if not (
+        len(birth_writes) == 3 and all(event["accepted"] for event in birth_writes)
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (birth_writes[0]["source_complete"]):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (
         not birth_writes[1]["source_complete"]
         and not birth_writes[1]["actors"]["writer"]["frames"]
-    )
-    assert birth_writes[2]["source_complete"]
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (birth_writes[2]["source_complete"]):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["task_birth_guard"] = dict(
         positive_before=True, mismatch_unknown=True, reseeded_after=True, health=stopped
     )
@@ -752,7 +814,8 @@ try:
     loop_pid = json.loads(loop_fixture.stdout.readline())["pid"]
     loop_key = struct.pack("<Q", (loop_pid << 32) | loop_pid)
     loop_binding = map_value("threads", loop_key)
-    assert loop_binding is not None
+    if not (loop_binding is not None):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     process.send_signal(signal.SIGSTOP)
     subprocess.run(
         [
@@ -772,11 +835,13 @@ try:
     wait_for(lambda: health(state).get("effective_capture_python") is True, timeout=60)
     recovered_writes = verify_writes(state, demo("recovered-source"), source=True)
     recovered_health = health(state)
-    assert map_value("threads", loop_key) == loop_binding
+    if not (map_value("threads", loop_key) == loop_binding):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     loop_fixture.stdin.write("x")
     loop_fixture.stdin.flush()
     loop_fixture.communicate(timeout=30)
-    assert loop_fixture.returncode == 0
+    if not (loop_fixture.returncode == 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     active.remove(loop_fixture)
     time.sleep(0.2)
     loop_application = json.loads(loop_result.read_text())
@@ -785,43 +850,59 @@ try:
         for event in read_events(state)
         if event["stage"] == 9 and event["inode"] == loop_application["inode"]
     ]
-    assert len(loop_writes) >= 2 and all(
-        event["source_complete"] for event in loop_writes[-2:]
-    )
+    if not (
+        len(loop_writes) >= 2
+        and all(event["source_complete"] for event in loop_writes[-2:])
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     oracle(loop_writes[-2:])
     result["continuous_loop_recovery"] = dict(
         binding_survives_epoch_change=True,
         recovered_source_before_new_eval_entry=True,
         oracle_checked_writes=2,
     )
-    assert recovered_health["history_gaps"]
-    assert recovered_health["capture_epoch"] > degraded_health["capture_epoch"]
-    assert recovered_health["python_entries"] > 0
-    assert recovered_health["python_returns"] > 0
-    assert recovered_health["uprobe_missed_callbacks"] is None
+    if not (recovered_health["history_gaps"]):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (recovered_health["capture_epoch"] > degraded_health["capture_epoch"]):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (recovered_health["python_entries"] > 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (recovered_health["python_returns"] > 0):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (recovered_health["uprobe_missed_callbacks"] is None):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     wait_for(
         lambda: any(row["run_cnt"] > 0 for row in health(state).get("bpf_runtime", []))
     )
     runtime_health = health(state)
-    assert any(row["delta_run_cnt"] > 0 for row in runtime_health["bpf_runtime"])
+    if not (any(row["delta_run_cnt"] > 0 for row in runtime_health["bpf_runtime"])):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     stopped = stop(process, state, expect_gaps=True)
     journals = list(state.glob("events-*.bin.capture.jsonl"))
-    assert len(journals) <= configuration()["max_segments"]
-    assert all(
-        path.stat().st_size <= 1024**2
-        and Path(str(path).removesuffix(".capture.jsonl")).is_file()
-        for path in journals
-    )
+    if not (len(journals) <= configuration()["max_segments"]):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (
+        all(
+            path.stat().st_size <= 1024**2
+            and Path(str(path).removesuffix(".capture.jsonl")).is_file()
+            for path in journals
+        )
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     mode_records = [
         json.loads(line)
         for path in state.glob("events-*.bin.capture.jsonl")
         for line in path.read_text().splitlines()
     ]
-    assert any(not row["capture_python"] for row in mode_records)
-    assert any(
-        row["capture_python"] and row["epoch"] > degraded_health["capture_epoch"]
-        for row in mode_records
-    )
+    if not (any(not row["capture_python"] for row in mode_records)):
+        raise RuntimeError("Guest control failed in integration_guest.py")
+    if not (
+        any(
+            row["capture_python"] and row["epoch"] > degraded_health["capture_epoch"]
+            for row in mode_records
+        )
+    ):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["adaptive_capture"] = dict(
         degraded_identity_writes=len(degraded_writes),
         recovered_source_writes=len(recovered_writes),
@@ -843,7 +924,8 @@ try:
         if line.startswith("0::")
     )
     cgroup_id = (Path("/sys/fs/cgroup") / cgroup_path.lstrip("/")).stat().st_ino
-    assert validate_cgroup(dict(cgroup_id=cgroup_id))["id"] == cgroup_id
+    if not (validate_cgroup(dict(cgroup_id=cgroup_id))["id"] == cgroup_id):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     try:
         validate_cgroup(dict(cgroup_id=2**64 - 1))
     except ValueError:
@@ -853,9 +935,11 @@ try:
     empty_group = Path("/sys/fs/cgroup") / ("pidfd-empty-test-" + str(os.getpid()))
     empty_group.mkdir()
     try:
-        assert not (empty_group / "cgroup.procs").read_text().strip()
+        if not (not (empty_group / "cgroup.procs").read_text().strip()):
+            raise RuntimeError("Guest control failed in integration_guest.py")
         resolved = validate_cgroup(dict(cgroup_id=empty_group.stat().st_ino))
-        assert resolved["path"] == str(empty_group)
+        if not (resolved["path"] == str(empty_group)):
+            raise RuntimeError("Guest control failed in integration_guest.py")
     finally:
         empty_group.rmdir()
 
@@ -868,7 +952,8 @@ try:
     demo("excluded-demo")
     time.sleep(0.3)
     stop(process, state)
-    assert not read_events(state)
+    if not (not read_events(state)):
+        raise RuntimeError("Guest control failed in integration_guest.py")
     result["cgroup"] = dict(
         exact_id=cgroup_id,
         matching_writes=application["writes"],

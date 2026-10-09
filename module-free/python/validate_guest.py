@@ -27,9 +27,8 @@ parser.add_argument(
     help="Owned Python fixture for run; exits when fixture exits",
 )
 args = parser.parse_args()
-assert (
-    sys.platform == "linux" and os.geteuid() == 0
-), "Run through ./run.sh in the owned Linux guest"
+if not (sys.platform == "linux" and os.geteuid() == 0):
+    raise RuntimeError("Run through ./run.sh in the owned Linux guest")
 # Reject pre-created writable or foreign staging directories before any
 # root build/copy/load operation. Keep the lock inside the protected parent.
 runtime = Path("/var/tmp/pidfd-module-free")
@@ -121,9 +120,8 @@ def step(name, driver, *arguments):
     print(name + " running", flush=True)
     with (EVIDENCE_DIR / (name + ".log")).open("w") as output:
         result = subprocess.run(command, stdout=output, stderr=subprocess.STDOUT)
-    assert (
-        result.returncode == 0
-    ), f'{name} failed; see {EVIDENCE_DIR / (name + ".log")}'
+    if not (result.returncode == 0):
+        raise RuntimeError(f'{name} failed; see {EVIDENCE_DIR / (name + ".log")}')
     print(name + " passed", flush=True)
 
 
@@ -138,7 +136,8 @@ try:
         sys.exit(0)
     step("correctness", "run_collector_path_guest.py")
     if args.action == "run":
-        assert args.fixture and args.fixture.is_file(), "run requires --fixture PATH"
+        if not (args.fixture and args.fixture.is_file()):
+            raise RuntimeError("run requires --fixture PATH")
         step("fixture", "fixture_guest.py", args.fixture.resolve())
         print("Fixture output: " + str(EVIDENCE_DIR / "fixture.log"))
         sys.exit(0)
@@ -151,10 +150,13 @@ try:
         step("cpu", "measure_collector_path_guest.py", EVIDENCE_DIR / "cpu")
     step("source-oracle", "oracle_collector_path_guest.py")
     for path, digest in protected.items():
-        assert sha256_file(Path(path)) == digest, "Original changed: " + path
-    assert modules() == baseline_modules, "Kernel module set changed"
+        if not (sha256_file(Path(path)) == digest):
+            raise RuntimeError("Original changed: " + path)
+    if not (modules() == baseline_modules):
+        raise RuntimeError("Kernel module set changed")
     remaining = json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
-    assert {p["id"] for p in remaining} == baseline_ids, "BPF program set changed"
+    if not ({p["id"] for p in remaining} == baseline_ids):
+        raise RuntimeError("BPF program set changed")
     report = dict(
         passed=True,
         backend="module-free",

@@ -529,38 +529,45 @@ static long fused_string_end(unsigned int index, void *opaque) {
   struct fused_string_context *s = opaque;
   if (index >= 128 || index >= s->size)
     return 1;
-  if (!s->bytes[index]) {
+  if (s->length != s->size)
+    s->bytes[index] = 0;
+  else if (!s->bytes[index])
     s->length = index + 1;
-    return 1;
-  }
   return 0;
 }
 static long fused_string_end64(unsigned int index, void *opaque) {
   struct fused_string_context *s = opaque;
   if (index >= 64 || index >= s->size)
     return 1;
-  if (!s->bytes[index]) {
+  if (s->length != s->size)
+    s->bytes[index] = 0;
+  else if (!s->bytes[index])
     s->length = index + 1;
-    return 1;
-  }
   return 0;
 }
+/* Read only the validated Unicode payload, including its terminator. This
+ * avoids crossing a guard page for short strings. Embedded-NUL tails are
+ * zeroed. */
 static __always_inline long fused_read_str(char *to, unsigned int size,
-                                           unsigned long long from) {
-  long rc = bpf_probe_read_user_str(to, size, (void *)from);
-  if (rc >= 0)
-    return rc;
-  rc = bpf_copy_from_user(to, size, (void *)from);
-  if (rc)
+                                           unsigned long long object) {
+  unsigned long long length = 0;
+  if (warm_read(&length, 8, object + UNICODE_LENGTH) ||
+      length > IOSEC_MAX_BYTECODE_BYTES)
     return -1;
-  to[size - 1] = '\0';
+  unsigned int amount = length < size ? (unsigned int)length + 1 : size;
+  if (amount == 0 || amount > size ||
+      warm_read(to, amount, object + ASCII_DATA))
+    return -1;
+  if (length < size && to[amount - 1])
+    return -1;
+  to[size - 1] = 0;
   struct fused_string_context scan = {
       .bytes = to, .size = size, .length = size};
   if (size <= 64)
     bpf_loop(64, fused_string_end64, &scan, 0);
   else
     bpf_loop(128, fused_string_end, &scan, 0);
-  return (long)scan.length;
+  return scan.length;
 }
 static __always_inline int ensure_fused_scratch(unsigned long long tid,
                                                 char **out_buf,
@@ -744,10 +751,8 @@ static long fused_frame_step(unsigned int step, void *opaque) {
     return 1;
   }
   struct source_frame *dst = &out->frames[slot];
-  long fsize =
-      fused_read_str(dst->file, sizeof(dst->file), filename + ASCII_DATA);
-  long nsize =
-      fused_read_str(dst->function, sizeof(dst->function), name + ASCII_DATA);
+  long fsize = fused_read_str(dst->file, sizeof(dst->file), filename);
+  long nsize = fused_read_str(dst->function, sizeof(dst->function), name);
   if (fsize < 0 || nsize < 0) {
     out->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
@@ -1273,8 +1278,9 @@ int BPF_PROG(reference_bound, struct task_struct *task, unsigned int fd,
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
-    e->file = (unsigned long long)ret;
-    struct event *o = bpf_map_lookup_elem(&origins, &e->file);
+    unsigned long long file = (unsigned long long)ret;
+    e->file = file && file < 0xfffffffffffff001ULL ? file : 0;
+    struct event *o = e->file ? bpf_map_lookup_elem(&origins, &e->file) : 0;
     if (o) {
       if (copy_source(&e->opener, &o->opener)) {
         e->opener.count = 0;
