@@ -52,7 +52,8 @@
       "root_tests": 17,
       "endpoint_tests": 15,
       "optimized_root_tests": 17,
-      "hosted_ci": "pending push"
+      "hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38002256273",
+      "hosted_ci_result": "success"
     }
   },
   "recommended_batches": [
@@ -853,9 +854,10 @@
   "implementation_batches": [
     {
       "batch": 1,
-      "status": "validated",
+      "status": "pushed-and-validated",
       "evidence": "validation/review-batch1.json",
-      "remaining": "Batch2 reliability and later coverage/performance work remain open."
+      "remaining": "Batch2 reliability and later coverage/performance work remain open.",
+      "source_commit": "b9880b827ffd24aaf5c52814f89d5b0dffce549d"
     }
   ]
 }
