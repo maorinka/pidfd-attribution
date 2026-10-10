@@ -551,10 +551,10 @@
     {
       "id": "R032",
       "area": "python-support",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Interpreter binary must itself export required CPython symbols; separate libpython/shared-library adapter unsupported. Doctor ELF/version checks may be weak.",
-      "next_step": "Verify target binary/version/symbols rather than doctor interpreter; document symbol-location requirement. Ubuntu/Killercoda3.12 passed, so not all distro builds fail.",
-      "evidence": ""
+      "next_step": "Target ELF/version/build flags/exported symbols are validated; runtime doctor selects manifest-pinned binary. Separate libpython adapters remain an explicit unsupported boundary.",
+      "evidence": "validation/selected-interpreter-preflight.json"
     },
     {
       "id": "R033",
@@ -883,8 +883,15 @@
       "area": "harness",
       "status": "partially-fixed",
       "finding": "Old /tmp execution tail, source-text rewriting/exec decoder, hardcoded python3.14, brittle readelf flags and sudo env stripping reported previously.",
-      "next_step": "Verify each remaining harness behavior; shared decoder/import refactor already done.",
-      "evidence": "Current measurement runner imports shared benchmark; controls import shared records. No claim all original harness issues fixed."
+      "next_step": "Audit remaining historical harness allegations separately; source decoder/import extraction and ELF parsing now corrected.",
+      "evidence": "Current measurement runner imports shared benchmark; controls import shared records. No claim all original harness issues fixed.",
+      "resolution_history": [
+        {
+          "batch": 14,
+          "detail": "Replaced fragile readelf header/flag parsing in shared fixture prepare and endpoint prepare with bounded binary ELF parsing; wrappers preserve PIDFD_* and expose absolute selected interpreter.",
+          "evidence": "validation/selected-interpreter-preflight.json"
+        }
+      ]
     },
     {
       "id": "R055",
@@ -1164,10 +1171,10 @@
     {
       "id": "R075",
       "area": "python-support",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "run.sh Ubuntu-release mapping reportedly makes3.11/3.13 unreachable despite supported layout range.",
-      "next_step": "Separate tested default interpreter from configurable target selection; verify target executable+matching headers and expose explicit configuration.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "next_step": "Absolute PIDFD_PYTHON selection is exposed in all three wrappers; matching target headers and ELF/symbol gates retained. New override runtime controls used Ubuntu24/Python3.12; supported minor versions still require their own qualification.",
+      "evidence": "validation/selected-interpreter-preflight.json"
     },
     {
       "id": "R076",

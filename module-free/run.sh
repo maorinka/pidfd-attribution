@@ -12,6 +12,11 @@ case "$VERSION_ID" in
   26.04) interpreter=/usr/bin/python3.14 ;;
   *) echo 'Supported Ubuntu releases: 22.04, 24.04 and 26.04.' >&2; exit 1 ;;
 esac
+interpreter="${PIDFD_PYTHON:-$interpreter}"
+if [[ "$interpreter" != /* ]]; then
+  echo 'PIDFD_PYTHON must be an absolute interpreter path.' >&2
+  exit 1
+fi
 if [[ ! -x "$interpreter" ]]; then
   echo 'Install dependencies first: sudo ./install-ubuntu.sh' >&2
   exit 1

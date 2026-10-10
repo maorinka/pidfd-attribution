@@ -281,3 +281,22 @@ backend's configured libbpf dependency. These workflows are opt-in; their presen
 alone does not mean every target has passed. Root/module-free source manifests
 cover their own backends, including arch.h. Endpoint builds pin their PRODUCTION
 source list and generated target inputs in build/manifest.json.
+
+Selected interpreter admission
+------------------------------
+The interpreter binary must itself export PyCode_Type and
+_PyEval_EvalFrameDefault; a separate shared libpython is unsupported. The doctor
+queries the selected binary for its version and build flags, and reads bounded
+ELF64 program headers directly. EXEC and executable PIE are supported; ordinary
+shared objects, static PIE, debug/free-threaded builds and mismatched development
+headers are refused. The installed doctor selects the binary pinned in the build
+manifest, independent of the Python running the CLI. Runtime checks need no nm
+or readelf; exported symbols were checked before building and the binary is pinned.
+
+To select another supported interpreter instead of the Ubuntu default, install
+its matching development headers and run, for example:
+  sudo env PIDFD_PYTHON=/absolute/path/python3.13 ./run.sh doctor
+  sudo env PIDFD_PYTHON=/absolute/path/python3.13 ./run.sh build
+The override affects the backend command process; it does not rewrite the system
+Python or the installed service command. Building with another version does not
+qualify that interpreter without its owned-VM source controls.

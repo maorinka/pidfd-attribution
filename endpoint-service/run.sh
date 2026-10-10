@@ -5,4 +5,9 @@ if [[ "$(uname -s)" != Linux ]]; then
   echo 'Run this sensor inside Ubuntu Linux.' >&2
   exit 1
 fi
-exec /usr/bin/python3 "$directory/python/service.py" "$@"
+interpreter="${PIDFD_PYTHON:-/usr/bin/python3}"
+if [[ "$interpreter" != /* || ! -x "$interpreter" ]]; then
+  echo 'PIDFD_PYTHON must name an executable absolute interpreter path.' >&2
+  exit 1
+fi
+exec "$interpreter" "$directory/python/service.py" "$@"

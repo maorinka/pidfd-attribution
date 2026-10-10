@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "baseline_commit": "170ee93",
+  "scope": "Selected CPython admission and ELF program-header generation; no BPF source change.",
+  "source_sha256": {
+    "shared/python/interpreter.py": "29ee40eb344c521adf5957cfd62243eccfdf94e607aa7562787a0c7c39d020f0",
+    "tests/test_interpreter.py": "21ccb4236769e489feb86814f4532a28ee4c6f14986be63376182b4871cb9ac6",
+    "shared/python/fixture_drivers/prepare_guest.py": "9195a7368041d3444a4ae3f2d1c1a7c8ac33068cece047b989fb3b6c78a08816",
+    "endpoint-service/python/prepare_guest.py": "65c2b3a535e8e39cc38a97e3041253d87842cbea7f327a73f57dfcc702ce35f2",
+    "python/doctor_guest.py": "90b1ec71f23f25b3cd21b5ad5fa554f0bd9d9344c8103b3941d0086eb442933d",
+    "module-free/python/doctor_guest.py": "57a0bc917e53b14506abdf75b56364bc5ae72499474019dfa61f6ffdfdddd019",
+    "endpoint-service/python/doctor_guest.py": "81dcddc1b18d6544c45cb535528304c842215dc3e62cc1f0ff8e7f1ac45f084d",
+    "endpoint-service/python/service.py": "444a80c86f3bb0b0439810b4a8a03f8ab85356b72022ccd51bbc0c79af49cafd",
+    "tools/check_compilation.py": "5736779edb89a80baa9b03c882762984af1d068e25b5c02f98049e45149f7008",
+    "run.sh": "ca28fe726f62052410b92f338bc7dd78b13c32f88c1c8126fb201c7baeb3a06e",
+    "module-free/run.sh": "ca28fe726f62052410b92f338bc7dd78b13c32f88c1c8126fb201c7baeb3a06e",
+    "endpoint-service/run.sh": "9ced2bc9ce03107c9fd255dd4ebceab8603b987d88c15aebaef9244189c5f86d"
+  },
+  "offline": {
+    "root_tests": 44,
+    "endpoint_tests": 28,
+    "mac_existing_root_policy_control_skipped": true,
+    "style_passed": true
+  },
+  "guest": {
+    "kernel": "6.8.0-146-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3",
+    "binary_kind": "EXEC",
+    "text_address": 4325376,
+    "code_type_address": 10670688,
+    "real_shared_object_refused": true,
+    "readelf_text_address_agrees": true,
+    "generated_root_config_byte_identical": true,
+    "generated_root_config_sha256": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+    "six_bpf_variants_compiled": true,
+    "collectors_compiled": true,
+    "module_compiled": true,
+    "root_prepare_passed": true,
+    "endpoint_prepare_passed": true,
+    "all_three_override_doctors_passed": true,
+    "all_three_relative_overrides_refused": true,
+    "isolated_installed_doctor_passed": true,
+    "installed_doctor_selected_pinned_alias_instead_of_command_interpreter": true
+  },
+  "controls": [
+    "ELF EXEC/PIE admission and distinct arm64 machine field",
+    "ordinary DSO/static PIE refusal",
+    "truncated headers, unsupported sizes, invalid entry/segment bounds, wrong architecture and loader errors",
+    "target version/build flags and required defined/exported symbols",
+    "isolated installed doctor complete import graph and pinned target selection"
+  ],
+  "limits": [
+    "ARM64 ELF admission covered by synthetic headers; no new ARM or Python3.10/3.13 runtime qualification in this batch.",
+    "No existing endpoint installation or fleet policy changed.",
+    "Preparation calibrations load temporary BPF; compile-only check itself loads no BPF/module.",
+    "Two first preparation attempts had incomplete private staging (entrypoint then fixture config); copying the full required source resolved both. No production correction was needed for those staging failures.",
+    "Separate libpython and static PIE adapters remain explicitly unsupported."
+  ],
+  "prior_hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38059510526"
+}

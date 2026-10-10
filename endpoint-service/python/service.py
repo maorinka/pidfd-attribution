@@ -343,6 +343,7 @@ def install_python_runtime(staging):
     shared_python.mkdir(parents=True)
     source = Path(sys.modules[configure_backend.__module__].__file__)
     shutil.copy2(source, shared_python / "backend_settings.py")
+    shutil.copy2(source.parent / "interpreter.py", shared_python / "interpreter.py")
 
 
 def validate_install_destination(target, unit):

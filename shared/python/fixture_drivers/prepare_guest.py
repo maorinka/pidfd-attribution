@@ -7,6 +7,7 @@ from support.python_layout import layout_header
 from kernel_admission import validate_preemption
 from shared.python.return_depth import detect_return_depth
 from shared.python.kernel_hooks import select_mm_release_hook
+from shared.python.interpreter import inspect_interpreter, require_interpreter_symbols
 from settings import BPF_INCLUDES, BPF_LIBS
 
 
@@ -32,24 +33,9 @@ def prepare():
         raise RuntimeError("Install linux-headers-" + os.uname().release)
     if not Path("/sys/kernel/btf/vmlinux").is_file():
         raise RuntimeError("Running kernel must expose BTF at /sys/kernel/btf/vmlinux")
-    version = subprocess.check_output(
-        [str(python), "-c", "import sys; print(sys.version_info[:3])"], text=True
-    ).strip()
-    build_flags = subprocess.check_output(
-        [
-            str(python),
-            "-c",
-            "import sysconfig; print(bool(sysconfig.get_config_var('Py_GIL_DISABLED') or sysconfig.get_config_var('Py_DEBUG')))",
-        ],
-        text=True,
-    ).strip()
-    if build_flags != "False":
-        raise RuntimeError("Free-threaded/debug CPython builds are unsupported")
-    if sys.version_info[:2] not in ((3, 10), (3, 11), (3, 12), (3, 13), (3, 14)):
-        raise RuntimeError("Source adapters require stock CPython 3.10–3.14")
-    elf = subprocess.check_output(["readelf", "-h", str(python)], text=True)
-    if not re.search(r"Type:\s+(EXEC|DYN)\b", elf):
-        raise RuntimeError("Requires an ELF EXEC or PIE interpreter")
+    target_info = inspect_interpreter(python, ARCH)
+    target_version = tuple(target_info["version"])
+    version = str(target_version)
     PREPARED.mkdir(exist_ok=True)
     includes = subprocess.check_output(
         [str(PYTHON_CONFIG), "--includes"], text=True
@@ -83,13 +69,11 @@ def prepare():
         if k != "CODE_TYPE_ADDRESS"
     }
     expected["UNICODE_LENGTH"] = 16
-    if offsets["PYTHON_MINOR"] != sys.version_info.minor:
+    if offsets["PYTHON_MINOR"] != target_version[1]:
         raise RuntimeError("Interpreter and development headers differ")
     # The historical 3.14 layout remains pinned; older adapters use their
     # own headers and retain the object/string assumptions of this reader.
-    if sys.version_info.minor == 14 and any(
-        offsets[k] != v for k, v in expected.items()
-    ):
+    if target_version[1] == 14 and any(offsets[k] != v for k, v in expected.items()):
         raise RuntimeError(f"Unsupported 3.14 interpreter layout: {offsets}")
     if any(
         offsets[k] != v
@@ -106,24 +90,8 @@ def prepare():
         not 0 <= v <= 1024 for v in offsets.values()
     ):
         raise RuntimeError("Unsupported interpreter field bounds")
-    symbols = subprocess.check_output(["nm", "-D", str(python)], text=True)
-    code = re.search(r"^([0-9a-fA-F]+) \w PyCode_Type$", symbols, re.M)
-    if not code or not re.search(r"\b_PyEval_EvalFrameDefault$", symbols, re.M):
-        raise RuntimeError("Required interpreter symbols are missing")
-    offsets["CODE_TYPE_ADDRESS"] = int(code[1], 16)
-    program_headers = subprocess.check_output(
-        ["readelf", "-lW", str(python)], text=True
-    )
-    executable_segments = [
-        int(fields[2], 16)
-        for line in program_headers.splitlines()
-        if (fields := line.split())
-        and fields[0] == "LOAD"
-        and "E" in "".join(fields[6:-1])
-    ]
-    if not executable_segments:
-        raise RuntimeError("Interpreter has no executable ELF load segment")
-    offsets["PYTHON_TEXT_ADDRESS"] = min(executable_segments)
+    offsets["CODE_TYPE_ADDRESS"] = require_interpreter_symbols(python)
+    offsets["PYTHON_TEXT_ADDRESS"] = target_info["elf"]["text_address"]
     thread_header = headers / "arch" / ARCH / "include/asm/thread_info.h"
     content = thread_header.read_text()
     if ARCH == "x86":

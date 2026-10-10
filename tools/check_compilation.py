@@ -19,6 +19,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from shared.python.kernel_hooks import select_mm_release_hook
+from shared.python.interpreter import interpreter_elf, require_interpreter_symbols
 from shared.python.python_layout import layout_header
 
 BACKENDS = ("root", "module-free", "endpoint-service")
@@ -54,19 +55,8 @@ def generate_inputs(directory, bpftool, headers):
             line.split("=") for line in output([str(helper)]).splitlines()
         )
     )
-    symbols = output(["nm", "-D", str(interpreter)])
-    code_type = re.search(r"^([0-9a-fA-F]+) \w PyCode_Type$", symbols, re.M)
-    if not code_type:
-        raise RuntimeError("Compile sample requires interpreter-exported PyCode_Type")
-    offsets["CODE_TYPE_ADDRESS"] = int(code_type[1], 16)
-    loads = []
-    for line in output(["readelf", "-lW", str(interpreter)]).splitlines():
-        fields = line.split()
-        if fields and fields[0] == "LOAD" and "E" in fields[6:-1]:
-            loads.append(int(fields[2], 16))
-    if not loads:
-        raise RuntimeError("Compile sample requires an executable load segment")
-    offsets["PYTHON_TEXT_ADDRESS"] = min(loads)
+    offsets["CODE_TYPE_ADDRESS"] = require_interpreter_symbols(interpreter)
+    offsets["PYTHON_TEXT_ADDRESS"] = interpreter_elf(interpreter, "x86")["text_address"]
     thread = (headers / "arch/x86/include/asm/thread_info.h").read_text()
     compat = re.search(r"^#define TS_COMPAT\s+(0x[0-9a-fA-F]+|\d+)\b", thread, re.M)
     if not compat:

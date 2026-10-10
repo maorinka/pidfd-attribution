@@ -4,6 +4,7 @@ from pathlib import Path
 import json, os, re, shutil, subprocess
 from settings import ARCH, PYTHON, PYTHON_CONFIG
 from kernel_admission import validate_preemption
+from shared.python.interpreter import inspect_interpreter, require_interpreter_symbols
 
 
 def doctor():
@@ -95,19 +96,15 @@ def doctor():
         not Path("/sys/module/iosec_native").exists(),
         "An existing iosec_native module must not be replaced",
     )
-    python = PYTHON
-    check(
-        "CPython 3.10–3.14",
-        __import__("sys").version_info[:2]
-        in ((3, 10), (3, 11), (3, 12), (3, 13), (3, 14)),
-        str(python),
-    )
-    if python.is_file() and shutil.which("readelf"):
-        elf = subprocess.check_output(["readelf", "-h", str(python)], text=True)
-        check(
-            "ELF interpreter",
-            re.search(r"Type:\s+(EXEC|DYN)\b", elf),
-            "EXEC and PIE are supported; shared-library interpreter symbols require a separate adapter",
-        )
+    try:
+        target = inspect_interpreter(PYTHON, ARCH)
+        check("selected CPython and ELF", True, dict(binary=str(PYTHON), **target))
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        check("selected CPython and ELF", False, str(error))
+    try:
+        address = require_interpreter_symbols(PYTHON)
+        check("interpreter-exported symbols", True, hex(address))
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        check("interpreter-exported symbols", False, str(error))
     print(json.dumps(checks, indent=2))
     return 0 if all(c["passed"] for c in checks) else 1
