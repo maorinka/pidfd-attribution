@@ -316,6 +316,25 @@ def run(config):
     os.execv(str(ROOT / "build/collector"), collector_command(config))
 
 
+def install_python_runtime(staging):
+    """Copy the complete Python import graph into the isolated installation."""
+    from settings import configure_backend
+
+    (staging / "python").mkdir()
+    for name in (
+        "service.py",
+        "wire.py",
+        "doctor_guest.py",
+        "settings.py",
+        "kernel_admission.py",
+    ):
+        shutil.copy2(SCRIPTS / name, staging / "python" / name)
+    shared_python = staging / "shared/python"
+    shared_python.mkdir(parents=True)
+    source = Path(sys.modules[configure_backend.__module__].__file__)
+    shutil.copy2(source, shared_python / "backend_settings.py")
+
+
 def install(config_path):
     linux_root()
     config = configuration(config_path)
@@ -351,15 +370,7 @@ def install(config_path):
         (staging / "build").mkdir()
         for name in ("collector", "reader.bpf.o", "manifest.json"):
             shutil.copy2(ROOT / "build" / name, staging / "build" / name)
-        (staging / "python").mkdir()
-        for name in (
-            "service.py",
-            "wire.py",
-            "doctor_guest.py",
-            "settings.py",
-            "kernel_admission.py",
-        ):
-            shutil.copy2(SCRIPTS / name, staging / "python" / name)
+        install_python_runtime(staging)
         for path in staging.rglob("*"):
             path.chmod(0o755 if path.is_dir() or path.name == "collector" else 0o644)
         staging.chmod(0o755)

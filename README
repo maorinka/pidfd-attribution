@@ -144,3 +144,20 @@ windows have accounting and background-noise limits. Saturated churn and
 callback workloads are compared by throughput and cost per work, rather than
 calling a similar utilization percentage low overhead. Use physical Intel
 hardware and representative long-running applications for fleet CPU claims.
+
+Shared fixture drivers
+----------------------
+Seven fixture controls use canonical implementations in
+shared/python/fixture_drivers/ with backend entrypoints under python/ and
+module-free/python/. Backend settings preserve the existing runtime prefixes,
+module-only generated configuration, and history timeouts (20/120 seconds).
+The admission/build/string/oracle/full-validation drivers still contain backend
+specific behavior and remain separate. Installed endpoint runtimes include the
+shared settings module and do not depend on the checkout.
+For the extraction comparison against its pre-refactor baseline, run:
+
+python3 tools/check_driver_refactor.py 039c820
+
+This compares normalized Python syntax for both backend variants. It complements
+the routing, timeout, fixture execution and isolated-installation tests; it does
+not load BPF or replace guest kernel validation.

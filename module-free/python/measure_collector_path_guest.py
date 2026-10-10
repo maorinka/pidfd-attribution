@@ -1,10 +1,7 @@
-"""Run the common CPU screen with this backend's interpreter and runtime."""
+"""Backend entrypoint for the shared measure collector path guest control."""
 
-import sys
-from settings import PYTHON
-from support.collector_benchmark import benchmark
+from settings import RUNTIME_DIR
+from shared.python.fixture_drivers.measure_collector_path_guest import main
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: measure_collector_path_guest.py OUTPUT_DIRECTORY")
-    benchmark(sys.argv[1], "/var/tmp/pidfd-module-free", PYTHON, expected_empty_maps=19)
+    main(RUNTIME_DIR)

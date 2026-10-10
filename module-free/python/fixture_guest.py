@@ -1,14 +1,7 @@
-"""Run one owned fixture using the built collector; called by the scope wrapper."""
+"""Backend entrypoint for the shared fixture guest control."""
 
-from pathlib import Path
-import os, subprocess, sys
+from settings import RUNTIME_DIR
+from shared.python.fixture_drivers.fixture_guest import main
 
-fixture = Path(sys.argv[1]).resolve()
-if not (fixture.is_file()):
-    raise RuntimeError("Validation failed: fixture_guest.py:7")
-evidence = __import__("settings").ROOT / "evidence"
-env = dict(
-    os.environ, PIDFD_FIXTURE=str(fixture), PIDFD_BINARY=str(evidence / "fixture.bin")
-)
-env.setdefault("PIDFD_RESULT", str(evidence / "fixture-result.json"))
-subprocess.run(["./loader"], cwd="/var/tmp/pidfd-module-free", env=env, check=True)
+if __name__ == "__main__":
+    main(RUNTIME_DIR)

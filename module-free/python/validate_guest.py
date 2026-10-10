@@ -67,6 +67,7 @@ from doctor_guest import doctor
 if doctor():
     raise RuntimeError("Environment preflight failed")
 from prepare_guest import prepare
+from shared.python.backend_settings import shared_driver_hashes
 
 pins = prepare()
 if args.action == "prepare":
@@ -174,6 +175,7 @@ try:
             for row in source_manifest["production_files"]
         },
         driver_sha256={p.name: sha256_file(p) for p in SCRIPTS.glob("*.py")},
+        shared_driver_sha256=shared_driver_hashes(),
         support_sha256={
             str(p.relative_to(SOURCE_DIR)): sha256_file(p)
             for p in (SCRIPTS / "support").glob("*.py")

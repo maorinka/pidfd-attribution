@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "baseline_commit": "039c8208531f7b130d89054a62b4c9e9d9e5c4e6",
+  "scope": "Seven shared fixture driver implementations and common backend settings; endpoint install includes its new settings dependency.",
+  "parity": [
+    {
+      "backend": ".",
+      "driver": "compat_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "fixture_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "held_collector_path_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "history_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "measure_collector_path_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "prepare_guest.py",
+      "passed": true
+    },
+    {
+      "backend": ".",
+      "driver": "verify_deep_collector_path_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "compat_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "fixture_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "held_collector_path_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "history_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "measure_collector_path_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "prepare_guest.py",
+      "passed": true
+    },
+    {
+      "backend": "module-free",
+      "driver": "verify_deep_collector_path_guest.py",
+      "passed": true
+    }
+  ],
+  "parity_command": "python3 tools/check_driver_refactor.py 039c820",
+  "normalizations": [
+    "Select the known module-backed/module-free generated-file branch.",
+    "Substitute existing runtime prefix and suffix paths; subprocess/benchmark accept pathlib.Path as well as string.",
+    "Parameterize the existing history timeout: 20 seconds module-backed, 120 seconds module-free.",
+    "Compare CLI bodies after moving them into explicit main functions and removing the old main guard."
+  ],
+  "source_sha256": {
+    "endpoint-service/python/service.py": "418505c0b8a75d02adf4b7ac768dbf41692be9b009d653b971a07f1f404e9a07",
+    "endpoint-service/python/settings.py": "dcd5e09ec5c5d40693861b64cb7d4b0350431670661483bb15b00bc2132d5554",
+    "module-free/python/compat_guest.py": "8603b490042d36daeda3d3e148a0a3310a5743c816419b7762165a12baa82799",
+    "module-free/python/fixture_guest.py": "e0a9adb6ed8a69bf5596e01d9a920617da1f402b7043d43abb32cb1cae0c0181",
+    "module-free/python/held_collector_path_guest.py": "44ff9a51a65e9cc2969d11124c7c1b573bf97f1fca8bce95e380dcc3f4022834",
+    "module-free/python/history_guest.py": "a335e483f664421d6395b0a86c0c01f6a0ec4659c953a8089aa70a8cc00293f5",
+    "module-free/python/measure_collector_path_guest.py": "74413c3b9af1228ab6221cbda1285f4492225e7f004e4c95bfcb1e67d67dcf12",
+    "module-free/python/prepare_guest.py": "c702b078cc2e515dbce557e3a44bcbca44da7a3655ba9eb001a085b3348be4aa",
+    "module-free/python/settings.py": "dcd5e09ec5c5d40693861b64cb7d4b0350431670661483bb15b00bc2132d5554",
+    "module-free/python/validate_guest.py": "3fde016c2e38e6905a494c8eb934f511318a20f60116ffde478cb3c3a17890ca",
+    "module-free/python/verify_deep_collector_path_guest.py": "da21fbee6bb3562f55172c1134235cfd49f7f6a689ab8be46713d0e43d4ff9c7",
+    "python/compat_guest.py": "8603b490042d36daeda3d3e148a0a3310a5743c816419b7762165a12baa82799",
+    "python/fixture_guest.py": "e0a9adb6ed8a69bf5596e01d9a920617da1f402b7043d43abb32cb1cae0c0181",
+    "python/held_collector_path_guest.py": "44ff9a51a65e9cc2969d11124c7c1b573bf97f1fca8bce95e380dcc3f4022834",
+    "python/history_guest.py": "a335e483f664421d6395b0a86c0c01f6a0ec4659c953a8089aa70a8cc00293f5",
+    "python/measure_collector_path_guest.py": "74413c3b9af1228ab6221cbda1285f4492225e7f004e4c95bfcb1e67d67dcf12",
+    "python/prepare_guest.py": "c702b078cc2e515dbce557e3a44bcbca44da7a3655ba9eb001a085b3348be4aa",
+    "python/settings.py": "dcd5e09ec5c5d40693861b64cb7d4b0350431670661483bb15b00bc2132d5554",
+    "python/validate_guest.py": "f6d769eaf5b90fe2d7cfda6529cb1b8d3804562933e01c9cd9d6fc6e3540a422",
+    "python/verify_deep_collector_path_guest.py": "da21fbee6bb3562f55172c1134235cfd49f7f6a689ab8be46713d0e43d4ff9c7",
+    "shared/python/backend_settings.py": "35392a65338debafd1044fcf51cb1be43fe225827b8b4839d7dda59ed07376d3",
+    "shared/python/fixture_drivers/__init__.py": "ebf36923d1c4697a6dc1dbe016664d00d5757a7582054483205f62ef57268fde",
+    "shared/python/fixture_drivers/compat_guest.py": "f35f3ef9ead4d5504f96a524f2b87e1b3687c3b9a5e2aa899bb665f5ad7c8252",
+    "shared/python/fixture_drivers/fixture_guest.py": "a440accafdae86645b36fa57bd0bd4b89e7054c08ddd3c82d72402df985841ee",
+    "shared/python/fixture_drivers/held_collector_path_guest.py": "af7362fec0c032d1bd768066e6c314ba5a8572da48f5b897a41133610ec442cd",
+    "shared/python/fixture_drivers/history_guest.py": "b37931268805670d215db5f54ca074a70c49380e6597750532558c572ae5d618",
+    "shared/python/fixture_drivers/measure_collector_path_guest.py": "50ea5695e4d7c47345d691075b96220249ecbe4f85f8cc92e69e6cff0acd49ee",
+    "shared/python/fixture_drivers/prepare_guest.py": "a4388df8268af10f1cf91c331eff02e184a32183a6b2687aab7cd457c4b59570",
+    "shared/python/fixture_drivers/verify_deep_collector_path_guest.py": "d86b4c713a4c6b0e4d4ac367a66801174063c42dfa0fb0ff2e1ff6d2f223ecdc",
+    "tests/test_fixture_drivers.py": "cf71e10267bf4f33943505c848008c7d1826f136513a9e66fd9e83a549e70bed",
+    "tools/check_driver_refactor.py": "e19deef0324343b9883c4c6fa59de52ff358b5913763aca8821e98f9851951ac"
+  },
+  "offline": {
+    "root_tests": 30,
+    "endpoint_tests": 19,
+    "style": "passed"
+  },
+  "tested_boundaries": [
+    "Backend roots, generated paths, runtimes, interpreter and history timeout selections.",
+    "Importing shared controls and preparation starts no subprocesses or filesystem writes.",
+    "Missing fixture refuses before starting collector.",
+    "Real subprocess fixture forwarding preserves paths with spaces and PIDFD_RESULT override.",
+    "History timeout kills/reaps the process group and retains stdout/stderr logs for both budgets.",
+    "Real endpoint installation-copy helper produces standalone settings/doctor imports in isolated Python with no checkout path.",
+    "Evidence hashes pin shared implementations, not only entrypoint wrappers."
+  ],
+  "limitations": [
+    "No new BPF attachment, source-binding kernel run, systemd installation or CPU benchmark in this slice.",
+    "Admission/build/string/oracle/full-validation drivers remain distinct; their differing security and coverage behavior is not unified.",
+    "Shared controls now have inert imports; their CLI operation and explicit failure gates are preserved."
+  ]
+}

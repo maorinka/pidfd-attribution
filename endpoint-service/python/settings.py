@@ -8,18 +8,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(
     0, str(ROOT.parent if ROOT.name in ("module-free", "endpoint-service") else ROOT)
 )
-PREPARED = ROOT / "generated"
-PYTHON = Path(sys.executable).resolve()
-PYTHON_CONFIG = Path(str(PYTHON) + "-config")
-DEPS = ROOT / ".deps"
-BPF_INCLUDES = (
-    ["-I" + str(DEPS / "include")] if (DEPS / "include/bpf/libbpf.h").is_file() else []
-)
-BPF_LIBS = (
-    [str(DEPS / "lib/libbpf.a"), "-lelf", "-lz"]
-    if (DEPS / "lib/libbpf.a").is_file()
-    else ["-lbpf", "-lelf", "-lz"]
-)
-ARCH = {"aarch64": "arm64", "x86_64": "x86"}.get(os.uname().machine)
-if ARCH is None:
-    raise RuntimeError("Supported architectures: aarch64 and x86_64")
+from shared.python.backend_settings import configure_backend
+
+globals().update(configure_backend(ROOT))

@@ -493,8 +493,10 @@
         },
         {
           "target": "Driver consolidation",
-          "status": "open",
-          "scope": "One driver set with explicit backend paths/timeouts and documented genuine backend differences."
+          "status": "partially-validated",
+          "scope": "One driver set with explicit backend paths/timeouts and documented genuine backend differences.",
+          "evidence": "validation/driver-consolidation.json",
+          "remaining": "Admission/build/string/oracle/full-validation drivers retain genuine backend differences; seven fixture controls and all settings share implementations."
         },
         {
           "target": "Frame walkers",
@@ -1001,6 +1003,12 @@
       "status": "validated",
       "evidence": "validation/thread-cleanup-refactor.json",
       "remaining": "R033 remains open: drivers, frame walkers, ring mechanics and common reader implementation. CPU optimizations remain separate."
+    },
+    {
+      "batch": "5-consolidation-drivers",
+      "status": "validated",
+      "evidence": "validation/driver-consolidation.json",
+      "remaining": "R033 stays open: other backend drivers, frame walkers, ring mechanics and common reader implementation."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."
