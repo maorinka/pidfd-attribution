@@ -7,6 +7,12 @@
       "file": "core/reader_impl.bpf.h"
     },
     {
+      "file": "core/wire_layout.bpf.h"
+    },
+    {
+      "file": "core/wire_emit_upstream.bpf.h"
+    },
+    {
       "file": "core/loader.c"
     },
     {

@@ -745,12 +745,19 @@
     {
       "id": "R039",
       "area": "scratch",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "Per-CPU scratch ownership/nesting assumption not fully established; admission rejects full/lazy/RT but is not proof against all interrupt/nested execution. Slab fallback may matter.",
-      "next_step": "Redesign ownership or document/prove supported hooks and execution invariants; stress concurrent programs and migration. Do not weaken gate based only on stress pass.",
-      "evidence": "",
+      "next_step": "Wire header now owned by each ring reservation. Replace remaining mutable per-CPU event/line scratch with proven ownership and test nested execution/migration before relaxing admission.",
+      "evidence": "validation/wire-header-ownership.json",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "resolution_history": [
+        {
+          "batch": 20,
+          "evidence": "validation/wire-header-ownership.json",
+          "scope": "Header-only ownership fixed; other scratch assumptions remain open."
+        }
       ]
     },
     {
@@ -1545,6 +1552,14 @@
       "items": [
         "R001",
         "R052"
+      ]
+    },
+    {
+      "batch": 20,
+      "name": "Per-reservation upstream wire headers",
+      "evidence": "validation/wire-header-ownership.json",
+      "items": [
+        "R039"
       ]
     }
   ],

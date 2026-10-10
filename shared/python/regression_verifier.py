@@ -443,6 +443,8 @@ def verify(root, runtime, expected_empty_maps=19):
     for name in [
         "reader.bpf.c",
         "reader_impl.bpf.h",
+        "wire_layout.bpf.h",
+        "wire_emit_upstream.bpf.h",
         "loader.c",
         "fixture_child.h",
         "fixture.py",
@@ -480,6 +482,8 @@ def verify(root, runtime, expected_empty_maps=19):
             for name in [
                 "reader.bpf.c",
                 "reader_impl.bpf.h",
+                "wire_layout.bpf.h",
+                "wire_emit_upstream.bpf.h",
                 "loader.c",
                 "fixture_child.h",
                 "fixture.py",

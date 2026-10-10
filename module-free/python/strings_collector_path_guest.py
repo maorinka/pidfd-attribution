@@ -187,6 +187,8 @@ if offsets["TSTATE_FRAME_INDIRECT"]:
 for n in [
     "reader.bpf.c",
     "reader_impl.bpf.h",
+    "wire_layout.bpf.h",
+    "wire_emit_upstream.bpf.h",
     "vmlinux.h",
     "config.h",
     "kernel_layout.h",

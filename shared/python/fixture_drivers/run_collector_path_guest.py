@@ -64,6 +64,8 @@ def build():
     for n in [
         "reader.bpf.c",
         "reader_impl.bpf.h",
+        "wire_layout.bpf.h",
+        "wire_emit_upstream.bpf.h",
         "loader.c",
         "fixture_child.h",
         "direct_ring.h",
@@ -151,6 +153,8 @@ def build():
     names = [
         "reader.bpf.c",
         "reader_impl.bpf.h",
+        "wire_layout.bpf.h",
+        "wire_emit_upstream.bpf.h",
         "loader.c",
         "fixture_child.h",
         "config.h",
@@ -230,6 +234,8 @@ def regression():
     for n in [
         "reader.bpf.c",
         "reader_impl.bpf.h",
+        "wire_layout.bpf.h",
+        "wire_emit_upstream.bpf.h",
         "loader.c",
         "fixture_child.h",
         "direct_ring.h",
@@ -239,6 +245,8 @@ def regression():
     for n in [
         "reader.bpf.c",
         "reader_impl.bpf.h",
+        "wire_layout.bpf.h",
+        "wire_emit_upstream.bpf.h",
         "loader.c",
         "fixture_child.h",
         "config.h",
@@ -299,6 +307,8 @@ def regression():
         for n in [
             "reader.bpf.c",
             "reader_impl.bpf.h",
+            "wire_layout.bpf.h",
+            "wire_emit_upstream.bpf.h",
             "loader.c",
             "fixture_child.h",
             "fixture.py",

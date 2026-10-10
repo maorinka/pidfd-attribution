@@ -15,8 +15,8 @@
       "R039",
       "R002"
     ],
-    "previous_batch_evidence": "validation/cgroup-boundary-coverage.json",
-    "pending_guest_coverage": "Cgroup batch passed both6.8 architectures,32 owned retirement audits each; native and module-free fixtures passed. Alias and scratch changes not yet implemented.",
+    "previous_batch_evidence": "validation/wire-header-ownership.json",
+    "pending_guest_coverage": "Wire header ownership passed both6.8 endpoint suites and ARM upstream fixture/encoder. Native executable equivalence passed. Other scratch ownership and descriptor aliases remain open.",
     "whole_host_requirement": "cgroup_id0 remains the intended default, with supported interpreter capture across workload cgroups."
   },
   "next_batches": [
