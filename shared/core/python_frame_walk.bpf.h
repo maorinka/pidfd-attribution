@@ -72,7 +72,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
     IOSEC_FRAME_SOURCE->flags |= IOSEC_SOURCE_READ_ERROR;
     return 1;
   }
-  if (type != python_code_type())
+  if (type != walk->code_type)
     return 0;
   if (IOSEC_FRAME_SOURCE->count >= IOSEC_SOURCE_FRAMES) {
     IOSEC_FRAME_SOURCE->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
@@ -82,7 +82,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
   int firstline = 0;
   {
     struct code_layout m;
-    if (IOSEC_FRAME_READ(&m, sizeof(m), code) || m.type != python_code_type()) {
+    if (IOSEC_FRAME_READ(&m, sizeof(m), code) || m.type != walk->code_type) {
       IOSEC_FRAME_SOURCE->flags |= IOSEC_SOURCE_READ_ERROR;
       return 1;
     }
@@ -200,15 +200,19 @@ static long walk_frame(unsigned int slot, void *opaque) {
 #endif
     bpf_loop(IOSEC_LINE_DECODE_STEPS, decode_byte, &line, 0);
     if (!line.found || line.error || line.kind == 15) {
+      /* A location failure does not invalidate the readable frame chain.
+       * Preserve this frame and outer callers with an explicit unknown line;
+       * never cache a failed decode as a valid location. */
       IOSEC_FRAME_SOURCE->flags |= IOSEC_SOURCE_LINE_ERROR;
-      return 1;
+      line.line = 0;
     }
 #if IOSEC_FRAME_WALK_SLEEPABLE
     line_nr = line.line;
 #else
     struct line_value *value = bpf_map_lookup_elem(&line_scratch, &zero);
 #endif
-    if (IOSEC_FRAME_CACHE_VALUE) {
+    if (IOSEC_FRAME_CACHE_VALUE && line.found && !line.error &&
+        line.kind != 15) {
       IOSEC_FRAME_CACHE_VALUE->line = IOSEC_FRAME_LINE_NUMBER;
       IOSEC_FRAME_CACHE_VALUE->amount = line.used;
       if (IOSEC_FRAME_COPY(IOSEC_FRAME_CACHE_VALUE->bytes,

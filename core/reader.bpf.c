@@ -243,7 +243,7 @@ _Static_assert(__builtin_offsetof(struct code_layout, firstline) ==
 _Static_assert(__builtin_offsetof(struct code_layout, table) == CODE_LINETABLE,
                "code table layout");
 struct walk_context {
-  unsigned long long frame;
+  unsigned long long frame, code_type;
   struct source_event *event;
 };
 
@@ -372,7 +372,7 @@ struct fused_walk_context {
   struct source_event *out;
   char *line_buf;
   struct line_value *line_val;
-  unsigned long long frame;
+  unsigned long long frame, code_type;
 };
 #define IOSEC_FRAME_WALK_SLEEPABLE 1
 #include "python_frame_walk.bpf.h"
@@ -1060,7 +1060,7 @@ static __always_inline void write_entry_snapshot(unsigned long long fd) {
  * other syscalls remains a full-system CPU accounting requirement. */
 SEC("tp_btf/sys_enter")
 int BPF_PROG(syscall_begin, struct pt_regs *regs, long id) {
-  if (id != IOSEC_NR_WRITE && id != 438)
+  if (id != IOSEC_NR_WRITE && id != IOSEC_NR_PIDFD_GETFD)
     return 0;
   /* Match ARCH_TRACE_IGNORE_COMPAT_SYSCALLS/is_compat_task in the
    * pinned arm64 formatted syscall-event dispatcher: TIF_32BIT==22. */

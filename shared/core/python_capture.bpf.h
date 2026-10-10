@@ -10,8 +10,10 @@ static __always_inline int capture_state(struct source_event *out,
   out->pid_tid = bpf_get_current_pid_tgid();
   struct task_struct *task = (void *)bpf_get_current_task_btf();
   out->birth = BPF_CORE_READ(task, start_time);
-  struct fused_walk_context walk = {
-      .out = out, .line_buf = line_buf, .line_val = line_val};
+  struct fused_walk_context walk = {.out = out,
+                                    .line_buf = line_buf,
+                                    .line_val = line_val,
+                                    .code_type = python_code_type()};
   int failed = warm_read(&walk.frame, 8, state + TSTATE_FRAME);
 #if TSTATE_FRAME_INDIRECT
   if (!failed)
@@ -74,7 +76,7 @@ static __always_inline int capture_python_source(struct source_event *e) {
 #if IOSEC_CAPTURE_CONTINUOUS
   unsigned long long epoch = current_capture_epoch();
 #endif
-  struct walk_context walk = {.event = e};
+  struct walk_context walk = {.event = e, .code_type = python_code_type()};
   int failed = read_u64(state->state + TSTATE_FRAME, &walk.frame);
 #if TSTATE_FRAME_INDIRECT
   if (!failed)

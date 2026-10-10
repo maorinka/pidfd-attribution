@@ -1,0 +1,290 @@
+{
+  "passed": true,
+  "baseline_commit": "11566f6c2406c9f7f69109396d99bc7c2a63e0f1",
+  "scope": "Preserve unknown-line frames/outer callers, resolve code type once per capture, architecture-owned pidfd number, fixed-offset manual-build refusal, explicit rotation and descriptor headroom.",
+  "offline": {
+    "root_tests": 34,
+    "endpoint_tests": 20,
+    "style_passed": true
+  },
+  "source_sha256": {
+    "README": "a89c02b5474a831f11e6bbf816844575865badff0bbbed4a5f29f256c1e9a054",
+    "core/module/config.h": "c27b4829b6eb45bcbba2d23d6bed54cbbb446f659e4ae9adacd686a610c6993c",
+    "core/module/iosec_native.c": "b16707fe40d306db060b0bccb218d2fd2f4e58a123d73034bc134d9759fa93e9",
+    "core/reader.bpf.c": "e6fa448083aa444afe6a3d7316e2075210b482a37912b897811c06236f3af974",
+    "endpoint-service/core/reader.bpf.c": "56f3d6fab9d2cd93112f76605da44f47b9a8a308618fbbb3bdadb3601c23c094",
+    "endpoint-service/iosec-endpoint.service": "ec79fec3f29cf64c48e5b175880cd36a5ff186fb5dbb57d6cd1264c1ce0a0851",
+    "endpoint-service/tests/integration_guest.py": "8c728a7f01f6b9c9936471335877ed857836e8797779d95b278c91ab8030d289",
+    "endpoint-service/tests/line_gap_fixture.py": "78fdbf1dad5d9769aa54aa2e5b01980290336974ea46b254abcf4117d9442049",
+    "endpoint-service/tests/systemd_guest.py": "b25d8bc4cfdd0b0a0ea1381d624d5018e5ae2ec82da7d94e83e0a2c3b5c137ca",
+    "module-free/core/reader.bpf.c": "c3e80d9a2871a064453d5b36c76ccfad9349cee45e5229844ebf785f1eab2bc5",
+    "shared/core/arch.h": "2e0614db96ac3c8028c99d12f2be0307b0071f3c067a99dadff1ce24dfe5d9a5",
+    "shared/core/python_capture.bpf.h": "cd5e5d1fdfeb1377343de2a22adc96b59daa8c765d6cb72b2217e69892d49966",
+    "shared/core/python_frame_walk.bpf.h": "92ff6d8692071394ed908e4fe3619ed29e9cb80da4765d44a7c8e50afca082a5"
+  },
+  "integration": {
+    "passed": true,
+    "kernel": "6.8.0-146-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "line_gap_frames": {
+      "line-gap-large-sleepable": {
+        "writes": 3,
+        "unknown_line_retained": true,
+        "outer_callers_retained": true,
+        "identity_accepted": true,
+        "source_complete": false,
+        "fallback": false
+      },
+      "line-gap-no-location-sleepable": {
+        "writes": 3,
+        "unknown_line_retained": true,
+        "outer_callers_retained": true,
+        "identity_accepted": true,
+        "source_complete": false,
+        "fallback": false
+      },
+      "line-gap-large-fallback": {
+        "writes": 3,
+        "unknown_line_retained": true,
+        "outer_callers_retained": true,
+        "identity_accepted": true,
+        "source_complete": false,
+        "fallback": true
+      },
+      "line-gap-no-location-fallback": {
+        "writes": 3,
+        "unknown_line_retained": true,
+        "outer_callers_retained": true,
+        "identity_accepted": true,
+        "source_complete": false,
+        "fallback": true
+      }
+    },
+    "final_mm_cache": {
+      "populated_worker_mm_retired": true,
+      "line_entries_retired": true,
+      "async_path_basis": "Both final-release paths call the selected hook; explicit mmput_async execution not forced by this control."
+    },
+    "outermost_return": {
+      "binding_present_during_eval": true,
+      "binding_retired_before_task_exit": true,
+      "empty_shadow": true
+    },
+    "nonleader_exec": {
+      "iterations": 4,
+      "old_thread_state_retired": true
+    },
+    "continuous_loop_recovery": {
+      "binding_survives_epoch_change": true,
+      "recovered_source_before_new_eval_entry": true,
+      "oracle_checked_writes": 2
+    },
+    "cleanup_ok": true,
+    "modules_unchanged": true,
+    "baseline_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ],
+    "final_bpf_ids": [
+      2,
+      18,
+      23,
+      24,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37
+    ]
+  },
+  "build_manifest": {
+    "schema_version": 1,
+    "upstream_only": true,
+    "pins": {
+      "kernel": "6.8.0-146-generic",
+      "architecture": "x86_64",
+      "python_binary": "/usr/bin/python3.12",
+      "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "kernel_btf_sha256": "d3805cbdc4a8882d216f45a7615961634651256d3dc07b4ff69ba4e528247b8e",
+      "python_version": "(3, 12, 3)",
+      "offsets": {
+        "TSTATE_FRAME": 56,
+        "CFRAME_FRAME": 0,
+        "TSTATE_FRAME_INDIRECT": 1,
+        "FRAME_CODE": 0,
+        "FRAME_INSTR": 56,
+        "FRAME_PREVIOUS": 8,
+        "FRAME_OWNER": 70,
+        "CODE_FILENAME": 112,
+        "CODE_NAME": 120,
+        "CODE_FIRSTLINE": 68,
+        "CODE_LINETABLE": 136,
+        "CODE_BYTECODE": 192,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 40,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 12,
+        "CODE_TYPE_ADDRESS": 10670688,
+        "PYTHON_TEXT_ADDRESS": 4325376,
+        "IOSEC_COMPAT_MASK": 2
+      },
+      "return_depth": {
+        "return_depth_bias": 1,
+        "entry_depths": [
+          0,
+          1
+        ],
+        "return_depths": [
+          2,
+          1
+        ]
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 47716,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 846,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 15
+            },
+            {
+              "name": "pathname",
+              "type_id": 4143
+            },
+            {
+              "name": "op",
+              "type_id": 11284
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 132710,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 719,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 719
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 8090
+            }
+          ]
+        },
+        "exit_mmap": {
+          "id": 28853,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 0,
+          "vlen": 1,
+          "params": [
+            {
+              "name": "mm",
+              "type_id": 404
+            }
+          ]
+        }
+      },
+      "target_inputs": {
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "3f67a31bc2312c6b513fd9abe57bd946d0cf333fdd19d782d9ec539d61e03a14",
+        "vmlinux.h": "87b4263ce33a2f437bab765368aab077bd112ee94c851154b22ef467469a539f"
+      },
+      "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+    },
+    "sources": {
+      "reader.bpf.c": "56f3d6fab9d2cd93112f76605da44f47b9a8a308618fbbb3bdadb3601c23c094",
+      "collector.c": "2a908b48046ea1e5bffb8d3b8a2404cef62941e0f7552a9a32157c28e0a47905",
+      "direct_ring.h": "2d2ec3876059626f4ca77e40b530b430b914f237a6609633718c6341ecc61053",
+      "direct_ring_common.h": "848402e37efce9f2be04184ca04ad749c928b2ca946388ec48d31b9bbb84cdbb",
+      "arch.h": "2e0614db96ac3c8028c99d12f2be0307b0071f3c067a99dadff1ce24dfe5d9a5",
+      "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+      "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+      "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+      "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+      "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+      "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+      "thread_retirement.bpf.h": "774e403a26440b7a9ceab403a52073d44a0276cc6fbe5fd55fab446a67c62c11",
+      "python_frame_walk.bpf.h": "92ff6d8692071394ed908e4fe3619ed29e9cb80da4765d44a7c8e50afca082a5",
+      "python_capture.bpf.h": "cd5e5d1fdfeb1377343de2a22adc96b59daa8c765d6cb72b2217e69892d49966",
+      "python_strings.bpf.h": "f6630a06831735d469ef8af48f0c218b1a3e0b42b507781852f0d5f2d9c98b68",
+      "slot_acceptance.bpf.h": "1fc160032e1b53222322213b3b9fe4febc0ce031714f4e45e080fb20af6b071b",
+      "mm_retirement.bpf.h": "3b9897437a81f940a28c624d6f075c87d2edfac1baedca30de230485049edc42",
+      "python_string_scan.bpf.h": "cec4993e87a0406b6720360ae818b5e48771aa34dd15599a00139463c2984856",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+      "capture_controller.h": "4cf68b1856cd2eed0441e4a1b2f4e03481cda118d0b57241dddfadf6b0163db9",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411"
+    },
+    "artifacts": {
+      "collector": "da1d18236b33332ba06cb54a0a039af17370fcc88a53005c05bbfd035be393bd",
+      "reader.bpf.o": "3264fe4e3bde5dd7ad0933b316fae7c5424f8be30ee94adc98ebaee2e8cd2f34"
+    }
+  },
+  "startup_unit": {
+    "passed": true,
+    "existing_installations_untouched": true,
+    "permanent_failure": {
+      "Result": "exit-code",
+      "NRestarts": "0",
+      "ExecMainStatus": "78",
+      "ActiveState": "failed"
+    },
+    "transient_failure_bounded": {
+      "Result": "exit-code",
+      "NRestarts": "5",
+      "ExecMainStatus": "1",
+      "ActiveState": "failed"
+    },
+    "start_limit_rejects_additional_attempt": true
+  },
+  "other_builds": {
+    "root": {
+      "compiled": true,
+      "object_sha256": "0a466c0d1d5660b6fbd16307f9d2cbd1a04f109495d09fbcca3aba1b8342d398"
+    },
+    "module-free": {
+      "compiled": true,
+      "object_sha256": "a4d5ba94d30001b9ca664fdc94024d6341febff42c83c75017f00053bd6dbbfa"
+    },
+    "module": {
+      "compiled": true,
+      "loaded": false
+    }
+  },
+  "integration_report_sha256": "072b8522ca1360ac5553aa096783d8deff93d144939334a750c59d48dc3e9ea3",
+  "limits": [
+    "Module compiled but not loaded in this batch. Other fixture backends BPF-compiled, not runtime tested.",
+    "No physical CPU or Secure Boot qualification.",
+    "Existing installed service untouched. Private unit tests startup/retry policy; full installation systemd suite not executed.",
+    "Identity acceptance preserved while LINE_ERROR makes source incomplete; no backfilled or invented source locations."
+  ]
+}

@@ -2,13 +2,17 @@
   "schema_version": 1,
   "purpose": "Persistent cumulative review ledger. Add new items or append evidence; never silently drop prior findings. No claim every reviewer statement is verified.",
   "baseline_commit": "bfb12492235ec31d046074ac9a59863777134feb",
-  "authorization": "User requested preservation/list only; this ledger does not authorize history rewriting or imply remaining fixes completed.",
+  "authorization": "User now requests continued implementation until the cumulative backlog is resolved. Preserve findings and evidence; irreversible history rewriting still needs a concrete reviewable proposal.",
   "status_definitions": {
     "reported-unverified": "Reviewer claim retained; source/runtime verification needed",
     "confirmed-open": "Confirmed code behavior or acknowledged limitation; unresolved",
     "fixed-tested": "Implemented and validated within stated scope",
     "partially-fixed": "Some components fixed, remaining risk recorded",
-    "open-design": "Requires behavior/trust contract decision"
+    "open-design": "Requires behavior/trust contract decision",
+    "fixed-with-scope": "Implemented/verified correction with explicit remaining scope limitations",
+    "fixed-with-runtime-limit": "Implemented fix; runtime matrix or special-path evidence limited",
+    "closed-not-reproduced": "Reviewed claim unsupported by current code/primary evidence; explanation retained",
+    "accepted-limitation": "Explicit documented product/research boundary; no claim of capability beyond it"
   },
   "review_sources": [
     "Repeated historical review referencing710d942 and older layout",
@@ -497,10 +501,17 @@
     {
       "id": "R031",
       "area": "portability",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "pidfd_getfd number438 hardcoded in readers while write has architecture macro.",
-      "next_step": "Use IOSEC_NR_GETFD for supported architectures. Third architecture already fails #error; silent third-arch build claim is incorrect.",
-      "evidence": ""
+      "next_step": "Native x86/arm64 syscall number is owned by arch.h; unsupported architectures already fail compilation. All3 readers use IOSEC_NR_PIDFD_GETFD.",
+      "evidence": "validation/source-location-robustness.json",
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Both architectures retain438; x86 live acquire controls and all3 BPF builds passed.",
+          "evidence": "validation/source-location-robustness.json"
+        }
+      ]
     },
     {
       "id": "R032",
@@ -732,10 +743,17 @@
     {
       "id": "R047",
       "area": "module-build",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Checked-in core/module/config.h contains hardcoded interpreter offsets despite generated build configuration.",
-      "next_step": "Make example unmistakable or guard manual misuse; preserve generated authoritative layout.",
-      "evidence": ""
+      "next_step": "Manual fixed-offset header refuses compilation; generated config still supplies target-specific module builds.",
+      "evidence": "validation/source-location-robustness.json",
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Unsafe checked-in offsets removed, generated-layout module compilation passed.",
+          "evidence": "validation/source-location-robustness.json"
+        }
+      ]
     },
     {
       "id": "R048",
@@ -888,14 +906,21 @@
     {
       "id": "R061",
       "area": "performance",
-      "status": "reported-unverified",
+      "status": "fixed-tested",
       "finding": "python_code_type reportedly computed twice per frame; proposal compute once per capture.",
-      "next_step": "Verify stable capture context and mm lifetime, then measure reduced reads without changing type validation.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Resolve code type once per capture context; retain both frame/type memory checks.",
+      "evidence": "validation/source-location-robustness.json",
       "measurement_history": [
         {
           "evidence": "validation/cpu-baseline-qemu.json",
           "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
+      ],
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Shared walker uses walk.code_type. Live complete-source/oracle and both location-gap capture paths passed; no CPU percentage claim.",
+          "evidence": "validation/source-location-robustness.json"
         }
       ]
     },
@@ -960,15 +985,22 @@
     {
       "id": "R067",
       "area": "source-capture",
-      "status": "confirmed-open",
+      "status": "fixed-tested",
       "finding": "Line table beyond4KiB or no-line kind15 reportedly aborts whole walk, losing outer frames; proposal emit line0 with explicit flag and continue.",
-      "next_step": "Confirm parser semantics and emitted flags; add large module/no-line/malformed table controls. Intentional wire/source behavior change requires oracle adaptation.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Keep readable unknown-line frame and outer callers; set LINE_ERROR, line0, skip cache insertion. Native capture follows same policy.",
+      "evidence": "validation/source-location-robustness.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Confirmed current shared walker returns 1 for !line.found, line.error or kind==15, setting LINE_ERROR; outer capture marks truncation. Continuing with unknown line changes source/complete semantics and needs oracle controls."
+      ],
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Four live controls: oversized table/no-location for sleepable/forced nonsleepable paths.3 accepted writes each; unknown lines retained; complete false; outer lines positive. Module compile only.",
+          "evidence": "validation/source-location-robustness.json"
+        }
       ]
     },
     {
@@ -1063,15 +1095,22 @@
     {
       "id": "R076",
       "area": "service-capacity",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "LimitNOFILE256 reportedly tight for35programs+35links+approximately20maps.",
-      "next_step": "Measure peak open descriptors including calibration/load/rotation/error paths; set bounded headroom and test under unit limit.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Unit descriptor limit1024 provides more headroom; exact fleet capacity still needs measurement.",
+      "evidence": "validation/source-location-robustness.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Reviewer estimates 100\u2013120 fds and requests headroom. Peak calibration/attach/rotation failure paths remain unmeasured."
+      ],
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Private systemd startup tests passed with new unit. No claim this replaces BPF/map/memory budgets.",
+          "evidence": "validation/source-location-robustness.json"
+        }
       ]
     },
     {
@@ -1211,11 +1250,18 @@
     {
       "id": "R088",
       "area": "operator-interface",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "ExecReload sends SIGHUP, which rotates segments rather than reloading policy/config.",
-      "next_step": "Document rotation explicitly or implement validated transactional reload with separate rotate command and signal tests.",
-      "evidence": "Current unit ExecReload and collector rotate_requested path inspected.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "No ExecReload for unsupported config reload. Document restart for config and explicit SIGHUP rotation.",
+      "evidence": "validation/source-location-robustness.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 10,
+          "detail": "Guest systemd rotation control updated to explicit signal. Candidate unit verified and private startup tests passed; full installed suite not executed.",
+          "evidence": "validation/source-location-robustness.json"
+        }
+      ]
     }
   ],
   "review_conflicts": [
@@ -1269,7 +1315,7 @@
     }
   ],
   "review_collection_complete": true,
-  "next_work": "Optimize measured global Python probe cost with source-scope/lifecycle controls; then native opening-state copies. Re-run this baseline and representative physical Intel workloads. Do not infer fleet budgets from QEMU.",
+  "next_work": "Continue WORK_PLAN.json goal: module helper authority/surface audit, CI and evidence indexing, install reliability, then coverage/lifecycle and measured CPU redesign.",
   "implementation_batches": [
     {
       "batch": 1,
@@ -1327,6 +1373,12 @@
       "status": "validated",
       "evidence": "validation/endpoint-reliability.json",
       "remaining": "Major CPU changes, lockdown admission, packaging, broader kernel/runtime coverage and other open review items remain. No CPU improvement claim."
+    },
+    {
+      "batch": "10-source-location-robustness",
+      "status": "validated",
+      "evidence": "validation/source-location-robustness.json",
+      "remaining": "Module attack surface, CI/install/evidence/coverage/saturation and measured CPU work remain."
     }
   ],
   "authorization_followup": "User approved implementation of the reconciled priority reliability batch. History rewriting remains unauthorized.",

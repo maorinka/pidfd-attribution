@@ -32,6 +32,7 @@ from wire import records
 
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-service-test-", dir="/var/tmp"))
 BASE.chmod(0o700)
+SOURCE_LINE_ERROR = 8
 REPORT = ROOT / "evidence/integration.json"
 REPORT.parent.mkdir(exist_ok=True)
 active = []
@@ -546,6 +547,71 @@ try:
     result["capacity"] = dict(
         explicit_history_gap=True, state_errors=stopped["state_errors"]
     )
+    result["line_gap_frames"] = {}
+    for fallback in (False, True):
+        for mode in ("large", "no-location"):
+            name = f"line-gap-{mode}-{'fallback' if fallback else 'sleepable'}"
+            process, state, _ = start_sensor(name, capture=True, state_entries=128)
+            if fallback:
+                fill_map("warm_tmp")  # Force the real nonsleepable capture path.
+            output = BASE / (name + ".json")
+            env = dict(
+                os.environ,
+                PIDFD_LINE_GAP=mode,
+                PIDFD_DEMO_ROOT=str(BASE / "files" / name),
+                PIDFD_RESULT=str(output),
+                PIDFD_WRITES="3",
+            )
+            subprocess.run(
+                [sys.executable, str(ROOT / "tests/line_gap_fixture.py")],
+                env=env,
+                check=True,
+                timeout=60,
+            )
+            application = json.loads(output.read_text())
+            stop(process, state)
+            writes = [
+                event
+                for event in read_events(state)
+                if event["stage"] == 9
+                and event["inode"] == application["inode"]
+                and event["emitter"]["pid"] == application["pid"]
+            ]
+            if len(writes) != 3 or not all(event["accepted"] for event in writes):
+                raise RuntimeError("Location gap changed identity acceptance")
+            for event in writes:
+                writer = event["actors"]["writer"]
+                frames = writer["frames"]
+                gap = [
+                    frame
+                    for frame in frames
+                    if (mode == "large" and frame["file"] == "large-locations.py")
+                    or (mode == "no-location" and frame["function"] == "line_gap_inner")
+                ]
+                outer = [
+                    frame for frame in frames if frame["function"] == "line_gap_outer"
+                ]
+                if not gap or not outer or any(frame["line"] != 0 for frame in gap):
+                    raise RuntimeError(
+                        ("Missing unknown-line frame or outer caller", frames)
+                    )
+                if writer["source_flags"] != SOURCE_LINE_ERROR:
+                    raise RuntimeError(
+                        ("Location gap misclassified as stack truncation", writer)
+                    )
+                if event["source_complete"] or not all(
+                    frame["line"] > 0 for frame in outer
+                ):
+                    raise RuntimeError("Location gap incorrectly marked complete")
+            result["line_gap_frames"][name] = dict(
+                writes=3,
+                unknown_line_retained=True,
+                outer_callers_retained=True,
+                identity_accepted=True,
+                source_complete=False,
+                fallback=fallback,
+            )
+
     process, state, _ = start_sensor("final-mm-cache", capture=True)
     worker_source = BASE / "mm-cache-worker.py"
     worker_source.write_text(

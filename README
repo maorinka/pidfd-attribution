@@ -226,3 +226,14 @@ The startup-unit control uses a unique private unit and leaves existing sensor
 installations untouched. It shortens only retry timing, verifies permanent
 refusals are not restarted, and verifies contention retries reach the shipped
 start limit. Neither startup failure reaches BPF object loading.
+
+Line-table decode bounds and no-location entries preserve readable frames with
+line 0 and SOURCE_LINE_ERROR, then continue to outer callers. Such source remains
+incomplete; identity acceptance is separate. PyCode_Type is resolved once per
+capture, while every frame still checks both readable type fields.
+
+Configuration reload is unsupported. Change the config and restart the service.
+For an explicit storage rotation use:
+  sudo systemctl kill --kill-who=main --signal=SIGHUP iosec-endpoint
+The unit intentionally exposes no ExecReload operation. Its file descriptor limit
+is 1024; map/program/link resource limits and memory bounds still apply.

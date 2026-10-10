@@ -8,7 +8,6 @@ StartLimitBurst=5
 Type=notify
 NotifyAccess=main
 ExecStart=/usr/bin/python3 /opt/iosec-endpoint/python/service.py run --config /etc/iosec-endpoint.json
-ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartPreventExitStatus=2 78
 RestartSec=10
@@ -37,7 +36,7 @@ RestrictNamespaces=true
 RestrictSUIDSGID=true
 PrivateDevices=true
 ProtectProc=invisible
-LimitNOFILE=256
+LimitNOFILE=1024
 MemoryMax=512M
 TasksMax=32
 

@@ -470,8 +470,9 @@ __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
     }
     /* FUSED-TABLE-END */
     if (native_line(bytes, amount, target, m.firstline, &line)) {
+      /* Keep the readable frame and outer callers, without inventing a line. */
       e->flags |= IOSEC_SOURCE_LINE_ERROR;
-      break;
+      line = 0;
     }
     struct source_frame *dst = &e->frames[count];
     flen = native_unicode_string(dst->file, sizeof(dst->file), m.filename,

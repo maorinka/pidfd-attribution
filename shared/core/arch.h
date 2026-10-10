@@ -5,6 +5,7 @@
 #define IOSEC_SYS_OPENAT "__x64_sys_openat"
 #define IOSEC_SYS_OPENAT2 "__x64_sys_openat2"
 #define IOSEC_NR_WRITE 1
+#define IOSEC_NR_PIDFD_GETFD 438
 #define IOSEC_ARG0(r) ((r)->di)
 #define IOSEC_ARG1(r) ((r)->si)
 /* TS_COMPAT is generated from the running kernel's x86 headers. x32 syscall
@@ -16,6 +17,7 @@
 #define IOSEC_SYS_OPENAT "__arm64_sys_openat"
 #define IOSEC_SYS_OPENAT2 "__arm64_sys_openat2"
 #define IOSEC_NR_WRITE 64
+#define IOSEC_NR_PIDFD_GETFD 438
 #define IOSEC_ARG0(r) ((r)->orig_x0)
 #define IOSEC_ARG1(r) ((r)->regs[1])
 #define IOSEC_COMPAT(t) ((t)->thread_info.flags & IOSEC_COMPAT_MASK)

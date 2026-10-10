@@ -1,0 +1,30 @@
+{
+  "objective": "Resolve all pidfd-attribution review backlog items through verified fixes or evidence-backed dispositions; preserve the full review ledger and push completed batches.",
+  "requested_by_user": "/goal keep until all is done and backlog is squeacky clean",
+  "baseline_commit": "11566f6c2406c9f7f69109396d99bc7c2a63e0f1",
+  "completion_criteria": [
+    "No open defect hidden or deleted; every finding has a concrete resolution and scope.",
+    "Source changes pass appropriate offline, build and owned-VM runtime checks.",
+    "Remaining evidence requirements or external decisions are explicitly tracked, not marked fixed.",
+    "Completed changes are pushed and hosted checks pass."
+  ],
+  "active_batch": {
+    "name": "Module helper authority and unused surface",
+    "items": [
+      "R021",
+      "R022",
+      "R023",
+      "R024",
+      "R025"
+    ],
+    "previous_batch_evidence": "validation/source-location-robustness.json"
+  },
+  "next_batches": [
+    "Module helper attack-surface audit and cleanup",
+    "Build/guest CI and evidence status index",
+    "Install/upgrade/runtime preflight robustness",
+    "Shared backend consolidation",
+    "Coverage, lifecycle, resource saturation and measured CPU redesign"
+  ],
+  "tracker_note": "create_goal refused because the thread retains an unfinished older blocked research goal. New objective preserved here; older goal is not falsely completed."
+}

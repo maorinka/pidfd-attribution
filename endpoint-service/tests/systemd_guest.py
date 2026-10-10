@@ -156,7 +156,10 @@ try:
     if not (len(writes) == 3 and all(e["source_complete"] for e in writes)):
         raise RuntimeError("Guest control failed in systemd_guest.py")
     old_segments = health()["segments_created"]
-    subprocess.run(["systemctl", "reload", "iosec-endpoint"], check=True)
+    subprocess.run(
+        ["systemctl", "kill", "--kill-who=main", "--signal=SIGHUP", "iosec-endpoint"],
+        check=True,
+    )
     wait(lambda: health().get("segments_created", 0) > old_segments)
     old_session = health()["session"]
     subprocess.run(
@@ -243,7 +246,7 @@ try:
         effective_capabilities=hex(cap),
         cap_sys_module=False,
         watchdog_notification=True,
-        reload_rotates=True,
+        explicit_rotation_signal=True,
         automatic_restart=True,
         old_session=old_session,
         new_session=restarted["session"],
