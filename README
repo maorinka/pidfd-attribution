@@ -122,3 +122,25 @@ Each control verifies that its child is reaped and BPF program IDs are restored.
 Mandatory Python driver and guest-control checks remain active with python -O.
 The offline string-helper test exercises bounds and zero tails with native read
 and loop stubs; live BPF string controls provide separate kernel evidence.
+
+CPU measurements (owned Linux VM only)
+--------------------------------------
+After building endpoint-service/, run its CPU matrix with the interpreter pinned
+in build/manifest.json. Example for the supported Ubuntu 24.04/Python 3.12 target:
+
+cd endpoint-service
+sudo /usr/bin/python3.12 benchmarks/cpu_matrix_guest.py --duration 4 --repeats 3
+sudo /usr/bin/python3.12 benchmarks/cpu_matrix_guest.py --bpf-stats --duration 3 --profiles native-churn pidfd-writes python-callbacks
+
+The first run leaves BPF timing disabled. The second is a separate diagnostic
+screen, because timing adds overhead. Both rotate off/identity/Python/excluded
+Python modes, check loss and cleanup, and verify captured pidfd writes and source
+positions. The excluded mode is an intentional direct-collector control with an
+unobservable cgroup ID; it is not a deployable service configuration.
+Reports are written under endpoint-service/evidence/. Whole-guest CPU,
+application CPU, collector CPU and BPF runtime are separate measurements; BPF
+runtime overlaps process/kernel CPU and must not be added to it. Short QEMU
+windows have accounting and background-noise limits. Saturated churn and
+callback workloads are compared by throughput and cost per work, rather than
+calling a similar utilization percentage low overhead. Use physical Intel
+hardware and representative long-running applications for fleet CPU claims.

@@ -405,6 +405,12 @@
       "evidence": "",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
       ]
     },
     {
@@ -416,6 +422,12 @@
       "evidence": "bfb1249 conditional fd_install/index cleanup deletes; global attachment costs remain.",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
       ]
     },
     {
@@ -671,6 +683,12 @@
       "evidence": "",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
       ]
     },
     {
@@ -703,7 +721,13 @@
       "status": "reported-unverified",
       "finding": "Proposal to resolve tstate at write time via _PyRuntime/native_thread_id on3.11+, eliminating uprobes.",
       "next_step": "Check interpreter ownership, bounded enumeration, subinterpreters, shared libpython, runtime mutations, memory faults and performance across3.10-3.14. Proposal is not a validated solution.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
+      ]
     },
     {
       "id": "R060",
@@ -711,7 +735,13 @@
       "status": "reported-unverified",
       "finding": "Write capture repeatedly copies large events, walks up to16frames and decodes line tables; proposal to cache per-thread stack using frame/instruction-chain hash.",
       "next_step": "Measure actual dominant paths; use collision-safe exact validation and invalidation for mutable code/strings, mm/task birth and interpreter reuse. Preserve unattested flags and fault behavior.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
+      ]
     },
     {
       "id": "R061",
@@ -719,7 +749,13 @@
       "status": "reported-unverified",
       "finding": "python_code_type reportedly computed twice per frame; proposal compute once per capture.",
       "next_step": "Verify stable capture context and mm lifetime, then measure reduced reads without changing type validation.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
+      ]
     },
     {
       "id": "R062",
@@ -743,7 +779,13 @@
       "status": "reported-unverified",
       "finding": "Proposal TASK_STORAGE for monitored flag and per-thread staging, to avoid hash overhead/map saturation and exit deletes;9,760-byte value limit unverified.",
       "next_step": "Check helper availability/prog-type permissions, allocation failure, value limits, lifetime on fork/exec, memory budget and lookup costs across supported kernels. Do not assume one pointer dereference.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "measurement_history": [
+        {
+          "evidence": "validation/cpu-baseline-qemu.json",
+          "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
+        }
+      ]
     },
     {
       "id": "R065",
@@ -892,7 +934,7 @@
     }
   ],
   "review_collection_complete": true,
-  "next_work": "Batch3: measure whole-host hook/uprobe cost and saturation; choose narrowly scoped changes with attribution regression controls. Preserve unresolved coverage, deployment and module-surface findings.",
+  "next_work": "Optimize measured global Python probe cost with source-scope/lifecycle controls; then native opening-state copies. Re-run this baseline and representative physical Intel workloads. Do not infer fleet budgets from QEMU.",
   "implementation_batches": [
     {
       "batch": 1,
@@ -908,6 +950,12 @@
       "remaining": "Probe cost, coverage, saturation and backend consolidation remain open; no CPU qualification.",
       "source_commit": "b9473febddc8cd232ed633620f1ec09baf217fdf",
       "hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38004142082"
+    },
+    {
+      "batch": "3-measurement",
+      "status": "validated",
+      "evidence": "validation/cpu-baseline-qemu.json",
+      "remaining": "Global Python probes, native opening-state cost, representative Intel measurement and other review items remain open."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."

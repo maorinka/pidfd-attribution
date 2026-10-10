@@ -36,3 +36,4 @@ jobs:
           #define IOSEC_PYTHON_BINARY "/usr/bin/python3.12"
           HEADER
           python3 endpoint-service/tests/check_storage.py
+          gcc -O2 -Wall -Wextra -Werror endpoint-service/benchmarks/bpf_runtime.c -lbpf -lelf -lz -o /tmp/bpf-runtime

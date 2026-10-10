@@ -68,6 +68,45 @@ class CpuMetricsTests(unittest.TestCase):
         self.assertEqual(result["throughput_change_pct"]["median"], -50)
         self.assertEqual(result["guest_cpu_ns_per_iteration_delta"]["median"], 1000)
 
+    def test_callback_fixed_work_does_not_report_baseline_window_as_utilization(self):
+        base = dict(
+            profile="python-callbacks",
+            mode="off",
+            repeat=0,
+            guest_busy_seconds=0.1,
+            measurement_wall_seconds=0.5,
+            guest_busy_ns_per_iteration=100,
+            application_cpu_seconds=0.1,
+            throughput=1000,
+            collector_pct_one_core=0,
+        )
+        row = dict(
+            base,
+            mode="python",
+            guest_busy_seconds=1.5,
+            guest_busy_ns_per_iteration=1500,
+            throughput=100,
+        )
+        result = metrics.paired_summary([base, row])["python-callbacks"]["python"]
+        self.assertNotIn("added_guest_cpu_pct_one_core", result)
+        self.assertEqual(result["throughput_change_pct"]["median"], -90)
+
+    def test_module_reference_change_is_distinct_from_module_replacement(self):
+        before = ["inet_diag 28672 3 udp_diag,tcp_diag, Live 0x1000"]
+        after = ["inet_diag 28672 2 udp_diag,tcp_diag, Live 0x1000"]
+        self.assertEqual(
+            metrics.module_identities(before), metrics.module_identities(after)
+        )
+        replaced = ["inet_diag 28672 2 udp_diag,tcp_diag, Live 0x2000"]
+        self.assertNotEqual(
+            metrics.module_identities(before), metrics.module_identities(replaced)
+        )
+        self.assertNotEqual(
+            metrics.module_identities(before), metrics.module_identities([])
+        )
+        with self.assertRaises(ValueError):
+            metrics.module_identities(["invalid"])
+
     def test_noise_is_not_clamped_to_zero(self):
         base = dict(
             profile="idle",

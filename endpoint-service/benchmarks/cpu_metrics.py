@@ -64,6 +64,14 @@ def paired_summary(samples):
             if profile == "native-churn":
                 del values["added_guest_cpu_pct_one_core"]
                 del values["application_cpu_change_pct"]
+            if profile == "python-callbacks":
+                # Fixed work can take much longer with probes. A percentage of
+                # the baseline window is not observed CPU utilization.
+                del values["added_guest_cpu_pct_one_core"]
+            if profile == "idle":
+                del values["application_cpu_change_pct"]
+                del values["guest_cpu_ns_per_iteration_delta"]
+                del values["throughput_change_pct"]
             result[profile][mode] = {
                 name: dict(
                     median=statistics.median(items), range=[min(items), max(items)]
@@ -72,3 +80,22 @@ def paired_summary(samples):
                 if items
             }
     return result
+
+
+def module_identities(lines):
+    """Module references change with ordinary socket/file use, not just loading.
+
+    Compare loaded identities, retaining address/state and optional taint fields.
+    A module load, unload or replacement must still invalidate the sample.
+    """
+    identities = {}
+    for line in lines:
+        fields = line.split()
+        if len(fields) < 6:
+            raise ValueError("Invalid /proc/modules record")
+        name, size, references, users, state, address = fields[:6]
+        int(references)
+        if name in identities:
+            raise ValueError("Duplicate module identity")
+        identities[name] = (int(size), state, address, tuple(fields[6:]))
+    return identities

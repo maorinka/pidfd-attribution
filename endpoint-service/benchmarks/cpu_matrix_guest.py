@@ -22,8 +22,9 @@ sys.path.insert(0, str(ROOT.parent))
 sys.path.insert(0, str(ROOT / "python"))
 from shared.python.validation_lock import validation_lock
 from service import configuration, collector_command, admit_runtime, verify_build
+from settings import BPF_INCLUDES, BPF_LIBS
 from wire import records
-from cpu_metrics import cpu_measurement, paired_summary
+from cpu_metrics import cpu_measurement, paired_summary, module_identities
 
 MODES = ("off", "identity", "python", "excluded-python")
 PROFILES = ("idle", "native-churn", "pidfd-writes", "python-callbacks")
@@ -81,13 +82,10 @@ def wait_for(check, timeout=180):
     raise TimeoutError("CPU matrix condition was not met")
 
 
-def runtime_snapshot(program_ids):
-    found = {row["id"]: row for row in programs() if row["id"] in program_ids}
+def runtime_snapshot(program_ids, reader):
+    rows = json.loads(subprocess.check_output([str(reader), *map(str, program_ids)]))
+    found = {row["id"]: row for row in rows}
     require(set(found) == set(program_ids), "Sensor program disappeared")
-    require(
-        all("run_time_ns" in row and "run_cnt" in row for row in found.values()),
-        "BPF runtime counters unavailable",
-    )
     return found
 
 
@@ -101,7 +99,7 @@ def runtime_delta(before, after):
         rows.append(
             dict(
                 id=key,
-                name=new["name"],
+                name=str(key),
                 run_time_ns=duration,
                 run_count=calls,
                 mean_ns=duration / calls if calls else None,
@@ -199,7 +197,7 @@ def workload(base, state, profile, executable, python, args):
     return app, usage.ru_utime + usage.ru_stime
 
 
-def measure(base, executable, python, profile, mode, repeat, args):
+def measure(base, executable, reader, python, profile, mode, repeat, args):
     state = base / f"{profile}-{repeat}-{mode}"
     state.mkdir(mode=0o700)
     baseline_ids, baseline_modules = ids(), modules()
@@ -241,13 +239,15 @@ def measure(base, executable, python, profile, mode, repeat, args):
                     return current if current.get("state") == "running" else None
 
                 initial = wait_for(ready)
+            if collector and args.bpf_stats:
+                require(initial["bpf_stats_enabled"], "Collector timing is not enabled")
             time.sleep(0.5)
             timed_ids = (
                 [row["id"] for row in initial["bpf_runtime"]]
                 if collector and args.bpf_stats
                 else []
             )
-            bpf_before = runtime_snapshot(timed_ids) if timed_ids else {}
+            bpf_before = runtime_snapshot(timed_ids, reader) if timed_ids else {}
             collector_before = collector_ticks(collector.pid) if collector else 0
             before = cpu_ticks()
             start = time.monotonic_ns()
@@ -256,10 +256,15 @@ def measure(base, executable, python, profile, mode, repeat, args):
             elapsed = (time.monotonic_ns() - start) / 1e9
             after = cpu_ticks()
             collector_after = collector_ticks(collector.pid) if collector else 0
-            bpf_after = runtime_snapshot(timed_ids) if timed_ids else {}
+            bpf_after = runtime_snapshot(timed_ids, reader) if timed_ids else {}
             collector_cpu = (collector_after - collector_before) / os.sysconf(
                 "SC_CLK_TCK"
             )
+            timing = runtime_delta(bpf_before, bpf_after)
+            if collector and args.bpf_stats:
+                names = {row["id"]: row["name"] for row in initial["bpf_runtime"]}
+                for row in timing:
+                    row["name"] = names[row["id"]]
             result = dict(
                 profile=profile,
                 mode=mode,
@@ -271,7 +276,7 @@ def measure(base, executable, python, profile, mode, repeat, args):
                 collector_cpu_seconds=collector_cpu,
                 collector_pct_one_core=100 * collector_cpu / elapsed,
                 bpf_stats_enabled=args.bpf_stats,
-                bpf_runtime=runtime_delta(bpf_before, bpf_after),
+                bpf_runtime=timing,
                 **cpu_measurement(
                     before,
                     after,
@@ -289,7 +294,22 @@ def measure(base, executable, python, profile, mode, repeat, args):
                     collector.returncode == 0, (state / "collector.log").read_text()
                 )
             wait_for(lambda: ids() == baseline_ids, timeout=30)
-            require(modules() == baseline_modules, "Module set changed")
+            current_modules = modules()
+            require(
+                module_identities(current_modules)
+                == module_identities(baseline_modules),
+                json.dumps(
+                    dict(
+                        error="Module snapshot changed",
+                        removed=sorted(set(baseline_modules) - set(current_modules)),
+                        added=sorted(set(current_modules) - set(baseline_modules)),
+                    )
+                ),
+            )
+        result["module_reference_changes"] = dict(
+            removed=sorted(set(baseline_modules) - set(current_modules)),
+            added=sorted(set(current_modules) - set(baseline_modules)),
+        )
         if collector:
             final = health(state)
             require(
@@ -390,6 +410,22 @@ def main():
         ],
         check=True,
     )
+    reader = base / "bpf-runtime"
+    subprocess.run(
+        [
+            "gcc",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            *BPF_INCLUDES,
+            str(ROOT / "benchmarks/bpf_runtime.c"),
+            *BPF_LIBS,
+            "-o",
+            str(reader),
+        ],
+        check=True,
+    )
     report = dict(
         passed=False,
         schema_version=1,
@@ -412,13 +448,23 @@ def main():
                 )
                 for mode in order:
                     report["samples"].append(
-                        measure(base, executable, python, profile, mode, repeat, args)
+                        measure(
+                            base,
+                            executable,
+                            reader,
+                            python,
+                            profile,
+                            mode,
+                            repeat,
+                            args,
+                        )
                     )
         report["summary"] = paired_summary(report["samples"])
         report["sources"] = {
             str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in (
                 ROOT / "benchmarks/cpu_matrix_guest.py",
+                ROOT / "benchmarks/bpf_runtime.c",
                 ROOT / "benchmarks/cpu_metrics.py",
                 ROOT / "benchmarks/python_callbacks.py",
                 ROOT / "benchmarks/native_churn.c",

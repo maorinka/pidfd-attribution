@@ -1,0 +1,4418 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Endpoint CPU baseline screen; production logic unchanged; no physical Intel/fleet qualification",
+  "target": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "cpu_count": 4,
+    "tick_hz": 100
+  },
+  "build": {
+    "schema_version": 1,
+    "upstream_only": true,
+    "pins": {
+      "kernel": "6.8.0-142-generic",
+      "architecture": "x86_64",
+      "python_binary": "/usr/bin/python3.12",
+      "python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "kernel_btf_sha256": "3802b509af01c3d187fa1bef9469e311612b184efa439d7366201fd5e9753cba",
+      "python_version": "(3, 12, 3)",
+      "offsets": {
+        "TSTATE_FRAME": 56,
+        "CFRAME_FRAME": 0,
+        "TSTATE_FRAME_INDIRECT": 1,
+        "FRAME_CODE": 0,
+        "FRAME_INSTR": 56,
+        "FRAME_PREVIOUS": 8,
+        "FRAME_OWNER": 70,
+        "CODE_FILENAME": 112,
+        "CODE_NAME": 120,
+        "CODE_FIRSTLINE": 68,
+        "CODE_LINETABLE": 136,
+        "CODE_BYTECODE": 192,
+        "BYTES_SIZE": 16,
+        "BYTES_DATA": 32,
+        "UNICODE_STATE": 32,
+        "UNICODE_LENGTH": 16,
+        "ASCII_DATA": 40,
+        "OBJECT_TYPE": 8,
+        "PYTHON_MINOR": 12,
+        "CODE_TYPE_ADDRESS": 10670688,
+        "PYTHON_TEXT_ADDRESS": 4325376,
+        "IOSEC_COMPAT_MASK": 2
+      },
+      "return_depth": {
+        "return_depth_bias": 1,
+        "entry_depths": [
+          0,
+          1
+        ],
+        "return_depths": [
+          2,
+          1
+        ]
+      },
+      "kernel_hooks": {
+        "do_filp_open": {
+          "id": 79611,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 739,
+          "vlen": 3,
+          "params": [
+            {
+              "name": "dfd",
+              "type_id": 12
+            },
+            {
+              "name": "pathname",
+              "type_id": 4751
+            },
+            {
+              "name": "op",
+              "type_id": 20581
+            }
+          ]
+        },
+        "dup_fd": {
+          "id": 30648,
+          "kind": "FUNC_PROTO",
+          "name": "(anon)",
+          "ret_type_id": 601,
+          "vlen": 2,
+          "params": [
+            {
+              "name": "oldf",
+              "type_id": 601
+            },
+            {
+              "name": "punch_hole",
+              "type_id": 20606
+            }
+          ]
+        }
+      },
+      "target_inputs": {
+        "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+        "python_layout.h": "dc1ae598d0bdad68a9b6316b34a86d3a3c66dcd61f167efd36bbb321d7aa95d1",
+        "kernel_layout.h": "ed83893259a38f5b4ba977eb82ccca23810a4eab5431b15c78b77dbaca321032",
+        "vmlinux.h": "eb24a07a6ed48bb15e3e22441d4f8bb03febeaf4c7ef3d07bda46de848712754"
+      },
+      "thread_header_sha256": "e308116ed6da6429fb181368d6afef996b124431cc87a3898a6c3850a867b988"
+    },
+    "sources": {
+      "reader.bpf.c": "528b1f611711adf20c06a54db840720d9e6aa800492e3a41bfdbb1b535e9ca83",
+      "collector.c": "84f2e494f12f1010792a033665e2589c47de3f840910fdb65aae297f97d833f7",
+      "direct_ring.h": "2a346bb86e01dd38860da51185e7ddae34f0e20a92ef0fe4434179b9b70d835b",
+      "arch.h": "9846c4ac2b629165b14e6930f133acba1b0d159e28f68ed21f176a7890620b77",
+      "source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+      "bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+      "python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+      "cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+      "diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+      "cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+      "policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+      "capture_controller.h": "4cf68b1856cd2eed0441e4a1b2f4e03481cda118d0b57241dddfadf6b0163db9",
+      "protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411"
+    },
+    "artifacts": {
+      "collector": "5a8e4d783de39f9a1e96bdbad789116c9a1acc2bb07e200d53d2a3510d665afb",
+      "reader.bpf.o": "a57a2f292ec7cf0d9c8a439319ba0fbac02dcff601bd2b0a5193c087313cf127"
+    }
+  },
+  "primary_driver_commit": "cac4bb9",
+  "primary_driver_sha256": {
+    "benchmarks/cpu_matrix_guest.py": "4bc5aae9a33b01455b26d00fca0b3f0af87da9a8fb53ec84a65629e8ac4cca79",
+    "benchmarks/cpu_metrics.py": "f4d26a8a2b920d8c32722caf51e49b44bf8a14ddc4a57f73ace17ebf0956bfd6",
+    "benchmarks/python_callbacks.py": "325ca531377b04b7e39242d81390d202811ee0c1aee11d58c9b7ed9fd6b9dd40",
+    "benchmarks/native_churn.c": "40ca3e49e47819991b0f9304ae4440fd889e2133e678116556a475b09dd5fdfd",
+    "python/demo.py": "dfe1622c0883d1bac2069c808db856e7b3bb07902dbdd875d385449a182dca95"
+  },
+  "timing_driver_sha256": {
+    "benchmarks/cpu_matrix_guest.py": "f9fee02e370c99bb2eb53c33d57dd1fe2c81b5aa099d368af09487f19f7ada64",
+    "benchmarks/bpf_runtime.c": "74725045c70b78a61b40c7db593949d4406fce21e10d52ffbb8914bea35deba5",
+    "benchmarks/cpu_metrics.py": "eafc12bfec063470611819780e4399069dc5782fcbbc6829937fc6cdb18bfb3e",
+    "benchmarks/python_callbacks.py": "325ca531377b04b7e39242d81390d202811ee0c1aee11d58c9b7ed9fd6b9dd40",
+    "benchmarks/native_churn.c": "40ca3e49e47819991b0f9304ae4440fd889e2133e678116556a475b09dd5fdfd",
+    "python/demo.py": "dfe1622c0883d1bac2069c808db856e7b3bb07902dbdd875d385449a182dca95"
+  },
+  "primary": {
+    "parameters": {
+      "duration": 4,
+      "repeats": 3,
+      "rate": 50,
+      "callbacks": 1000,
+      "profiles": [
+        "idle",
+        "native-churn",
+        "pidfd-writes",
+        "python-callbacks"
+      ],
+      "bpf_stats": false
+    },
+    "sample_count": 48,
+    "summary": {
+      "idle": {
+        "excluded-python": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 0.21995986815928426,
+            "range": [
+              -0.22037868153240042,
+              1.1042369826557312
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.545844441571819,
+            "range": [
+              1.1032901157391029,
+              1.5469491315634205
+            ]
+          }
+        },
+        "identity": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 0.6625421895934387,
+            "range": [
+              0.6598796044778522,
+              0.881514726129602
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.1039066568853324,
+            "range": [
+              0.8838732526940026,
+              1.3266504472711993
+            ]
+          }
+        },
+        "python": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 0.4399197363185682,
+            "range": [
+              -0.881514726129602,
+              1.3250843791868774
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.1032026837717595,
+            "range": [
+              0.8815825870865297,
+              1.3238878471958269
+            ]
+          }
+        }
+      },
+      "native-churn": {
+        "excluded-python": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 31904.798546355916,
+            "range": [
+              24651.26370913486,
+              42933.27017346094
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -15.904408755527943,
+            "range": [
+              -17.805321018496734,
+              -11.013549266165645
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 0.44287970929290843,
+            "range": [
+              0.44245179973951676,
+              0.6639806252666817
+            ]
+          }
+        },
+        "identity": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 79060.18255521901,
+            "range": [
+              76051.75734295088,
+              100383.7992827479
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -30.411533194548102,
+            "range": [
+              -32.46887899803427,
+              -29.399103581805452
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 2.214414526794555,
+            "range": [
+              2.213190775441829,
+              2.2158110104016044
+            ]
+          }
+        },
+        "python": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 88453.53489040467,
+            "range": [
+              87880.64569394969,
+              94796.8881642351
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -33.02908913011498,
+            "range": [
+              -33.619677306035975,
+              -32.96717574864768
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.9939308188727394,
+            "range": [
+              1.9912169262154065,
+              2.4331199047224574
+            ]
+          }
+        }
+      },
+      "pidfd-writes": {
+        "excluded-python": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 2.9253039685286493,
+            "range": [
+              2.254487367831205,
+              6.705458907328132
+            ]
+          },
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 700000.0,
+            "range": [
+              550000.0,
+              1600000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": 49.59985618019231,
+            "range": [
+              22.433139949484037,
+              82.83127312322902
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -0.007232456532468845,
+            "range": [
+              -0.016894154936730743,
+              0.001671024915905761
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.003690384664643,
+            "range": [
+              0.7943005152395308,
+              1.2100472744516144
+            ]
+          }
+        },
+        "identity": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 1.0477279542700206,
+            "range": [
+              -0.20495339707556434,
+              1.2537017007979923
+            ]
+          },
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 250000.0,
+            "range": [
+              -50000.0,
+              300000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": 16.193993837930144,
+            "range": [
+              -11.93382315729422,
+              30.509806423178198
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -0.006960595029348315,
+            "range": [
+              -0.010747486558138064,
+              0.004080506979398102
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.24513898466717,
+            "range": [
+              1.2433827367618469,
+              1.4298471046005172
+            ]
+          }
+        },
+        "python": {
+          "added_guest_cpu_pct_one_core": {
+            "median": 4.387955952792974,
+            "range": [
+              2.254487367831205,
+              6.076822134766121
+            ]
+          },
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 1050000.0,
+            "range": [
+              550000.0,
+              1450000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": 66.81850868138115,
+            "range": [
+              24.863933528710835,
+              68.0181768687281
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -0.004654022106986844,
+            "range": [
+              -0.008709619343827413,
+              0.00029200011419927563
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.8112495816760608,
+            "range": [
+              1.801953356721269,
+              1.814427643858974
+            ]
+          }
+        }
+      },
+      "python-callbacks": {
+        "excluded-python": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 590000.0,
+            "range": [
+              550000.0,
+              690000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": 259.328932188181,
+            "range": [
+              227.3978119802932,
+              462.29985443959237
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -97.62173255017304,
+            "range": [
+              -97.71511769557965,
+              -96.81867532602423
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 0.6916457780938473,
+            "range": [
+              0.6783962255987789,
+              1.4206204735222674
+            ]
+          }
+        },
+        "identity": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": -30000.0,
+            "range": [
+              -60000.0,
+              -20000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": -13.523506601717738,
+            "range": [
+              -26.321856240647456,
+              23.815736227629912
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -13.571044486299133,
+            "range": [
+              -14.26407126765511,
+              22.890896006698448
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 1.3864138455616193,
+            "range": [
+              0.0,
+              1.4061212346676417
+            ]
+          }
+        },
+        "python": {
+          "guest_cpu_ns_per_iteration_delta": {
+            "median": 620000.0,
+            "range": [
+              580000.0,
+              670000.0
+            ]
+          },
+          "application_cpu_change_pct": {
+            "median": 289.841847199077,
+            "range": [
+              284.60956243077806,
+              493.3839472841811
+            ]
+          },
+          "throughput_change_pct": {
+            "median": -97.9230255705997,
+            "range": [
+              -97.95411246200455,
+              -97.25949832728546
+            ]
+          },
+          "collector_pct_one_core": {
+            "median": 0.6732574767491474,
+            "range": [
+              0.6170780019768612,
+              1.3394600333485767
+            ]
+          }
+        }
+      }
+    },
+    "samples": [
+      {
+        "profile": "idle",
+        "mode": "off",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.546283867,
+        "guest_busy_seconds": 0.06,
+        "guest_busy_pct_one_core": 1.3197592089557044,
+        "guest_busy_pct_machine": 0.3299398022389261,
+        "guest_busy_ns_per_iteration": 60000000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.015192999999999998,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 2,
+          "nice": 0,
+          "system": 4,
+          "idle": 1809,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "identity",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.529368465,
+        "guest_busy_seconds": 0.09,
+        "guest_busy_pct_one_core": 1.9870319823935985,
+        "guest_busy_pct_machine": 0.4967579955983996,
+        "guest_busy_ns_per_iteration": 90000000.0,
+        "collector_cpu_seconds": 0.05,
+        "collector_pct_one_core": 1.1039066568853324,
+        "application_cpu_seconds": 0.014011,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 8,
+          "idle": 1789,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.532258735,
+        "guest_busy_seconds": 0.08,
+        "guest_busy_pct_one_core": 1.7651242940348153,
+        "guest_busy_pct_machine": 0.4412810735087038,
+        "guest_busy_ns_per_iteration": 80000000.0,
+        "collector_cpu_seconds": 0.05,
+        "collector_pct_one_core": 1.1032026837717595,
+        "application_cpu_seconds": 0.012379999999999999,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 6,
+          "idle": 1793,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "excluded-python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.531899569,
+        "guest_busy_seconds": 0.07,
+        "guest_busy_pct_one_core": 1.544606162034744,
+        "guest_busy_pct_machine": 0.386151540508686,
+        "guest_busy_ns_per_iteration": 70000000.0,
+        "collector_cpu_seconds": 0.05,
+        "collector_pct_one_core": 1.1032901157391029,
+        "application_cpu_seconds": 0.014100999999999999,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 6,
+          "idle": 1790,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "identity",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.525535746,
+        "guest_busy_seconds": 0.06,
+        "guest_busy_pct_one_core": 1.325809879041004,
+        "guest_busy_pct_machine": 0.331452469760251,
+        "guest_busy_ns_per_iteration": 60000000.0,
+        "collector_cpu_seconds": 0.04,
+        "collector_pct_one_core": 0.8838732526940026,
+        "application_cpu_seconds": 0.013595,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 5,
+          "idle": 1792,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.5372947,
+        "guest_busy_seconds": 0.09,
+        "guest_busy_pct_one_core": 1.9835608209446918,
+        "guest_busy_pct_machine": 0.49589020523617294,
+        "guest_busy_ns_per_iteration": 90000000.0,
+        "collector_cpu_seconds": 0.04,
+        "collector_pct_one_core": 0.8815825870865297,
+        "application_cpu_seconds": 0.013602999999999999,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 7,
+          "idle": 1794,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "excluded-python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.52503567,
+        "guest_busy_seconds": 0.08,
+        "guest_busy_pct_one_core": 1.767941864643909,
+        "guest_busy_pct_machine": 0.4419854661609772,
+        "guest_busy_ns_per_iteration": 80000000.0,
+        "collector_cpu_seconds": 0.07,
+        "collector_pct_one_core": 1.5469491315634205,
+        "application_cpu_seconds": 0.013108,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 2,
+          "nice": 0,
+          "system": 6,
+          "idle": 1786,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "off",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.528013532,
+        "guest_busy_seconds": 0.03,
+        "guest_busy_pct_one_core": 0.6625421895934387,
+        "guest_busy_pct_machine": 0.16563554739835967,
+        "guest_busy_ns_per_iteration": 30000000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.010695999999999999,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 2,
+          "idle": 1804,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "python",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.532105958,
+        "guest_busy_seconds": 0.07,
+        "guest_busy_pct_one_core": 1.5445358217284648,
+        "guest_busy_pct_machine": 0.3861339554321162,
+        "guest_busy_ns_per_iteration": 70000000.0,
+        "collector_cpu_seconds": 0.06,
+        "collector_pct_one_core": 1.3238878471958269,
+        "application_cpu_seconds": 0.010477,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 1,
+          "nice": 0,
+          "system": 6,
+          "idle": 1794,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "excluded-python",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.528269347,
+        "guest_busy_seconds": 0.1,
+        "guest_busy_pct_one_core": 2.2083492022454556,
+        "guest_busy_pct_machine": 0.5520873005613639,
+        "guest_busy_ns_per_iteration": 100000000.0,
+        "collector_cpu_seconds": 0.07,
+        "collector_pct_one_core": 1.545844441571819,
+        "application_cpu_seconds": 0.013318,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 2,
+          "nice": 0,
+          "system": 8,
+          "idle": 1781,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "off",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.537643991,
+        "guest_busy_seconds": 0.11,
+        "guest_busy_pct_one_core": 2.4241654968564057,
+        "guest_busy_pct_machine": 0.6060413742141014,
+        "guest_busy_ns_per_iteration": 110000000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.012606999999999998,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 3,
+          "nice": 0,
+          "system": 8,
+          "idle": 1795,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        }
+      },
+      {
+        "profile": "idle",
+        "mode": "identity",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.522668358,
+        "guest_busy_seconds": 0.15,
+        "guest_busy_pct_one_core": 3.316626118177998,
+        "guest_busy_pct_machine": 0.8291565295444995,
+        "guest_busy_ns_per_iteration": 150000000.0,
+        "collector_cpu_seconds": 0.06,
+        "collector_pct_one_core": 1.3266504472711993,
+        "application_cpu_seconds": 0.012502,
+        "throughput": 0.25,
+        "cpu_ticks": {
+          "user": 2,
+          "nice": 0,
+          "system": 12,
+          "idle": 1779,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1,
+          "wall_ns": 4000000000
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "off",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.515454325,
+        "guest_busy_seconds": 3.19,
+        "guest_busy_pct_one_core": 70.64626880042685,
+        "guest_busy_pct_machine": 17.661567200106713,
+        "guest_busy_ns_per_iteration": 173737.81384456184,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 4.0048569999999994,
+        "throughput": 4590.070050893725,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 315,
+          "idle": 1396,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 18361,
+          "wall_ns": 4000156816
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "identity",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.515866329,
+        "guest_busy_seconds": 3.23,
+        "guest_busy_pct_one_core": 71.52558921546414,
+        "guest_busy_pct_machine": 17.881397303866034,
+        "guest_busy_ns_per_iteration": 252797.99639978085,
+        "collector_cpu_seconds": 0.1,
+        "collector_pct_one_core": 2.214414526794555,
+        "application_cpu_seconds": 3.998704,
+        "throughput": 3194.159373713169,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 318,
+          "idle": 1376,
+          "iowait": 3,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 12777,
+          "wall_ns": 4000113490
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 38331,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.520944479,
+        "guest_busy_seconds": 3.22,
+        "guest_busy_pct_one_core": 71.22405539278466,
+        "guest_busy_pct_machine": 17.806013848196166,
+        "guest_busy_ns_per_iteration": 261618.45953851152,
+        "collector_cpu_seconds": 0.11,
+        "collector_pct_one_core": 2.4331199047224574,
+        "application_cpu_seconds": 3.9997700000000003,
+        "throughput": 3076.853590229549,
+        "cpu_ticks": {
+          "user": 5,
+          "nice": 0,
+          "system": 316,
+          "idle": 1380,
+          "iowait": 2,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 12308,
+          "wall_ns": 4000190337
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 36924,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "excluded-python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.520266391,
+        "guest_busy_seconds": 3.27,
+        "guest_busy_pct_one_core": 72.34086925741099,
+        "guest_busy_pct_machine": 18.085217314352747,
+        "guest_busy_ns_per_iteration": 216671.08401802278,
+        "collector_cpu_seconds": 0.02,
+        "collector_pct_one_core": 0.44245179973951676,
+        "application_cpu_seconds": 4.004566,
+        "throughput": 3772.793343358221,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 322,
+          "idle": 1385,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 15092,
+          "wall_ns": 4000219102
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "identity",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.518363311,
+        "guest_busy_seconds": 3.21,
+        "guest_busy_pct_one_core": 71.0434238916827,
+        "guest_busy_pct_machine": 17.760855972920677,
+        "guest_busy_ns_per_iteration": 254903.5178273644,
+        "collector_cpu_seconds": 0.1,
+        "collector_pct_one_core": 2.213190775441829,
+        "application_cpu_seconds": 3.998208,
+        "throughput": 3148.040911057739,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 316,
+          "idle": 1380,
+          "iowait": 3,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 12593,
+          "wall_ns": 4000265675
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 37779,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.519849084,
+        "guest_busy_seconds": 3.24,
+        "guest_busy_pct_one_core": 71.68380934375463,
+        "guest_busy_pct_machine": 17.920952335938658,
+        "guest_busy_ns_per_iteration": 273648.64864864864,
+        "collector_cpu_seconds": 0.09,
+        "collector_pct_one_core": 1.9912169262154065,
+        "application_cpu_seconds": 3.995415,
+        "throughput": 2959.8487006740056,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 319,
+          "idle": 1379,
+          "iowait": 4,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 11840,
+          "wall_ns": 4000204469
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 35520,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "excluded-python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.518204125,
+        "guest_busy_seconds": 3.23,
+        "guest_busy_pct_one_core": 71.48858065371273,
+        "guest_busy_pct_machine": 17.872145163428183,
+        "guest_busy_ns_per_iteration": 203503.0241935484,
+        "collector_cpu_seconds": 0.03,
+        "collector_pct_one_core": 0.6639806252666817,
+        "application_cpu_seconds": 4.001686,
+        "throughput": 3967.838960295998,
+        "cpu_ticks": {
+          "user": 6,
+          "nice": 0,
+          "system": 317,
+          "idle": 1388,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 15872,
+          "wall_ns": 4000162345
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "off",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.515755386,
+        "guest_busy_seconds": 3.19,
+        "guest_busy_pct_one_core": 70.6415588827025,
+        "guest_busy_pct_machine": 17.660389720675624,
+        "guest_busy_ns_per_iteration": 178851.76048441353,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 4.0049220000000005,
+        "throughput": 4458.92484482174,
+        "cpu_ticks": {
+          "user": 6,
+          "nice": 0,
+          "system": 312,
+          "idle": 1396,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 17836,
+          "wall_ns": 4000067420
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "python",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.513697223,
+        "guest_busy_seconds": 3.22,
+        "guest_busy_pct_one_core": 71.33841374189134,
+        "guest_busy_pct_machine": 17.834603435472836,
+        "guest_busy_ns_per_iteration": 271112.23372905614,
+        "collector_cpu_seconds": 0.09,
+        "collector_pct_one_core": 1.9939308188727394,
+        "application_cpu_seconds": 3.994458,
+        "throughput": 2969.2295679890353,
+        "cpu_ticks": {
+          "user": 4,
+          "nice": 0,
+          "system": 317,
+          "idle": 1380,
+          "iowait": 3,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 11877,
+          "wall_ns": 4000027525
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 35631,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 135,
+          "python_returns": 135
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "excluded-python",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.515898918,
+        "guest_busy_seconds": 3.2,
+        "guest_busy_pct_one_core": 70.86075348686535,
+        "guest_busy_pct_machine": 17.715188371716337,
+        "guest_busy_ns_per_iteration": 214563.4973850074,
+        "collector_cpu_seconds": 0.02,
+        "collector_pct_one_core": 0.44287970929290843,
+        "application_cpu_seconds": 4.001647999999999,
+        "throughput": 3728.4712544187464,
+        "cpu_ticks": {
+          "user": 3,
+          "nice": 0,
+          "system": 316,
+          "idle": 1388,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 14914,
+          "wall_ns": 4000030839
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "off",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.530173081,
+        "guest_busy_seconds": 3.24,
+        "guest_busy_pct_one_core": 71.52044617431693,
+        "guest_busy_pct_machine": 17.880111543579233,
+        "guest_busy_ns_per_iteration": 182658.69883865147,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 4.011406,
+        "throughput": 4433.610845995252,
+        "cpu_ticks": {
+          "user": 8,
+          "nice": 0,
+          "system": 316,
+          "idle": 1392,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 17738,
+          "wall_ns": 4000802194
+        }
+      },
+      {
+        "profile": "native-churn",
+        "mode": "identity",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.513020268,
+        "guest_busy_seconds": 3.39,
+        "guest_busy_pct_one_core": 75.11599325261439,
+        "guest_busy_pct_machine": 18.778998313153597,
+        "guest_busy_ns_per_iteration": 283042.4981213994,
+        "collector_cpu_seconds": 0.1,
+        "collector_pct_one_core": 2.2158110104016044,
+        "application_cpu_seconds": 3.995334,
+        "throughput": 2994.0671051653303,
+        "cpu_ticks": {
+          "user": 8,
+          "nice": 0,
+          "system": 330,
+          "idle": 1355,
+          "iowait": 3,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 11977,
+          "wall_ns": 4000244343
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 35931,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "off",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.879157966,
+        "guest_busy_seconds": 0.34,
+        "guest_busy_pct_one_core": 6.968415500569181,
+        "guest_busy_pct_machine": 1.7421038751422953,
+        "guest_busy_ns_per_iteration": 1700000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.43471399999999993,
+        "throughput": 49.982756174042365,
+        "cpu_ticks": {
+          "user": 24,
+          "nice": 0,
+          "system": 10,
+          "idle": 1899,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 64972271,
+          "wall_ns": 4001379982,
+          "iterations": 200
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "identity",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.825545524,
+        "guest_busy_seconds": 0.33,
+        "guest_busy_pct_one_core": 6.838605052190157,
+        "guest_busy_pct_machine": 1.7096512630475393,
+        "guest_busy_ns_per_iteration": 1650000.0,
+        "collector_cpu_seconds": 0.06,
+        "collector_pct_one_core": 1.2433827367618469,
+        "application_cpu_seconds": 0.38283599999999995,
+        "throughput": 49.97738428404117,
+        "cpu_ticks": {
+          "user": 20,
+          "nice": 0,
+          "system": 12,
+          "idle": 1868,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 70705766,
+          "wall_ns": 4001810076,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "diagnostics": {
+          "attachments": 29,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.968945247,
+        "guest_busy_seconds": 0.45,
+        "guest_busy_pct_one_core": 9.056247908380303,
+        "guest_busy_pct_machine": 2.264061977095076,
+        "guest_busy_ns_per_iteration": 2250000.0,
+        "collector_cpu_seconds": 0.09,
+        "collector_pct_one_core": 1.8112495816760608,
+        "application_cpu_seconds": 0.542801,
+        "throughput": 49.98290212374747,
+        "cpu_ticks": {
+          "user": 24,
+          "nice": 0,
+          "system": 20,
+          "idle": 1908,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 89963296,
+          "wall_ns": 4001368298,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "oracle_frames": 3200,
+        "diagnostics": {
+          "attachments": 35,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 3884,
+          "python_returns": 3884
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "excluded-python",
+        "repeat": 0,
+        "measurement_wall_seconds": 4.981615921,
+        "guest_busy_seconds": 0.45,
+        "guest_busy_pct_one_core": 9.033213461981786,
+        "guest_busy_pct_machine": 2.2583033654954465,
+        "guest_busy_ns_per_iteration": 2250000.0,
+        "collector_cpu_seconds": 0.05,
+        "collector_pct_one_core": 1.003690384664643,
+        "application_cpu_seconds": 0.532234,
+        "throughput": 49.979141192928346,
+        "cpu_ticks": {
+          "user": 27,
+          "nice": 0,
+          "system": 18,
+          "idle": 1917,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 64971213,
+          "wall_ns": 4001669401,
+          "iterations": 200
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "identity",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.895628335,
+        "guest_busy_seconds": 0.38,
+        "guest_busy_pct_one_core": 7.76202713925995,
+        "guest_busy_pct_machine": 1.9405067848149875,
+        "guest_busy_ns_per_iteration": 1900000.0,
+        "collector_cpu_seconds": 0.07,
+        "collector_pct_one_core": 1.4298471046005172,
+        "application_cpu_seconds": 0.45009699999999997,
+        "throughput": 49.9844672893015,
+        "cpu_ticks": {
+          "user": 26,
+          "nice": 0,
+          "system": 11,
+          "idle": 1891,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 63498921,
+          "wall_ns": 4001243003,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "diagnostics": {
+          "attachments": 29,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.994579891,
+        "guest_busy_seconds": 0.53,
+        "guest_busy_pct_one_core": 10.611503100691918,
+        "guest_busy_pct_machine": 2.6528757751729795,
+        "guest_busy_ns_per_iteration": 2650000.0,
+        "collector_cpu_seconds": 0.09,
+        "collector_pct_one_core": 1.801953356721269,
+        "application_cpu_seconds": 0.575317,
+        "throughput": 49.98010155961135,
+        "cpu_ticks": {
+          "user": 28,
+          "nice": 0,
+          "system": 24,
+          "idle": 1906,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 96206610,
+          "wall_ns": 4001592509,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "oracle_frames": 3200,
+        "diagnostics": {
+          "attachments": 35,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 3884,
+          "python_returns": 3884
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "excluded-python",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.958483959,
+        "guest_busy_seconds": 0.46,
+        "guest_busy_pct_one_core": 9.277029104129044,
+        "guest_busy_pct_machine": 2.319257276032261,
+        "guest_busy_ns_per_iteration": 2300000.0,
+        "collector_cpu_seconds": 0.06,
+        "collector_pct_one_core": 1.2100472744516144,
+        "application_cpu_seconds": 0.515934,
+        "throughput": 49.97398364406287,
+        "cpu_ticks": {
+          "user": 26,
+          "nice": 0,
+          "system": 20,
+          "idle": 1903,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 71591675,
+          "wall_ns": 4002082392,
+          "iterations": 200
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "off",
+        "repeat": 1,
+        "measurement_wall_seconds": 4.785827439,
+        "guest_busy_seconds": 0.32,
+        "guest_busy_pct_one_core": 6.686409070922625,
+        "guest_busy_pct_machine": 1.6716022677306563,
+        "guest_busy_ns_per_iteration": 1600000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.34487599999999996,
+        "throughput": 49.98242775284857,
+        "cpu_ticks": {
+          "user": 19,
+          "nice": 0,
+          "system": 13,
+          "idle": 1859,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 66672311,
+          "wall_ns": 4001406274,
+          "iterations": 200
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "python",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.960241887,
+        "guest_busy_seconds": 0.54,
+        "guest_busy_pct_one_core": 10.886565863153843,
+        "guest_busy_pct_machine": 2.7216414657884607,
+        "guest_busy_ns_per_iteration": 2700000.0,
+        "collector_cpu_seconds": 0.09,
+        "collector_pct_one_core": 1.814427643858974,
+        "application_cpu_seconds": 0.543149,
+        "throughput": 49.980599930175906,
+        "cpu_ticks": {
+          "user": 26,
+          "nice": 0,
+          "system": 27,
+          "idle": 1889,
+          "iowait": 2,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 96467548,
+          "wall_ns": 4001552608,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "oracle_frames": 3200,
+        "diagnostics": {
+          "attachments": 35,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 3884,
+          "python_returns": 3884
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "excluded-python",
+        "repeat": 2,
+        "measurement_wall_seconds": 5.035877383,
+        "guest_busy_seconds": 0.57,
+        "guest_busy_pct_one_core": 11.318782342163313,
+        "guest_busy_pct_machine": 2.8296955855408283,
+        "guest_busy_ns_per_iteration": 2850000.0,
+        "collector_cpu_seconds": 0.04,
+        "collector_pct_one_core": 0.7943005152395308,
+        "application_cpu_seconds": 0.591035,
+        "throughput": 49.985788690374804,
+        "cpu_ticks": {
+          "user": 34,
+          "nice": 0,
+          "system": 22,
+          "idle": 1922,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 67840280,
+          "wall_ns": 4001137228,
+          "iterations": 200
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "off",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.772231169,
+        "guest_busy_seconds": 0.25,
+        "guest_busy_pct_one_core": 5.238639771350104,
+        "guest_busy_pct_machine": 1.309659942837526,
+        "guest_busy_ns_per_iteration": 1250000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.323268,
+        "throughput": 49.98495342934879,
+        "cpu_ticks": {
+          "user": 17,
+          "nice": 0,
+          "system": 8,
+          "idle": 1865,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 63946245,
+          "wall_ns": 4001204088,
+          "iterations": 200
+        }
+      },
+      {
+        "profile": "pidfd-writes",
+        "mode": "identity",
+        "repeat": 2,
+        "measurement_wall_seconds": 4.818739172,
+        "guest_busy_seconds": 0.3,
+        "guest_busy_pct_one_core": 6.22569492333585,
+        "guest_busy_pct_machine": 1.5564237308339626,
+        "guest_busy_ns_per_iteration": 1500000.0,
+        "collector_cpu_seconds": 0.06,
+        "collector_pct_one_core": 1.24513898466717,
+        "application_cpu_seconds": 0.375618,
+        "throughput": 49.98147417916497,
+        "cpu_ticks": {
+          "user": 19,
+          "nice": 0,
+          "system": 11,
+          "idle": 1863,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "writes": 200,
+          "rate": 50,
+          "application_cpu_ns": 66040654,
+          "wall_ns": 4001482615,
+          "iterations": 200
+        },
+        "verified_writes": 200,
+        "diagnostics": {
+          "attachments": 29,
+          "records": 208,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "off",
+        "repeat": 0,
+        "measurement_wall_seconds": 0.671527284,
+        "guest_busy_seconds": 0.2,
+        "guest_busy_pct_one_core": 29.782855405172192,
+        "guest_busy_pct_machine": 7.445713851293048,
+        "guest_busy_ns_per_iteration": 200000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.165567,
+        "throughput": 66826.17182866545,
+        "cpu_ticks": {
+          "user": 11,
+          "nice": 0,
+          "system": 9,
+          "idle": 242,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 14964197,
+          "application_cpu_ns": 14995409
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "identity",
+        "repeat": 0,
+        "measurement_wall_seconds": 0.711176231,
+        "guest_busy_seconds": 0.17,
+        "guest_busy_pct_one_core": 23.904060989349908,
+        "guest_busy_pct_machine": 5.976015247337477,
+        "guest_busy_ns_per_iteration": 170000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 1.4061212346676417,
+        "application_cpu_seconds": 0.204998,
+        "throughput": 57757.16232130656,
+        "cpu_ticks": {
+          "user": 14,
+          "nice": 0,
+          "system": 3,
+          "idle": 262,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 17313870,
+          "application_cpu_ns": 17299348
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "python",
+        "repeat": 0,
+        "measurement_wall_seconds": 1.493138989,
+        "guest_busy_seconds": 0.82,
+        "guest_busy_pct_one_core": 54.91786136729164,
+        "guest_busy_pct_machine": 13.72946534182291,
+        "guest_busy_ns_per_iteration": 820000.0,
+        "collector_cpu_seconds": 0.02,
+        "collector_pct_one_core": 1.3394600333485767,
+        "application_cpu_seconds": 0.982448,
+        "throughput": 1387.9625010284801,
+        "cpu_ticks": {
+          "user": 24,
+          "nice": 0,
+          "system": 58,
+          "idle": 491,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 720480560,
+          "application_cpu_ns": 720240043
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 34487,
+          "python_returns": 34487
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "excluded-python",
+        "repeat": 0,
+        "measurement_wall_seconds": 1.445826797,
+        "guest_busy_seconds": 0.89,
+        "guest_busy_pct_one_core": 61.55647425035241,
+        "guest_busy_pct_machine": 15.389118562588102,
+        "guest_busy_ns_per_iteration": 890000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 0.6916457780938473,
+        "application_cpu_seconds": 0.9309829999999999,
+        "throughput": 1526.899374834718,
+        "cpu_ticks": {
+          "user": 28,
+          "nice": 0,
+          "system": 61,
+          "idle": 465,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 654922005,
+          "application_cpu_ns": 654380448
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "identity",
+        "repeat": 1,
+        "measurement_wall_seconds": 0.721285353,
+        "guest_busy_seconds": 0.18,
+        "guest_busy_pct_one_core": 24.95544922010915,
+        "guest_busy_pct_machine": 6.238862305027287,
+        "guest_busy_ns_per_iteration": 180000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 1.3864138455616193,
+        "application_cpu_seconds": 0.21220999999999998,
+        "throughput": 54163.64320696648,
+        "cpu_ticks": {
+          "user": 14,
+          "nice": 0,
+          "system": 4,
+          "idle": 265,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 18462569,
+          "application_cpu_ns": 18208259
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "python",
+        "repeat": 1,
+        "measurement_wall_seconds": 1.620540672,
+        "guest_busy_seconds": 0.91,
+        "guest_busy_pct_one_core": 56.15409817989437,
+        "guest_busy_pct_machine": 14.038524544973592,
+        "guest_busy_ns_per_iteration": 910000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 0.6170780019768612,
+        "application_cpu_seconds": 1.107764,
+        "throughput": 1292.488741744503,
+        "cpu_ticks": {
+          "user": 30,
+          "nice": 0,
+          "system": 60,
+          "idle": 531,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 773701130,
+          "application_cpu_ns": 773182826
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 34487,
+          "python_returns": 34487
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "excluded-python",
+        "repeat": 1,
+        "measurement_wall_seconds": 1.474064805,
+        "guest_busy_seconds": 0.79,
+        "guest_busy_pct_one_core": 53.59330182230353,
+        "guest_busy_pct_machine": 13.398325455575883,
+        "guest_busy_ns_per_iteration": 790000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 0.6783962255987789,
+        "application_cpu_seconds": 0.942981,
+        "throughput": 1502.469635633309,
+        "cpu_ticks": {
+          "user": 25,
+          "nice": 0,
+          "system": 53,
+          "idle": 489,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 1,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 665570855,
+          "application_cpu_ns": 663677777
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "off",
+        "repeat": 1,
+        "measurement_wall_seconds": 0.803960796,
+        "guest_busy_seconds": 0.24,
+        "guest_busy_pct_one_core": 29.852201897665665,
+        "guest_busy_pct_machine": 7.463050474416416,
+        "guest_busy_ns_per_iteration": 240000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.28802300000000003,
+        "throughput": 63174.965277459705,
+        "cpu_ticks": {
+          "user": 20,
+          "nice": 0,
+          "system": 4,
+          "idle": 290,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 15829055,
+          "application_cpu_ns": 15770233
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "python",
+        "repeat": 2,
+        "measurement_wall_seconds": 1.485315848,
+        "guest_busy_seconds": 0.78,
+        "guest_busy_pct_one_core": 52.51408318643349,
+        "guest_busy_pct_machine": 13.128520796608372,
+        "guest_busy_ns_per_iteration": 780000.0,
+        "collector_cpu_seconds": 0.01,
+        "collector_pct_one_core": 0.6732574767491474,
+        "application_cpu_seconds": 0.9731699999999999,
+        "throughput": 1375.3845969036784,
+        "cpu_ticks": {
+          "user": 21,
+          "nice": 0,
+          "system": 57,
+          "idle": 492,
+          "iowait": 1,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 727069361,
+          "application_cpu_ns": 726663131
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 34487,
+          "python_returns": 34487
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "excluded-python",
+        "repeat": 2,
+        "measurement_wall_seconds": 1.407835546,
+        "guest_busy_seconds": 0.79,
+        "guest_busy_pct_one_core": 56.11450870412956,
+        "guest_busy_pct_machine": 14.02862717603239,
+        "guest_busy_ns_per_iteration": 790000.0,
+        "collector_cpu_seconds": 0.02,
+        "collector_pct_one_core": 1.4206204735222674,
+        "application_cpu_seconds": 0.897,
+        "throughput": 1596.6218878464547,
+        "cpu_ticks": {
+          "user": 28,
+          "nice": 0,
+          "system": 51,
+          "idle": 459,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 626322367,
+          "application_cpu_ns": 626110915
+        },
+        "diagnostics": {
+          "attachments": 35,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "off",
+        "repeat": 2,
+        "measurement_wall_seconds": 0.759287698,
+        "guest_busy_seconds": 0.2,
+        "guest_busy_pct_one_core": 26.34047680830462,
+        "guest_busy_pct_machine": 6.585119202076155,
+        "guest_busy_ns_per_iteration": 200000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.249632,
+        "throughput": 50187.329225065485,
+        "cpu_ticks": {
+          "user": 17,
+          "nice": 0,
+          "system": 3,
+          "idle": 278,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 19925348,
+          "application_cpu_ns": 19909533
+        }
+      },
+      {
+        "profile": "python-callbacks",
+        "mode": "identity",
+        "repeat": 2,
+        "measurement_wall_seconds": 0.722903207,
+        "guest_busy_seconds": 0.18,
+        "guest_busy_pct_one_core": 24.899599041341645,
+        "guest_busy_pct_machine": 6.224899760335411,
+        "guest_busy_ns_per_iteration": 180000.0,
+        "collector_cpu_seconds": 0.0,
+        "collector_pct_one_core": 0.0,
+        "application_cpu_seconds": 0.21587299999999998,
+        "throughput": 61675.658566514605,
+        "cpu_ticks": {
+          "user": 15,
+          "nice": 0,
+          "system": 3,
+          "idle": 267,
+          "iowait": 0,
+          "irq": 0,
+          "softirq": 0,
+          "steal": 0
+        },
+        "cleanup_ok": true,
+        "workload": {
+          "iterations": 1000,
+          "callbacks": 32000,
+          "wall_ns": 16213852,
+          "application_cpu_ns": 16035198
+        },
+        "diagnostics": {
+          "attachments": 29,
+          "records": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "history_gaps": false,
+          "malformed_records": 0,
+          "unflushed_ring_bytes": 0,
+          "capture_transitions": 0,
+          "python_entries": 0,
+          "python_returns": 0
+        }
+      }
+    ],
+    "write_loop_only": {
+      "identity": {
+        "added_write_loop_cpu_pct_one_core": {
+          "median": 0.052344468163504486,
+          "range": [
+            -0.07930686820330607,
+            0.1432879413050455
+          ]
+        },
+        "note": "Application write-loop process CPU only; excludes startup, collector, other tasks and deferred work."
+      },
+      "python": {
+        "added_write_loop_cpu_pct_one_core": {
+          "median": 0.7380979829992639,
+          "range": [
+            0.6245601545571985,
+            0.8127879079583705
+          ]
+        },
+        "note": "Application write-loop process CPU only; excludes startup, collector, other tasks and deferred work."
+      },
+      "excluded-python": {
+        "added_write_loop_cpu_pct_one_core": {
+          "median": 0.09732157906362711,
+          "range": [
+            -2.6440878016068407e-05,
+            0.12294087785998209
+          ]
+        },
+        "note": "Application write-loop process CPU only; excludes startup, collector, other tasks and deferred work."
+      }
+    }
+  },
+  "diagnostic": {
+    "parameters": {
+      "duration": 3,
+      "repeats": 3,
+      "rate": 50,
+      "callbacks": 1000,
+      "profiles": [
+        "native-churn",
+        "pidfd-writes",
+        "python-callbacks"
+      ],
+      "bpf_stats": true
+    },
+    "sample_count": 36,
+    "rankings": {
+      "native-churn": {
+        "identity": {
+          "total_runtime_ms": {
+            "median": 620.848018,
+            "range": [
+              606.545677,
+              626.169734
+            ]
+          },
+          "programs": [
+            {
+              "name": "open_begin",
+              "runtime_ms": {
+                "median": 221.667909,
+                "range": [
+                  220.290951,
+                  222.929828
+                ]
+              },
+              "calls": {
+                "median": 9247,
+                "range": [
+                  9012,
+                  9437
+                ]
+              },
+              "mean_ns_per_call": 24006.66839976892,
+              "runtime_ns_per_work": {
+                "median": 24226.236470332537,
+                "range": [
+                  23551.626540586487,
+                  24512.178813842216
+                ]
+              }
+            },
+            {
+              "name": "open_bound",
+              "runtime_ms": {
+                "median": 209.37655,
+                "range": [
+                  205.701778,
+                  212.003371
+                ]
+              },
+              "calls": {
+                "median": 9247,
+                "range": [
+                  9012,
+                  9437
+                ]
+              },
+              "mean_ns_per_call": 22641.59802859619,
+              "runtime_ns_per_work": {
+                "median": 22888.81473239123,
+                "range": [
+                  22245.70229494263,
+                  23038.836231254074
+                ]
+              }
+            },
+            {
+              "name": "file_released",
+              "runtime_ms": {
+                "median": 36.17819,
+                "range": [
+                  35.555174,
+                  36.488135
+                ]
+              },
+              "calls": {
+                "median": 9285,
+                "range": [
+                  9047,
+                  9472
+                ]
+              },
+              "mean_ns_per_call": 3892.29963314631,
+              "runtime_ns_per_work": {
+                "median": 3931.557270158661,
+                "range": [
+                  3876.7674245643857,
+                  3956.289529320129
+                ]
+              }
+            },
+            {
+              "name": "write_finish",
+              "runtime_ms": {
+                "median": 33.788309,
+                "range": [
+                  33.547315,
+                  34.267292
+                ]
+              },
+              "calls": {
+                "median": 9233,
+                "range": [
+                  9004,
+                  9431
+                ]
+              },
+              "mean_ns_per_call": 3672.2175798756684,
+              "runtime_ns_per_work": {
+                "median": 3671.8440556400783,
+                "range": [
+                  3640.8087547811306,
+                  3732.871369756315
+                ]
+              }
+            },
+            {
+              "name": "write_file",
+              "runtime_ms": {
+                "median": 30.047536,
+                "range": [
+                  29.549518,
+                  31.688441
+                ]
+              },
+              "calls": {
+                "median": 9233,
+                "range": [
+                  9004,
+                  9431
+                ]
+              },
+              "mean_ns_per_call": 3299.31671967616,
+              "runtime_ns_per_work": {
+                "median": 3288.0291532213196,
+                "range": [
+                  3265.326668115627,
+                  3366.8126859328518
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 28.959522,
+                "range": [
+                  26.490699,
+                  30.793541
+                ]
+              },
+              "calls": {
+                "median": 121349,
+                "range": [
+                  118021,
+                  123309
+                ]
+              },
+              "mean_ns_per_call": 237.79640398258516,
+              "runtime_ns_per_work": {
+                "median": 3076.872290692733,
+                "range": [
+                  2878.7979787002823,
+                  3426.453877823523
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 23.13683,
+                "range": [
+                  21.407943,
+                  28.287614
+                ]
+              },
+              "calls": {
+                "median": 48810,
+                "range": [
+                  46874,
+                  49207
+                ]
+              },
+              "mean_ns_per_call": 502.6701934557702,
+              "runtime_ns_per_work": {
+                "median": 2514.326233427516,
+                "range": [
+                  2382.101146099922,
+                  3005.48385040374
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 11.353434,
+                "range": [
+                  10.833423,
+                  13.281374
+                ]
+              },
+              "calls": {
+                "median": 9281,
+                "range": [
+                  9043,
+                  9468
+                ]
+              },
+              "mean_ns_per_call": 1276.2029001151411,
+              "runtime_ns_per_work": {
+                "median": 1206.2722056948576,
+                "range": [
+                  1205.4548792700568,
+                  1443.3138448163443
+                ]
+              }
+            }
+          ],
+          "program_count": 29,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "python": {
+          "total_runtime_ms": {
+            "median": 625.864736,
+            "range": [
+              617.569187,
+              631.165397
+            ]
+          },
+          "programs": [
+            {
+              "name": "open_begin",
+              "runtime_ms": {
+                "median": 221.210976,
+                "range": [
+                  218.95807,
+                  223.785798
+                ]
+              },
+              "calls": {
+                "median": 9219,
+                "range": [
+                  9207,
+                  9227
+                ]
+              },
+              "mean_ns_per_call": 24010.228329656817,
+              "runtime_ns_per_work": {
+                "median": 24060.362845333915,
+                "range": [
+                  23846.4463079939,
+                  24319.256465985654
+                ]
+              }
+            },
+            {
+              "name": "open_bound",
+              "runtime_ms": {
+                "median": 206.074684,
+                "range": [
+                  204.650776,
+                  209.532541
+                ]
+              },
+              "calls": {
+                "median": 9219,
+                "range": [
+                  9207,
+                  9227
+                ]
+              },
+              "mean_ns_per_call": 22430.043792716886,
+              "runtime_ns_per_work": {
+                "median": 22414.04002610398,
+                "range": [
+                  22288.257024613373,
+                  22770.326124755487
+                ]
+              }
+            },
+            {
+              "name": "file_released",
+              "runtime_ms": {
+                "median": 36.923183,
+                "range": [
+                  34.878206,
+                  37.783187
+                ]
+              },
+              "calls": {
+                "median": 9260,
+                "range": [
+                  9248,
+                  9268
+                ]
+              },
+              "mean_ns_per_call": 3945.2972350230416,
+              "runtime_ns_per_work": {
+                "median": 4021.2571335221087,
+                "range": [
+                  3793.5834239721557,
+                  4105.975548793741
+                ]
+              }
+            },
+            {
+              "name": "write_finish",
+              "runtime_ms": {
+                "median": 33.059386,
+                "range": [
+                  32.257435,
+                  34.894294
+                ]
+              },
+              "calls": {
+                "median": 9210,
+                "range": [
+                  9202,
+                  9221
+                ]
+              },
+              "mean_ns_per_call": 3626.50146563891,
+              "runtime_ns_per_work": {
+                "median": 3592.630515105412,
+                "range": [
+                  3508.531107243855,
+                  3800.2934001306903
+                ]
+              }
+            },
+            {
+              "name": "write_file",
+              "runtime_ms": {
+                "median": 32.357365,
+                "range": [
+                  29.90049,
+                  32.370354
+                ]
+              },
+              "calls": {
+                "median": 9210,
+                "range": [
+                  9202,
+                  9221
+                ]
+              },
+              "mean_ns_per_call": 3424.4638294792458,
+              "runtime_ns_per_work": {
+                "median": 3516.3404694631604,
+                "range": [
+                  3256.424526247005,
+                  3520.812921470524
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 27.718559,
+                "range": [
+                  25.367751,
+                  32.408346
+                ]
+              },
+              "calls": {
+                "median": 120830,
+                "range": [
+                  120179,
+                  120859
+                ]
+              },
+              "mean_ns_per_call": 236.25923264836902,
+              "runtime_ns_per_work": {
+                "median": 3012.2320147793957,
+                "range": [
+                  2759.163693713291,
+                  3529.551949466347
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 23.197797,
+                "range": [
+                  22.938835,
+                  23.347873
+                ]
+              },
+              "calls": {
+                "median": 48061,
+                "range": [
+                  48049,
+                  48072
+                ]
+              },
+              "mean_ns_per_call": 481.92218862271295,
+              "runtime_ns_per_work": {
+                "median": 2520.95164094762,
+                "range": [
+                  2494.9787905155536,
+                  2542.7873012415594
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 9.353551,
+                "range": [
+                  8.291593,
+                  10.027547
+                ]
+              },
+              "calls": {
+                "median": 9256,
+                "range": [
+                  9244,
+                  9264
+                ]
+              },
+              "mean_ns_per_call": 996.7112447774095,
+              "runtime_ns_per_work": {
+                "median": 1018.6834023088652,
+                "range": [
+                  901.0642251684417,
+                  1090.6620622144876
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "excluded-python": {
+          "total_runtime_ms": {
+            "median": 125.40764,
+            "range": [
+              123.110863,
+              128.199646
+            ]
+          },
+          "programs": [
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 35.428161,
+                "range": [
+                  32.484403,
+                  40.272942
+                ]
+              },
+              "calls": {
+                "median": 149881,
+                "range": [
+                  133263,
+                  152931
+                ]
+              },
+              "mean_ns_per_call": 248.0892185977183,
+              "runtime_ns_per_work": {
+                "median": 3028.824570402667,
+                "range": [
+                  2825.713552540014,
+                  3960.753540519276
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 13.39131,
+                "range": [
+                  13.074372,
+                  14.222293
+                ]
+              },
+              "calls": {
+                "median": 59557,
+                "range": [
+                  52733,
+                  60298
+                ]
+              },
+              "mean_ns_per_call": 235.75205112754074,
+              "runtime_ns_per_work": {
+                "median": 1144.849961528597,
+                "range": [
+                  1137.2974947807934,
+                  1398.7306254917387
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 11.730433,
+                "range": [
+                  11.4274,
+                  14.260289
+                ]
+              },
+              "calls": {
+                "median": 11556,
+                "range": [
+                  10228,
+                  11757
+                ]
+              },
+              "mean_ns_per_call": 1115.593512417638,
+              "runtime_ns_per_work": {
+                "median": 1153.661782061369,
+                "range": [
+                  994.0327070285317,
+                  1219.1407198426948
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_cleanup",
+              "runtime_ms": {
+                "median": 9.69352,
+                "range": [
+                  8.040604,
+                  10.070509
+                ]
+              },
+              "calls": {
+                "median": 11515,
+                "range": [
+                  10187,
+                  11716
+                ]
+              },
+              "mean_ns_per_call": 832.0256448620504,
+              "runtime_ns_per_work": {
+                "median": 843.2080723729993,
+                "range": [
+                  687.4073694109601,
+                  990.4119787568843
+                ]
+              }
+            },
+            {
+              "name": "file_released",
+              "runtime_ms": {
+                "median": 8.78655,
+                "range": [
+                  5.749714,
+                  9.26556
+                ]
+              },
+              "calls": {
+                "median": 11560,
+                "range": [
+                  10232,
+                  11761
+                ]
+              },
+              "mean_ns_per_call": 709.3799064167139,
+              "runtime_ns_per_work": {
+                "median": 751.1797896896641,
+                "range": [
+                  565.4714791502754,
+                  805.9812108559499
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_entry",
+              "runtime_ms": {
+                "median": 8.603547,
+                "range": [
+                  8.349567,
+                  9.47055
+                ]
+              },
+              "calls": {
+                "median": 11515,
+                "range": [
+                  10187,
+                  11716
+                ]
+              },
+              "mean_ns_per_call": 790.7015380932431,
+              "runtime_ns_per_work": {
+                "median": 735.5344960246217,
+                "range": [
+                  726.3019311064718,
+                  931.4073564122738
+                ]
+              }
+            },
+            {
+              "name": "write_fused_entry",
+              "runtime_ms": {
+                "median": 4.928739,
+                "range": [
+                  4.1888,
+                  5.417719
+                ]
+              },
+              "calls": {
+                "median": 11515,
+                "range": [
+                  10185,
+                  11714
+                ]
+              },
+              "mean_ns_per_call": 435.005027832645,
+              "runtime_ns_per_work": {
+                "median": 428.73512526096033,
+                "range": [
+                  411.9590873328088,
+                  463.17166794904676
+                ]
+              }
+            },
+            {
+              "name": "open_bound",
+              "runtime_ms": {
+                "median": 4.75477,
+                "range": [
+                  4.346778,
+                  5.701707
+                ]
+              },
+              "calls": {
+                "median": 11519,
+                "range": [
+                  10191,
+                  11720
+                ]
+              },
+              "mean_ns_per_call": 442.8134908764583,
+              "runtime_ns_per_work": {
+                "median": 467.6209677419355,
+                "range": [
+                  371.61477301872276,
+                  495.973121085595
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        }
+      },
+      "pidfd-writes": {
+        "identity": {
+          "total_runtime_ms": {
+            "median": 14.826236,
+            "range": [
+              14.315314,
+              15.331205
+            ]
+          },
+          "programs": [
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 3.935813,
+                "range": [
+                  3.897802,
+                  4.331774
+                ]
+              },
+              "calls": {
+                "median": 4216,
+                "range": [
+                  4158,
+                  4279
+                ]
+              },
+              "mean_ns_per_call": 961.4628151426539,
+              "runtime_ns_per_work": {
+                "median": 26238.753333333334,
+                "range": [
+                  25985.346666666668,
+                  28878.493333333332
+                ]
+              }
+            },
+            {
+              "name": "write_finish",
+              "runtime_ms": {
+                "median": 3.191842,
+                "range": [
+                  3.035846,
+                  3.408827
+                ]
+              },
+              "calls": {
+                "median": 171,
+                "range": [
+                  170,
+                  171
+                ]
+              },
+              "mean_ns_per_call": 18821.318359375,
+              "runtime_ns_per_work": {
+                "median": 21278.946666666667,
+                "range": [
+                  20238.97333333333,
+                  22725.513333333332
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 1.453917,
+                "range": [
+                  1.26595,
+                  1.453923
+                ]
+              },
+              "calls": {
+                "median": 2313,
+                "range": [
+                  2264,
+                  2347
+                ]
+              },
+              "mean_ns_per_call": 602.8004043905257,
+              "runtime_ns_per_work": {
+                "median": 9692.78,
+                "range": [
+                  8439.666666666666,
+                  9692.82
+                ]
+              }
+            },
+            {
+              "name": "write_file",
+              "runtime_ms": {
+                "median": 1.158942,
+                "range": [
+                  1.022953,
+                  1.203934
+                ]
+              },
+              "calls": {
+                "median": 171,
+                "range": [
+                  170,
+                  171
+                ]
+              },
+              "mean_ns_per_call": 6612.947265625,
+              "runtime_ns_per_work": {
+                "median": 7726.28,
+                "range": [
+                  6819.6866666666665,
+                  8026.2266666666665
+                ]
+              }
+            },
+            {
+              "name": "file_released",
+              "runtime_ms": {
+                "median": 0.844955,
+                "range": [
+                  0.660969,
+                  0.857957
+                ]
+              },
+              "calls": {
+                "median": 137,
+                "range": [
+                  137,
+                  137
+                ]
+              },
+              "mean_ns_per_call": 5751.535279805353,
+              "runtime_ns_per_work": {
+                "median": 5633.033333333334,
+                "range": [
+                  4406.46,
+                  5719.713333333333
+                ]
+              }
+            },
+            {
+              "name": "slot_close_done",
+              "runtime_ms": {
+                "median": 0.630971,
+                "range": [
+                  0.557973,
+                  0.642969
+                ]
+              },
+              "calls": {
+                "median": 259,
+                "range": [
+                  259,
+                  259
+                ]
+              },
+              "mean_ns_per_call": 2357.674388674389,
+              "runtime_ns_per_work": {
+                "median": 4206.473333333333,
+                "range": [
+                  3719.82,
+                  4286.46
+                ]
+              }
+            },
+            {
+              "name": "write_inner",
+              "runtime_ms": {
+                "median": 0.496971,
+                "range": [
+                  0.436976,
+                  0.564975
+                ]
+              },
+              "calls": {
+                "median": 171,
+                "range": [
+                  170,
+                  171
+                ]
+              },
+              "mean_ns_per_call": 2927.58203125,
+              "runtime_ns_per_work": {
+                "median": 3313.14,
+                "range": [
+                  2913.173333333333,
+                  3766.5
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 0.491973,
+                "range": [
+                  0.474972,
+                  0.492972
+                ]
+              },
+              "calls": {
+                "median": 134,
+                "range": [
+                  134,
+                  134
+                ]
+              },
+              "mean_ns_per_call": 3631.634328358209,
+              "runtime_ns_per_work": {
+                "median": 3279.82,
+                "range": [
+                  3166.48,
+                  3286.48
+                ]
+              }
+            }
+          ],
+          "program_count": 29,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "python": {
+          "total_runtime_ms": {
+            "median": 65.58173,
+            "range": [
+              64.858701,
+              72.435445
+            ]
+          },
+          "programs": [
+            {
+              "name": "write_fused_entry",
+              "runtime_ms": {
+                "median": 20.026998,
+                "range": [
+                  19.46103,
+                  22.514871
+                ]
+              },
+              "calls": {
+                "median": 172,
+                "range": [
+                  171,
+                  183
+                ]
+              },
+              "mean_ns_per_call": 117876.23384030418,
+              "runtime_ns_per_work": {
+                "median": 133513.32,
+                "range": [
+                  129740.2,
+                  150099.14
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_entry",
+              "runtime_ms": {
+                "median": 11.564429,
+                "range": [
+                  10.843456,
+                  12.843362
+                ]
+              },
+              "calls": {
+                "median": 100,
+                "range": [
+                  100,
+                  121
+                ]
+              },
+              "mean_ns_per_call": 109816.96884735202,
+              "runtime_ns_per_work": {
+                "median": 77096.19333333333,
+                "range": [
+                  72289.70666666667,
+                  85622.41333333333
+                ]
+              }
+            },
+            {
+              "name": "eval_return",
+              "runtime_ms": {
+                "median": 9.268516,
+                "range": [
+                  8.76355,
+                  9.694516
+                ]
+              },
+              "calls": {
+                "median": 3866,
+                "range": [
+                  3866,
+                  3866
+                ]
+              },
+              "mean_ns_per_call": 2390.6347646145887,
+              "runtime_ns_per_work": {
+                "median": 61790.10666666667,
+                "range": [
+                  58423.666666666664,
+                  64630.10666666667
+                ]
+              }
+            },
+            {
+              "name": "seed_thread",
+              "runtime_ms": {
+                "median": 7.382646,
+                "range": [
+                  6.917605,
+                  7.720661
+                ]
+              },
+              "calls": {
+                "median": 3866,
+                "range": [
+                  3866,
+                  3866
+                ]
+              },
+              "mean_ns_per_call": 1898.6818416968442,
+              "runtime_ns_per_work": {
+                "median": 49217.64,
+                "range": [
+                  46117.36666666667,
+                  51471.073333333334
+                ]
+              }
+            },
+            {
+              "name": "write_finish",
+              "runtime_ms": {
+                "median": 5.356732,
+                "range": [
+                  5.167733,
+                  6.148693
+                ]
+              },
+              "calls": {
+                "median": 172,
+                "range": [
+                  171,
+                  183
+                ]
+              },
+              "mean_ns_per_call": 31698.019011406843,
+              "runtime_ns_per_work": {
+                "median": 35711.54666666667,
+                "range": [
+                  34451.55333333334,
+                  40991.28666666667
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 4.270774,
+                "range": [
+                  3.833819,
+                  4.270792
+                ]
+              },
+              "calls": {
+                "median": 4857,
+                "range": [
+                  4577,
+                  6138
+                ]
+              },
+              "mean_ns_per_call": 794.7203313639866,
+              "runtime_ns_per_work": {
+                "median": 28471.826666666668,
+                "range": [
+                  25558.793333333335,
+                  28471.946666666667
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 1.57993,
+                "range": [
+                  1.567922,
+                  1.761906
+                ]
+              },
+              "calls": {
+                "median": 2274,
+                "range": [
+                  2262,
+                  2677
+                ]
+              },
+              "mean_ns_per_call": 680.6818244835713,
+              "runtime_ns_per_work": {
+                "median": 10532.866666666667,
+                "range": [
+                  10452.813333333334,
+                  11746.04
+                ]
+              }
+            },
+            {
+              "name": "acquire_fused_entry",
+              "runtime_ms": {
+                "median": 0.981951,
+                "range": [
+                  0.959952,
+                  1.410929
+                ]
+              },
+              "calls": {
+                "median": 1,
+                "range": [
+                  1,
+                  1
+                ]
+              },
+              "mean_ns_per_call": 1117610.6666666667,
+              "runtime_ns_per_work": {
+                "median": 6546.34,
+                "range": [
+                  6399.68,
+                  9406.193333333333
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "excluded-python": {
+          "total_runtime_ms": {
+            "median": 9.80949,
+            "range": [
+              9.717517,
+              10.869504
+            ]
+          },
+          "programs": [
+            {
+              "name": "eval_return",
+              "runtime_ms": {
+                "median": 1.887909,
+                "range": [
+                  1.87093,
+                  2.000893
+                ]
+              },
+              "calls": {
+                "median": 3866,
+                "range": [
+                  3866,
+                  3866
+                ]
+              },
+              "mean_ns_per_call": 496.614243835144,
+              "runtime_ns_per_work": {
+                "median": 12586.06,
+                "range": [
+                  12472.866666666667,
+                  13339.286666666667
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 1.867914,
+                "range": [
+                  1.631918,
+                  1.965901
+                ]
+              },
+              "calls": {
+                "median": 4696,
+                "range": [
+                  4429,
+                  5878
+                ]
+              },
+              "mean_ns_per_call": 364.3093381323735,
+              "runtime_ns_per_work": {
+                "median": 12452.76,
+                "range": [
+                  10879.453333333333,
+                  13106.006666666666
+                ]
+              }
+            },
+            {
+              "name": "seed_thread",
+              "runtime_ms": {
+                "median": 1.622929,
+                "range": [
+                  1.55592,
+                  1.638916
+                ]
+              },
+              "calls": {
+                "median": 3866,
+                "range": [
+                  3866,
+                  3866
+                ]
+              },
+              "mean_ns_per_call": 415.3961889981031,
+              "runtime_ns_per_work": {
+                "median": 10819.526666666667,
+                "range": [
+                  10372.8,
+                  10926.106666666667
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 1.057949,
+                "range": [
+                  1.017947,
+                  1.291935
+                ]
+              },
+              "calls": {
+                "median": 2071,
+                "range": [
+                  1995,
+                  2516
+                ]
+              },
+              "mean_ns_per_call": 511.6728957763598,
+              "runtime_ns_per_work": {
+                "median": 7052.993333333333,
+                "range": [
+                  6786.3133333333335,
+                  8612.9
+                ]
+              }
+            },
+            {
+              "name": "write_file",
+              "runtime_ms": {
+                "median": 0.504973,
+                "range": [
+                  0.391988,
+                  0.505971
+                ]
+              },
+              "calls": {
+                "median": 170,
+                "range": [
+                  168,
+                  182
+                ]
+              },
+              "mean_ns_per_call": 2697.9461538461537,
+              "runtime_ns_per_work": {
+                "median": 3366.4866666666667,
+                "range": [
+                  2613.2533333333336,
+                  3373.14
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 0.402988,
+                "range": [
+                  0.362977,
+                  0.490976
+                ]
+              },
+              "calls": {
+                "median": 138,
+                "range": [
+                  138,
+                  165
+                ]
+              },
+              "mean_ns_per_call": 2850.2063492063494,
+              "runtime_ns_per_work": {
+                "median": 2686.5866666666666,
+                "range": [
+                  2419.846666666667,
+                  3273.173333333333
+                ]
+              }
+            },
+            {
+              "name": "write_fused_entry",
+              "runtime_ms": {
+                "median": 0.318979,
+                "range": [
+                  0.308978,
+                  0.319981
+                ]
+              },
+              "calls": {
+                "median": 170,
+                "range": [
+                  168,
+                  182
+                ]
+              },
+              "mean_ns_per_call": 1822.9576923076922,
+              "runtime_ns_per_work": {
+                "median": 2126.5266666666666,
+                "range": [
+                  2059.8533333333335,
+                  2133.2066666666665
+                ]
+              }
+            },
+            {
+              "name": "write_inner",
+              "runtime_ms": {
+                "median": 0.265995,
+                "range": [
+                  0.201994,
+                  0.292984
+                ]
+              },
+              "calls": {
+                "median": 170,
+                "range": [
+                  168,
+                  182
+                ]
+              },
+              "mean_ns_per_call": 1463.4096153846153,
+              "runtime_ns_per_work": {
+                "median": 1773.3,
+                "range": [
+                  1346.6266666666668,
+                  1953.2266666666667
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        }
+      },
+      "python-callbacks": {
+        "identity": {
+          "total_runtime_ms": {
+            "median": 2.731862,
+            "range": [
+              2.249864,
+              2.773861
+            ]
+          },
+          "programs": [
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 0.404979,
+                "range": [
+                  0.384983,
+                  0.417985
+                ]
+              },
+              "calls": {
+                "median": 1101,
+                "range": [
+                  1095,
+                  1118
+                ]
+              },
+              "mean_ns_per_call": 364.49818949909474,
+              "runtime_ns_per_work": {
+                "median": 404.979,
+                "range": [
+                  384.983,
+                  417.985
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 0.398973,
+                "range": [
+                  0.393972,
+                  0.41498
+                ]
+              },
+              "calls": {
+                "median": 1945,
+                "range": [
+                  1929,
+                  2116
+                ]
+              },
+              "mean_ns_per_call": 201.65692821368947,
+              "runtime_ns_per_work": {
+                "median": 398.973,
+                "range": [
+                  393.972,
+                  414.98
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 0.225983,
+                "range": [
+                  0.201987,
+                  0.26699
+                ]
+              },
+              "calls": {
+                "median": 103,
+                "range": [
+                  103,
+                  103
+                ]
+              },
+              "mean_ns_per_call": 2249.061488673139,
+              "runtime_ns_per_work": {
+                "median": 225.983,
+                "range": [
+                  201.987,
+                  266.99
+                ]
+              }
+            },
+            {
+              "name": "open_begin",
+              "runtime_ms": {
+                "median": 0.195992,
+                "range": [
+                  0.174991,
+                  0.210989
+                ]
+              },
+              "calls": {
+                "median": 78,
+                "range": [
+                  78,
+                  78
+                ]
+              },
+              "mean_ns_per_call": 2487.059829059829,
+              "runtime_ns_per_work": {
+                "median": 195.992,
+                "range": [
+                  174.991,
+                  210.989
+                ]
+              }
+            },
+            {
+              "name": "slot_close_done",
+              "runtime_ms": {
+                "median": 0.138995,
+                "range": [
+                  0.130993,
+                  0.146997
+                ]
+              },
+              "calls": {
+                "median": 226,
+                "range": [
+                  226,
+                  226
+                ]
+              },
+              "mean_ns_per_call": 615.0221238938053,
+              "runtime_ns_per_work": {
+                "median": 138.995,
+                "range": [
+                  130.993,
+                  146.997
+                ]
+              }
+            },
+            {
+              "name": "slot_close_begin",
+              "runtime_ms": {
+                "median": 0.138994,
+                "range": [
+                  0.116991,
+                  0.140988
+                ]
+              },
+              "calls": {
+                "median": 226,
+                "range": [
+                  226,
+                  226
+                ]
+              },
+              "mean_ns_per_call": 585.5058997050147,
+              "runtime_ns_per_work": {
+                "median": 138.994,
+                "range": [
+                  116.991,
+                  140.988
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_cleanup",
+              "runtime_ms": {
+                "median": 0.136994,
+                "range": [
+                  0.116992,
+                  0.15499
+                ]
+              },
+              "calls": {
+                "median": 74,
+                "range": [
+                  74,
+                  74
+                ]
+              },
+              "mean_ns_per_call": 1842.2342342342342,
+              "runtime_ns_per_work": {
+                "median": 136.994,
+                "range": [
+                  116.992,
+                  154.99
+                ]
+              }
+            },
+            {
+              "name": "table_duplicate_done",
+              "runtime_ms": {
+                "median": 0.128993,
+                "range": [
+                  0.099996,
+                  0.270986
+                ]
+              },
+              "calls": {
+                "median": 2,
+                "range": [
+                  2,
+                  2
+                ]
+              },
+              "mean_ns_per_call": 83329.16666666667,
+              "runtime_ns_per_work": {
+                "median": 128.993,
+                "range": [
+                  99.996,
+                  270.986
+                ]
+              }
+            }
+          ],
+          "program_count": 29,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "python": {
+          "total_runtime_ms": {
+            "median": 130.770442,
+            "range": [
+              129.231502,
+              131.342495
+            ]
+          },
+          "programs": [
+            {
+              "name": "eval_return",
+              "runtime_ms": {
+                "median": 74.186176,
+                "range": [
+                  74.106251,
+                  75.184276
+                ]
+              },
+              "calls": {
+                "median": 34469,
+                "range": [
+                  34469,
+                  34469
+                ]
+              },
+              "mean_ns_per_call": 2161.1370893653234,
+              "runtime_ns_per_work": {
+                "median": 74186.176,
+                "range": [
+                  74106.251,
+                  75184.276
+                ]
+              }
+            },
+            {
+              "name": "seed_thread",
+              "runtime_ms": {
+                "median": 43.883882,
+                "range": [
+                  43.206855,
+                  44.054819
+                ]
+              },
+              "calls": {
+                "median": 34469,
+                "range": [
+                  34469,
+                  34469
+                ]
+              },
+              "mean_ns_per_call": 1268.2464049822545,
+              "runtime_ns_per_work": {
+                "median": 43883.882,
+                "range": [
+                  43206.855,
+                  44054.819
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_entry",
+              "runtime_ms": {
+                "median": 8.143597,
+                "range": [
+                  8.055599,
+                  8.307588
+                ]
+              },
+              "calls": {
+                "median": 95,
+                "range": [
+                  75,
+                  96
+                ]
+              },
+              "mean_ns_per_call": 92130.76691729324,
+              "runtime_ns_per_work": {
+                "median": 8143.597,
+                "range": [
+                  8055.599,
+                  8307.588
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 0.927961,
+                "range": [
+                  0.660956,
+                  1.008953
+                ]
+              },
+              "calls": {
+                "median": 3776,
+                "range": [
+                  2613,
+                  3886
+                ]
+              },
+              "mean_ns_per_call": 252.83406326034063,
+              "runtime_ns_per_work": {
+                "median": 927.961,
+                "range": [
+                  660.956,
+                  1008.953
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 0.772964,
+                "range": [
+                  0.557974,
+                  0.810955
+                ]
+              },
+              "calls": {
+                "median": 1587,
+                "range": [
+                  1174,
+                  1685
+                ]
+              },
+              "mean_ns_per_call": 481.7573099415205,
+              "runtime_ns_per_work": {
+                "median": 772.964,
+                "range": [
+                  557.974,
+                  810.955
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 0.274985,
+                "range": [
+                  0.25199,
+                  0.274989
+                ]
+              },
+              "calls": {
+                "median": 133,
+                "range": [
+                  110,
+                  134
+                ]
+              },
+              "mean_ns_per_call": 2127.2254641909813,
+              "runtime_ns_per_work": {
+                "median": 274.985,
+                "range": [
+                  251.99,
+                  274.989
+                ]
+              }
+            },
+            {
+              "name": "open_begin",
+              "runtime_ms": {
+                "median": 0.26099,
+                "range": [
+                  0.214992,
+                  0.279994
+                ]
+              },
+              "calls": {
+                "median": 99,
+                "range": [
+                  79,
+                  100
+                ]
+              },
+              "mean_ns_per_call": 2719.338129496403,
+              "runtime_ns_per_work": {
+                "median": 260.99,
+                "range": [
+                  214.992,
+                  279.994
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_cleanup",
+              "runtime_ms": {
+                "median": 0.244984,
+                "range": [
+                  0.233986,
+                  0.262985
+                ]
+              },
+              "calls": {
+                "median": 95,
+                "range": [
+                  75,
+                  96
+                ]
+              },
+              "mean_ns_per_call": 2789.3045112781956,
+              "runtime_ns_per_work": {
+                "median": 244.984,
+                "range": [
+                  233.986,
+                  262.985
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        },
+        "excluded-python": {
+          "total_runtime_ms": {
+            "median": 29.864513,
+            "range": [
+              28.935495,
+              33.480329
+            ]
+          },
+          "programs": [
+            {
+              "name": "eval_return",
+              "runtime_ms": {
+                "median": 16.063179,
+                "range": [
+                  16.033182,
+                  18.288087
+                ]
+              },
+              "calls": {
+                "median": 34469,
+                "range": [
+                  34469,
+                  34469
+                ]
+              },
+              "mean_ns_per_call": 487.2440743856799,
+              "runtime_ns_per_work": {
+                "median": 16063.179,
+                "range": [
+                  16033.182,
+                  18288.087
+                ]
+              }
+            },
+            {
+              "name": "seed_thread",
+              "runtime_ms": {
+                "median": 10.212452,
+                "range": [
+                  9.877511,
+                  11.453455
+                ]
+              },
+              "calls": {
+                "median": 34469,
+                "range": [
+                  34469,
+                  34469
+                ]
+              },
+              "mean_ns_per_call": 305.04141885945825,
+              "runtime_ns_per_work": {
+                "median": 10212.452,
+                "range": [
+                  9877.511,
+                  11453.455
+                ]
+              }
+            },
+            {
+              "name": "syscall_begin",
+              "runtime_ms": {
+                "median": 0.763957,
+                "range": [
+                  0.563973,
+                  0.850964
+                ]
+              },
+              "calls": {
+                "median": 2509,
+                "range": [
+                  2238,
+                  3587
+                ]
+              },
+              "mean_ns_per_call": 261.4463642908567,
+              "runtime_ns_per_work": {
+                "median": 763.957,
+                "range": [
+                  563.973,
+                  850.964
+                ]
+              }
+            },
+            {
+              "name": "table_physically_freed",
+              "runtime_ms": {
+                "median": 0.687961,
+                "range": [
+                  0.454972,
+                  0.771966
+                ]
+              },
+              "calls": {
+                "median": 1202,
+                "range": [
+                  1116,
+                  1582
+                ]
+              },
+              "mean_ns_per_call": 490.9997435897436,
+              "runtime_ns_per_work": {
+                "median": 687.961,
+                "range": [
+                  454.972,
+                  771.966
+                ]
+              }
+            },
+            {
+              "name": "installed",
+              "runtime_ms": {
+                "median": 0.396984,
+                "range": [
+                  0.30499,
+                  0.404982
+                ]
+              },
+              "calls": {
+                "median": 110,
+                "range": [
+                  109,
+                  133
+                ]
+              },
+              "mean_ns_per_call": 3144.7613636363635,
+              "runtime_ns_per_work": {
+                "median": 396.984,
+                "range": [
+                  304.99,
+                  404.982
+                ]
+              }
+            },
+            {
+              "name": "slot_close_begin",
+              "runtime_ms": {
+                "median": 0.204983,
+                "range": [
+                  0.198987,
+                  0.391979
+                ]
+              },
+              "calls": {
+                "median": 233,
+                "range": [
+                  232,
+                  256
+                ]
+              },
+              "mean_ns_per_call": 1103.9514563106795,
+              "runtime_ns_per_work": {
+                "median": 204.983,
+                "range": [
+                  198.987,
+                  391.979
+                ]
+              }
+            },
+            {
+              "name": "openat_fused_cleanup",
+              "runtime_ms": {
+                "median": 0.202991,
+                "range": [
+                  0.191986,
+                  0.275976
+                ]
+              },
+              "calls": {
+                "median": 75,
+                "range": [
+                  74,
+                  95
+                ]
+              },
+              "mean_ns_per_call": 2749.80737704918,
+              "runtime_ns_per_work": {
+                "median": 202.991,
+                "range": [
+                  191.986,
+                  275.976
+                ]
+              }
+            },
+            {
+              "name": "file_released",
+              "runtime_ms": {
+                "median": 0.183987,
+                "range": [
+                  0.128998,
+                  0.270988
+                ]
+              },
+              "calls": {
+                "median": 114,
+                "range": [
+                  113,
+                  137
+                ]
+              },
+              "mean_ns_per_call": 1604.3214285714287,
+              "runtime_ns_per_work": {
+                "median": 183.987,
+                "range": [
+                  128.998,
+                  270.988
+                ]
+              }
+            }
+          ],
+          "program_count": 35,
+          "ranking_scope": "Top eight programs by median runtime; total_runtime_ms covers all programs. Full counters retained in the hash-pinned private report."
+        }
+      }
+    },
+    "cleanup_all_passed": true,
+    "verified_writes": 900,
+    "oracle_frames": 7200
+  },
+  "private_report_sha256": {
+    "primary": "19177b5cc75389faf87ab2664bc7c220388bf9dd44cf305d521e4a5460ce0eab",
+    "timed": "efbf1f94c9a0e1e43e450efea81aeb83becca37398332de580b15183fa830f0a"
+  },
+  "offline": {
+    "root_tests": 23,
+    "endpoint_tests": 19,
+    "style": "passed"
+  },
+  "accounting": {
+    "aggregate_process_disagreement_samples": 29,
+    "examples": [
+      {
+        "profile": "native-churn",
+        "mode": "off",
+        "repeat": 0,
+        "guest_busy_seconds": 3.19,
+        "application_cpu_seconds": 4.0048569999999994,
+        "collector_cpu_seconds": 0.0
+      },
+      {
+        "profile": "native-churn",
+        "mode": "identity",
+        "repeat": 0,
+        "guest_busy_seconds": 3.23,
+        "application_cpu_seconds": 3.998704,
+        "collector_cpu_seconds": 0.1
+      },
+      {
+        "profile": "native-churn",
+        "mode": "python",
+        "repeat": 0,
+        "guest_busy_seconds": 3.22,
+        "application_cpu_seconds": 3.9997700000000003,
+        "collector_cpu_seconds": 0.11
+      },
+      {
+        "profile": "native-churn",
+        "mode": "excluded-python",
+        "repeat": 0,
+        "guest_busy_seconds": 3.27,
+        "application_cpu_seconds": 4.004566,
+        "collector_cpu_seconds": 0.02
+      }
+    ],
+    "interpretation": "Guest aggregate ticks undercount process accounting in some windows. Aggregate added percentages are noisy screens, not calibrated CPU budgets. CPU and kernel-reported BPF runtime must not be summed; BPF snapshots include extra observer time."
+  },
+  "rejected_attempts": [
+    {
+      "reason": "bpftool presentation lacked required timing counters; switched to exact kernel info API."
+    },
+    {
+      "reason": "Two timing attempts and a diagnostic run rejected raw module snapshot changes. Diagnostic identified inet_diag references3-to2 with unchanged identity. Final audit compares identities and retains raw reference changes separately; BPF program ID-set audit unchanged."
+    }
+  ],
+  "limitations": [
+    "QEMU guest on a non-Intel host; physical Intel required before claiming fleet CPU percentages.",
+    "Three repeats per condition, short windows, timing quantization and background noise; retain ranges and negative deltas.",
+    "Whole-guest/app CPU windows include application startup and equal0.5s settling; the write-loop-only figure is a separate incomplete accounting view.",
+    "Excluded-Python control uses an intentionally unobservable cgroup ID through the direct collector; it is not a deployable service configuration.",
+    "Python metadata remains unattested. Fixture identity/source checks do not prove general coverage or arbitrary missed-callback correctness.",
+    "No production CPU optimization shipped in this measurement batch."
+  ],
+  "recommendation": "First address global Python probes with explicit source scope and lifecycle/cross-boundary regression controls. Native opening-state copies are the next measured BPF target. Keep identity-only default; do not remove return binding or add stack caches without correctness proof."
+}
