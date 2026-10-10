@@ -16,7 +16,8 @@
     "Review ofbfb1249: disk-full transactions/restart loop/global probes/privacy",
     "Cross-cgroup/module/aliasing coverage review",
     "Latest three-track review: fget_task ERR_PTR, fused_read_str, stale evidence, unused surface and endpoint CI",
-    "Final HEAD bfb1249 end-to-end endpoint review with shared/fixture sub-reviews; reviewer reports offline, storage and controller tests passed locally."
+    "Final HEAD bfb1249 end-to-end endpoint review with shared/fixture sub-reviews; reviewer reports offline, storage and controller tests passed locally.",
+    "Current-HEAD duplication review: backend readers/drivers, endpoint frame walkers and collectors, staging/wire copies, fixture ownership and redundant fields."
   ],
   "validation": {
     "local_offline": {
@@ -479,9 +480,47 @@
       "status": "confirmed-open",
       "finding": "Three reader programs and several Python drivers remain hand-maintained with semantic drift; history timeouts differ20/120 seconds. Shared symlinks do not eliminate all duplication.",
       "next_step": "Extract common semantics where practical; document intentional backend differences; add precise shared-section checks. Do not demand whole-program equivalence across intentional wire/policy differences.",
-      "evidence": "",
+      "evidence": "validation/thread-cleanup-refactor.json (partial consolidation only)",
       "additional_reviews": [
         "final-bfb1249"
+      ],
+      "consolidation_plan": [
+        {
+          "target": "Thread retirement and diagnostic constants",
+          "status": "validated",
+          "scope": "Shared compile-time six/twelve-map retirement; preserve backend map sets and deletion order; named enum diagnostics.",
+          "evidence": "validation/thread-cleanup-refactor.json"
+        },
+        {
+          "target": "Driver consolidation",
+          "status": "open",
+          "scope": "One driver set with explicit backend paths/timeouts and documented genuine backend differences."
+        },
+        {
+          "target": "Frame walkers",
+          "status": "open",
+          "scope": "Compile-time read specialization and caller-owned scratch; preserve flags, limits, cold-page behavior and verifier compatibility."
+        },
+        {
+          "target": "Ring consumer",
+          "status": "open",
+          "scope": "Shared mechanics, explicit wire v1/v2 validation and endpoint storage hooks."
+        },
+        {
+          "target": "Reader backends",
+          "status": "open",
+          "scope": "Common implementation with thin wrappers; preserve module/upstream and fixture/continuous policy differences."
+        }
+      ],
+      "review_details": [
+        "Duplicated capture wrappers and bounded string callbacks accompany duplicated frame walkers.",
+        "Keep partial write reset lightweight; full event clear would regress cost.",
+        "Repeated opener/acquirer source snapshots are a performance/ABI redesign, separate from behavior-preserving consolidation.",
+        "Task storage conversion is a lifecycle/capacity redesign, separate from cleanup extraction.",
+        "Fixture-based expected layouts and regression verifier ownership require explicit canonical ownership; measured UNICODE_LENGTH is checked, not overwritten.",
+        "Workflow twins, settings/run wrappers and formatting configs can be shared; retained failed evidence is historical audit data rather than source duplication.",
+        "Audit unused binding/shadow fields and cleanup_bits before removal; shadow epoch is read during binding restoration.",
+        "Collector common code must preserve endpoint storage fault semantics and fixture child supervision."
       ]
     },
     {
@@ -956,6 +995,12 @@
       "status": "validated",
       "evidence": "validation/cpu-baseline-qemu.json",
       "remaining": "Global Python probes, native opening-state cost, representative Intel measurement and other review items remain open."
+    },
+    {
+      "batch": "4-consolidation-cleanup",
+      "status": "validated",
+      "evidence": "validation/thread-cleanup-refactor.json",
+      "remaining": "R033 remains open: drivers, frame walkers, ring mechanics and common reader implementation. CPU optimizations remain separate."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."

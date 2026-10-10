@@ -32,6 +32,9 @@
     },
     {
       "file": "core/fixture_child.h"
+    },
+    {
+      "file": "core/thread_retirement.bpf.h"
     }
   ]
 }

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Behavior-preserving thread cleanup extraction and named diagnostic constants; build comparison only, no BPF attachment.",
+  "baseline_commit": "7cc51f461478dc8f957f7b91cffe6ae9eef715a6",
+  "target": {
+    "kernel": "6.8.0-142-generic",
+    "architecture": "x86_64",
+    "python": "3.12.3"
+  },
+  "compiler_flags": [
+    "-O2",
+    "-g",
+    "-target",
+    "bpf",
+    "-mcpu=v3",
+    "-D__TARGET_ARCH_x86"
+  ],
+  "comparison": [
+    {
+      "backend": ".",
+      "passed": true,
+      "executable_sections": 36,
+      "relocation_sections": 36,
+      "baseline_sha256": "c702dd6bec21297e221d2716886c8459a25370495671e5aa8b07e1deeab15367",
+      "candidate_sha256": "1a6db26995f2cfc0f9748a965ad7ceccf1f20484a86fa586f97771cab61019a3"
+    },
+    {
+      "backend": "module-free",
+      "passed": true,
+      "executable_sections": 36,
+      "relocation_sections": 36,
+      "baseline_sha256": "de58cf559c4b9fea893d473d17b51af92bb1bc28525246530eb22dc2822684d5",
+      "candidate_sha256": "7818e50b5b5ee8324413c462b3080af75302929d26de7e04ffcd9c1cfa786455"
+    },
+    {
+      "backend": "endpoint-service",
+      "passed": true,
+      "executable_sections": 36,
+      "relocation_sections": 36,
+      "baseline_sha256": "83c0fc35d08e64eb25ac84df9f3d056512eb2cbc2910150a4b3696e262cc9aee",
+      "candidate_sha256": "4a313bc595eeccb6fbebdc605f2ffec87d77463feb10e60d20b3dbf22ebb5091"
+    }
+  ],
+  "source_sha256": {
+    "shared/core/thread_retirement.bpf.h": "774e403a26440b7a9ceab403a52073d44a0276cc6fbe5fd55fab446a67c62c11",
+    "core/reader.bpf.c": "5e4a84a56bb6deeafb276ced69e4c08b2296a804c0052fd954937815695bfafb",
+    "module-free/core/reader.bpf.c": "2699fa3d3c4f87f9260e9c51eefa0e72e83698e74080a1bfb19c30a600e3d44e",
+    "endpoint-service/core/reader.bpf.c": "cf061d109c837fe76a9a0e03e98905b35c4a0f10fee6cd9ede69203492b53c7e",
+    "endpoint-service/python/service.py": "97490e8fb7a715382e247b9cdbe67c76c0f90457381122c6a52666ae3cf31f05",
+    "python/run_collector_path_guest.py": "b2486b2a880d460731a254c738a268f297bd4e5bc0f7fc3e73bb14d7fd727012",
+    "module-free/python/run_collector_path_guest.py": "9b03f144f6e9fded5dbb8a3cd5e6a4318acbb0fbcb8c0bfa2c668fee13f36796",
+    "module-free/python/strings_collector_path_guest.py": "0d4d05ddaa132889c68931ffa572ae04d7ebf08477ae7708343b342057decf86",
+    "source_manifest.json": "0bf802a202cb4a47b8822ca64a34477be9c38ee3932a3e335834935e8abfd980",
+    "module-free/source_manifest.json": "442e99b3a0fa90aa45af87768687ca3a522375077efd294cbd28c4cb42cb43b6"
+  },
+  "offline": {
+    "root_tests": 23,
+    "endpoint_tests": 19,
+    "style": "passed"
+  },
+  "rejected_candidates": [
+    "Value-argument exit helper changed exit instruction selection.",
+    "Pointer-argument exec helper changed exec instruction selection."
+  ],
+  "final_strategy": "Caller-key expansion at exit and original value-key inline wrapper at exec preserve key stack lifetimes and deletion ordering.",
+  "limitations": [
+    "ELF file hashes differ because debug metadata changed; executable instructions and symbolic relocations compare exactly.",
+    "Compiled against the existing measured Ubuntu24/Python3.12 generated headers. No new kernel runtime, verifier load, CPU screen or physical-hardware claim.",
+    "Driver consolidation, frame walkers, ring mechanics and common reader implementation remain open."
+  ]
+}

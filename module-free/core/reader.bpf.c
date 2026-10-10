@@ -371,7 +371,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
       value->amount = line.used;
       if (map_copy(value->bytes, sizeof(value->bytes), bytes,
                    sizeof(value->bytes))) {
-        increment_diagnostic(1);
+        increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
       } else {
         unsigned long long one = 1;
         if (!UPDATE_SOURCE(&warmed_mms, &key.mm, &one, BPF_ANY)) {
@@ -407,7 +407,7 @@ static long walk_frame(unsigned int slot, void *opaque) {
 static __always_inline int copy_source(struct source_event *to,
                                        const struct source_event *from) {
   if (map_copy(to, sizeof(*to), from, sizeof(*to))) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return -1;
   }
   return 0;
@@ -423,7 +423,7 @@ static __always_inline int clear_source(struct source_event *e) {
   unsigned int z = 0;
   unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
   if (!zero || map_copy(e, sizeof(*e), zero, sizeof(*e))) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return -1;
   }
   return 0;
@@ -736,7 +736,7 @@ static long fused_frame_step(unsigned int step, void *opaque) {
       line_val->amount = line.used;
       if (map_copy(line_val->bytes, sizeof(line_val->bytes), line_buf,
                    sizeof(line_val->bytes))) {
-        increment_diagnostic(1);
+        increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
       } else {
         unsigned long long one = 1;
         if (!UPDATE_SOURCE(&warmed_mms, &mm, &one, BPF_ANY)) {
@@ -871,7 +871,7 @@ _Static_assert(sizeof(struct event) == IOSEC_EVENT_BYTES, "event ABI");
 static __always_inline int copy_event(struct event *to,
                                       const struct event *from) {
   if (map_copy(to, sizeof(*to), from, sizeof(*to))) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return -1;
   }
   return 0;
@@ -887,7 +887,7 @@ static __always_inline struct event *reset_scratch_event(void) {
     unsigned int z = 0;
     unsigned char *zero = bpf_map_lookup_elem(&zero_bytes, &z);
     if (!zero || map_copy(e, sizeof(*e), zero, sizeof(*e))) {
-      increment_diagnostic(1);
+      increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
       return 0;
     }
   }
@@ -970,18 +970,18 @@ static __always_inline void emit(struct event *e, unsigned int stage,
                 ((stage < 7 || stage > 9) || source_is_complete(&e->live));
   unsigned int a = e->opener.count, b = e->acquirer.count, c = e->live.count;
   if (a > 16 || b > 16 || c > 16) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return;
   }
   unsigned int total = a + b + c, size = 176 + total * 200;
   if (total > 48 || size > 9776) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return;
   }
   unsigned int zero = 0;
   struct wire_record *wire = bpf_map_lookup_elem(&wire_scratch, &zero);
   if (!wire) {
-    increment_diagnostic(1);
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
     return;
   }
   struct wire_header *h = &wire->header;
@@ -1012,7 +1012,7 @@ static __always_inline void emit(struct event *e, unsigned int stage,
   struct bpf_dynptr d;
   if (bpf_ringbuf_reserve_dynptr(&events, size, 0, &d)) {
     bpf_ringbuf_discard_dynptr(&d, 0);
-    increment_diagnostic(0);
+    increment_diagnostic(IOSEC_DIAG_RING_DROPS);
     return;
   }
   if (bpf_dynptr_write(&d, 0, h, 176, 0))
@@ -1385,7 +1385,7 @@ static __always_inline void write_entry_snapshot(unsigned long long fd) {
   struct event *label = bpf_map_lookup_elem(&slots, &key);
   if (label) {
     if (map_copy(w, sizeof(*w), label, sizeof(*label))) {
-      increment_diagnostic(1);
+      increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
       return;
     }
   } else
@@ -1683,14 +1683,8 @@ int BPF_PROG(exec_close_done, struct files_struct *files_arg) {
   return 0;
 }
 #include "cleanup_retirement.bpf.h"
-static __always_inline void retire_thread_state(unsigned long long tid) {
-  bpf_map_delete_elem(&shadows, &tid);
-  bpf_map_delete_elem(&threads, &tid);
-  bpf_map_delete_elem(&warm_tmp, &tid);
-  bpf_map_delete_elem(&fused_opener, &tid);
-  bpf_map_delete_elem(&fused_lineval, &tid);
-  bpf_map_delete_elem(&writing, &tid);
-}
+#define IOSEC_RETIRE_SYSCALL_STATE 0
+#include "thread_retirement.bpf.h"
 SEC("tracepoint/sched/sched_process_exec")
 int executed(struct trace_event_raw_sched_process_exec *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
@@ -1707,12 +1701,7 @@ SEC("tracepoint/sched/sched_process_exit") int exited(void *ctx) {
   /* do_exit decrements live before invoking sched_process_exit. */
   if (BPF_CORE_READ(task, signal, live.counter) == 0)
     bpf_map_delete_elem(&subjects, &pid);
-  bpf_map_delete_elem(&shadows, &tid);
-  bpf_map_delete_elem(&threads, &tid);
-  bpf_map_delete_elem(&warm_tmp, &tid);
-  bpf_map_delete_elem(&fused_opener, &tid);
-  bpf_map_delete_elem(&fused_lineval, &tid);
-  bpf_map_delete_elem(&writing, &tid);
+  IOSEC_RETIRE_THREAD_STATE(&tid);
   return 0;
 }
 

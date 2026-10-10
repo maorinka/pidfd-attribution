@@ -41,6 +41,7 @@ PRODUCTION = (
     "cleanup_index.bpf.h",
     "diagnostics.bpf.h",
     "cleanup_retirement.bpf.h",
+    "thread_retirement.bpf.h",
     "policy.h",
     "capture_controller.h",
     "protocol.h",

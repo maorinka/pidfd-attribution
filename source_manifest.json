@@ -41,6 +41,9 @@
     },
     {
       "file": "core/arch.h"
+    },
+    {
+      "file": "core/thread_retirement.bpf.h"
     }
   ]
 }
