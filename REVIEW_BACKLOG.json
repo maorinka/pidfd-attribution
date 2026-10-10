@@ -17,7 +17,8 @@
     "Cross-cgroup/module/aliasing coverage review",
     "Latest three-track review: fget_task ERR_PTR, fused_read_str, stale evidence, unused surface and endpoint CI",
     "Final HEAD bfb1249 end-to-end endpoint review with shared/fixture sub-reviews; reviewer reports offline, storage and controller tests passed locally.",
-    "Current-HEAD duplication review: backend readers/drivers, endpoint frame walkers and collectors, staging/wire copies, fixture ownership and redundant fields."
+    "Current-HEAD duplication review: backend readers/drivers, endpoint frame walkers and collectors, staging/wire copies, fixture ownership and redundant fields.",
+    "Endpoint CPU/production review of da2d6bd; reviewer reports 30 root + 19 endpoint tests and local hosted-storage reproduction passed. Reconciled against b138647; reviewer runtime/security proposals remain unproven unless noted."
   ],
   "validation": {
     "local_offline": {
@@ -114,12 +115,18 @@
       "status": "confirmed-open",
       "finding": "Dynamic preemption query can fail under integrity lockdown or absent debugfs; current backend cannot safely admit these hosts.",
       "next_step": "Remove scratch execution assumption or find authoritative runtime verification; do not use boot arguments alone as proof.",
-      "evidence": "Integrity policy test on 6.8 reproduced EPERM; firmware Secure Boot not tested."
+      "evidence": "Integrity policy test on 6.8 reproduced EPERM; firmware Secure Boot not tested.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer proposes cmdline + Kconfig fallback specifically under integrity lockdown. Requires proof of boot-time lockdown, earlier mode changes, all update paths, kernel variants and safe mode parsing; missing/denied debugfs alone is not sufficient evidence. No admission relaxation made."
+      ]
     },
     {
       "id": "R003",
       "area": "deployment",
-      "status": "fixed-tested",
+      "status": "partially-fixed",
       "finding": "Restart=always with no start limit retries permanent admission/build-pin failures every ten seconds, including after kernel upgrades.",
       "next_step": "Distinct permanent-error exit code plus RestartPreventExitStatus; clarify doctor individual lockdown result versus overall admission.",
       "evidence": "",
@@ -129,6 +136,12 @@
           "evidence": "validation/review-batch2.json",
           "detail": "Permanent run admission/build/config failures use exit78; shipped unit prevents restart on2/78. Offline admission/config tests and installed stale-kernel test passed; ordinary SIGKILL restart still passed."
         }
+      ],
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Python admission/build-pin failures exit78 and stop restart loops; collector C startup failures still return1 and retry. Completion applies only to the Python refusal paths; see R081."
       ]
     },
     {
@@ -230,7 +243,13 @@
       "status": "reported-unverified",
       "finding": "Prior git commits retain local paths and SSH host public keys; review cites 7 commits and 16c3e67.",
       "next_step": "Audit history; decide separately whether to rewrite public history. Paths/public keys are identifying metadata, not private credentials.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer repeats historical local paths and public SSH key metadata. History rewrite is still unauthorized; no rewriting or claim those historical commits sanitized."
+      ]
     },
     {
       "id": "R011",
@@ -405,13 +424,17 @@
       "next_step": "Measure costs and missed callbacks; design process-scoped discovery/attachment without coverage races. Not every Python frame enters EvalFrameDefault on 3.11+.",
       "evidence": "",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
       ],
       "measurement_history": [
         {
           "evidence": "validation/cpu-baseline-qemu.json",
           "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
         }
+      ],
+      "review_details": [
+        "Reviewer repeats global entry/return trap cost. Do not call every Python call an EvalFrameDefault entry on 3.11+. Needs representative measurement, not static dominance assertion."
       ]
     },
     {
@@ -422,13 +445,17 @@
       "next_step": "Measure per-hook host-wide overhead; eliminate proven unnecessary operations without losing retirement.",
       "evidence": "bfb1249 conditional fd_install/index cleanup deletes; global attachment costs remain.",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
       ],
       "measurement_history": [
         {
           "evidence": "validation/cpu-baseline-qemu.json",
           "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
         }
+      ],
+      "review_details": [
+        "Reviewer proposes syscall wrapper fentry/fexit, disabling fused cleanup in identity-only mode and task storage. New focused proposal recorded as R078."
       ]
     },
     {
@@ -439,7 +466,11 @@
       "next_step": "Inventory actual configurable map sizes; measure workload capacity; lifecycle retirement/admission budget and explicit losses. Do not simply LRU exact identity maps.",
       "evidence": "",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer proposes header-only unattributed writes after origins admission fails. Must bound host-wide traffic, identify affected objects and preserve explicit coverage gaps; not a drop-in exact-map eviction fix."
       ]
     },
     {
@@ -482,7 +513,8 @@
       "next_step": "Extract common semantics where practical; document intentional backend differences; add precise shared-section checks. Do not demand whole-program equivalence across intentional wire/policy differences.",
       "evidence": "validation/thread-cleanup-refactor.json (partial consolidation only)",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
       ],
       "consolidation_plan": [
         {
@@ -530,7 +562,8 @@
         "Fixture-based expected layouts and regression verifier ownership require explicit canonical ownership; measured UNICODE_LENGTH is checked, not overwritten.",
         "Workflow twins, settings/run wrappers and formatting configs can be shared; retained failed evidence is historical audit data rather than source duplication.",
         "Audit unused binding/shadow fields and cleanup_bits before removal; shadow epoch is read during binding restoration.",
-        "Collector common code must preserve endpoint storage fault semantics and fixture child supervision."
+        "Collector common code must preserve endpoint storage fault semantics and fixture child supervision.",
+        "Review targets da2d6bd. Later 2ca1bd6 and b138647 share ring mechanics and capture/string helpers with unchanged compiled behavior. Common reader source and genuine driver differences remain open; current readers are still separate."
       ]
     },
     {
@@ -539,7 +572,13 @@
       "status": "confirmed-open",
       "finding": "Historical reports pin older or uncommitted source trees; cannot be read as current regression evidence.",
       "next_step": "Index reports by tested source revision/hash, status and supersedes; retain honest failures. Check which recorded hashes exist in history.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer estimates stale/uncommitted hash counts at da2d6bd. Preserve historical evidence; newer ring/capture extraction reports pin their own source and expressly do not claim fresh runtime validation."
+      ]
     },
     {
       "id": "R035",
@@ -557,7 +596,11 @@
       "next_step": "Add opt-in endpoint workflow and kernel matrix; retain distinction between hosted compilation and actual BPF attachment.",
       "evidence": "",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer again reports endpoint integration/systemd controls absent from VM workflows. No new guest workflow added in extraction commits."
       ]
     },
     {
@@ -581,12 +624,16 @@
     {
       "id": "R038",
       "area": "ci",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "check_bpf_equivalence.py and check_core_relocations.py are not wired into checks/docs.",
       "next_step": "Audit applicability and run meaningful checks; bytecode equivalence inappropriate for intentional semantic differences.",
       "evidence": "",
       "additional_reviews": [
-        "final-bfb1249"
+        "final-bfb1249",
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Both equivalence tools are now used for bounded extraction evidence; CO-RE comparisons passed all 15 capture-helper configurations. Automatic CI wiring remains open."
       ]
     },
     {
@@ -630,7 +677,13 @@
       "status": "open-design",
       "finding": "No SystemCallFilter; suggestions include PrivateTmp, ProtectHome=true, MemoryDenyWriteExecute. CAP_SYS_ADMIN still required for tested global uprobes.",
       "next_step": "Test compatible restrictions; document powerful capabilities and compromise boundary. Sandbox provides containment, not elimination of root risk.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer adds OOMScoreAdjust and startup retry limits to hardening proposals. Validate actual syscall/capability requirements before changing unit."
+      ]
     },
     {
       "id": "R044",
@@ -638,7 +691,13 @@
       "status": "reported-unverified",
       "finding": "SIGHUP before collector handlers can terminate Python preflight.",
       "next_step": "Handle signal startup window deliberately; test reload during admission/build checks and restart policy.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer repeats preflight SIGHUP window; not changed by extractions."
+      ]
     },
     {
       "id": "R045",
@@ -646,7 +705,13 @@
       "status": "confirmed-open",
       "finding": "Partial installation leaves existing /opt directory and retry refuses; root-owned evidence/.deps written into checkout.",
       "next_step": "Transactional install with safe recovery; separate generated/root-owned artifacts from source tree.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Install prevalidates policy/config before /opt rename but later unit/config/systemctl failures can still leave partial publication. No upgrade/uninstall path yet."
+      ]
     },
     {
       "id": "R046",
@@ -689,7 +754,13 @@
       "status": "partially-fixed",
       "finding": "Missed callbacks and PyThreadState reuse weaken source guarantees; quantitative arbitrary-miss bound not proven. Epoch transitions previously invalidated live bindings.",
       "next_step": "Retain birth guard and continuity; collect tracefs miss counters when available; preserve unattested-source caveats.",
-      "evidence": "Live reuse/normal/missing-return and recovery controls passed; Killercoda miss counters null."
+      "evidence": "Live reuse/normal/missing-return and recovery controls passed; Killercoda miss counters null.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Direct-current-state resolver proposed to avoid callback misses; detached/GIL-released writes must retain correct ownership and source semantics."
+      ]
     },
     {
       "id": "R051",
@@ -705,7 +776,13 @@
       "status": "confirmed-open",
       "finding": "Only write(2) recorded, not writev/pwrite/sendfile/copy_file_range/io_uring/mmap; raw opening path prefix bypassable by relative/symlink/alternate paths; cgroup exact ID excludes descendants.",
       "next_step": "Keep explicit coverage contract; plan extensions with negative controls and overhead measurement.",
-      "evidence": ""
+      "evidence": "",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Ancestor/subtree filters do not automatically cover theft by outside callers (R001). Raw-path entry prefilter proposal is recorded separately as R084."
+      ]
     },
     {
       "id": "R053",
@@ -776,6 +853,17 @@
           "evidence": "validation/cpu-baseline-qemu.json",
           "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
         }
+      ],
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer proposes runtime->gilstate.tstate_current on 3.10/3.11 and native TLS _Py_tss_tstate on 3.12+. CPython 3.11.9 PyEval_SaveThread swaps current state to NULL; 3.12.3 SaveThread calls SwapNoGIL(NULL), which clears _Py_tss_tstate. Thus current state is unavailable during GIL-released writes, and the global pointer may refer to another GIL holder. TLS ELF/ABI address calculation is build/architecture-specific, not simply subtract PT_TLS file offset. Bound-thread TSS and subinterpreters need separate validation."
+      ],
+      "primary_sources": [
+        "https://github.com/python/cpython/blob/v3.11.9/Python/ceval.c",
+        "https://github.com/python/cpython/blob/v3.12.3/Python/ceval_gil.c",
+        "https://github.com/python/cpython/blob/v3.12.3/Python/pystate.c"
       ]
     },
     {
@@ -834,6 +922,12 @@
           "evidence": "validation/cpu-baseline-qemu.json",
           "detail": "48 timing-disabled samples plus36 independent timing-enabled diagnostic samples. CPU/throughput, collector and BPF rankings recorded; this finding remains open."
         }
+      ],
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer claims task-storage helper permissions and 64KiB value limit cover all programs. Keep unverified pending actual verifier/prog-type and allocation/lifetime/memory tests; do not assume a pointer-only lookup."
       ]
     },
     {
@@ -842,7 +936,13 @@
       "status": "reported-unverified",
       "finding": "Proposal replace slab-free fallback with fentry/put_files_struct and files->count.counter==1; reviewer says symbol always exported.",
       "next_step": "Check actual BTF attachment and concurrency: observing count1 at entry is not by itself proof of final release. Test shared files_struct refcount races and pre-free ordering before replacing cleanup.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer adds Bloom filter miss-path proposal. False positives must be harmless; deletion/stale filter management and final-put races require proof. No cleanup replacement made."
+      ]
     },
     {
       "id": "R066",
@@ -855,10 +955,16 @@
     {
       "id": "R067",
       "area": "source-capture",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Line table beyond4KiB or no-line kind15 reportedly aborts whole walk, losing outer frames; proposal emit line0 with explicit flag and continue.",
       "next_step": "Confirm parser semantics and emitted flags; add large module/no-line/malformed table controls. Intentional wire/source behavior change requires oracle adaptation.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Confirmed current shared walker returns 1 for !line.found, line.error or kind==15, setting LINE_ERROR; outer capture marks truncation. Continuing with unknown line changes source/complete semantics and needs oracle controls."
+      ]
     },
     {
       "id": "R068",
@@ -889,7 +995,13 @@
       "status": "reported-unverified",
       "finding": "Reviewer reports four tests/*_guest.py controls invoked nowhere and README validation coverage may exceed run.sh coverage.",
       "next_step": "Inventory every owned guest control and workflow; wire meaningful controls or accurately document standalone scope. Identify exact four scripts before treating claim as confirmed.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer additionally identifies endpoint integration_guest.py/systemd_guest.py as not executable/documented through run.sh. Inventory needed; explicit standalone instructions/workflow preferred to assuming all controls already run."
+      ]
     },
     {
       "id": "R071",
@@ -897,7 +1009,13 @@
       "status": "reported-unverified",
       "finding": "Proposal hosted push-time BPF object/fixture-loader/module compile job; current hosted storage job does compile endpoint collector but attaches no BPF.",
       "next_step": "Supply trustworthy representative generated BTF/layout fixtures or generation environment; separate build checks from runtime verifier/attachment qualification. Kernel module headers/toolchain need pinned matrix.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Hosted CI still does not build BPF objects. Existing Linux storage job compiles the real collector without BPF attachment."
+      ]
     },
     {
       "id": "R072",
@@ -921,7 +1039,13 @@
       "status": "reported-unverified",
       "finding": "Installer reportedly redownloads pinned libbpf each run and installs kernel headers for module-free backend.",
       "next_step": "Check idempotence/cache integrity; distinguish native module from upstream backend dependencies before trimming.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Installer derives .deps from the invoked backend path. Root compatibility workflow installs and runs root backend, whose settings expect root/.deps, so that example does not establish the alleged Jammy mismatch. Need failing cross-backend invocation before labeling path selection defective."
+      ]
     },
     {
       "id": "R075",
@@ -937,7 +1061,121 @@
       "status": "reported-unverified",
       "finding": "LimitNOFILE256 reportedly tight for35programs+35links+approximately20maps.",
       "next_step": "Measure peak open descriptors including calibration/load/rotation/error paths; set bounded headroom and test under unit limit.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "additional_reviews": [
+        "da2d6bd-endpoint-production-review"
+      ],
+      "review_details": [
+        "Reviewer estimates 100\u2013120 fds and requests headroom. Peak calibration/attach/rotation failure paths remain unmeasured."
+      ]
+    },
+    {
+      "id": "R077",
+      "area": "attribution",
+      "status": "confirmed-open",
+      "finding": "Slots are copied during fd_install before acquire_finish sets syscall acceptance; later lifecycle snapshots retain pre-return accepted/complete values.",
+      "next_step": "Define stage-specific proof semantics. INSTALL cannot prove a future syscall return. Test acquire success/failure and later CLOSE/TABLE_COPY/EXEC_CLOSE/TABLE_RELEASE before updating persisted acceptance.",
+      "evidence": "Current endpoint installed/acquire_finish/emit source inspected; no new runtime test.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R078",
+      "area": "performance",
+      "status": "reported-unverified",
+      "finding": "Proposal replace global syscall tracepoints with syscall-wrapper fentry/fexit, preserving identity-only entry twins when sleepable captures are disabled.",
+      "next_step": "Measure tracepoint slow-path impact; verify wrapper BTF/return semantics, compat and all open/fcntl/write/acquire transitions across supported kernels.",
+      "evidence": "Reviewer static claim; no benchmark or attach experiment.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R079",
+      "area": "cache-lifecycle",
+      "status": "reported-unverified",
+      "finding": "mmput-only retirement may miss mmput_async final releases, retaining warmed_mms/lines cache entries.",
+      "next_step": "Verify unconditional __mmput BTF hook, sleeping/interrupt assumptions, final-release ordering and async-mm controls before changing hooks.",
+      "evidence": "Current fentry/mmput with mm_users==1 confirmed; async coverage claim not runtime validated.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R080",
+      "area": "adaptive-capture",
+      "status": "confirmed-open",
+      "finding": "Controller samples current backlog before direct_consume, not the maximum backlog observed while draining. Short peaks may escape samples.",
+      "next_step": "Track interval high-water backlog and test burst overload, busy records, storage stalls and recovery. Do not claim threshold universally unreachable from static timing arithmetic.",
+      "evidence": "Current collector loop sample ordering inspected; reviewer throughput estimate not benchmarked.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R081",
+      "area": "service-availability",
+      "status": "confirmed-open",
+      "finding": "Collector startup errors generally return1, bypassing RestartPreventExitStatus=2 78; cleanup error reason is not consistently printed to stderr.",
+      "next_step": "Classify permanent vs transient failures and print actionable stage/errno. Test real unit behavior for ownership/config/lock, memory budget and attach failures; ENOMEM/lock contention are not automatically permanent.",
+      "evidence": "Current collector main/CHECK_SENSOR and systemd unit inspected; parse_options already returns2.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R082",
+      "area": "cgroup-admission",
+      "status": "confirmed-open",
+      "finding": "Cgroup walk rethrows scandir errors; Python run wraps OSError as PermanentStartupError, including possible transient cgroup disappearance.",
+      "next_step": "Handle bounded ENOENT races separately, retry discovery as appropriate and keep genuinely inaccessible/missing configured groups explicit.",
+      "evidence": "Current validate_cgroup failed callback and run exception wrapper inspected.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R083",
+      "area": "idle-performance",
+      "status": "reported-unverified",
+      "finding": "Proposal avoid unconditional health/segment fsync, replace 20ms idle polling with wakeups/backoff, mmap diagnostics and clarify host-wide bpf_enable_stats effects.",
+      "next_step": "Measure idle wakeups/fsync cost; define durable event/journal vs ephemeral-health guarantees, notification races and diagnostic consistency before changes.",
+      "evidence": "Reviewer source-based claims; no idle benchmark or mmap experiment.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R084",
+      "area": "capture-admission",
+      "status": "reported-unverified",
+      "finding": "Fused open entry captures Python before final raw path-prefix check; reviewer proposes early user-path filtering.",
+      "next_step": "Measure import workload. User pathname can change between entry read and getname, so early user-memory filtering is not guaranteed equivalent to kernel filename filtering; preserve coverage and truncation behavior with race tests.",
+      "evidence": "Reviewer proposal; prefilter not implemented.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R085",
+      "area": "proof-model",
+      "status": "open-design",
+      "finding": "Reviewer proposes removing write_inner because positive write syscall result implies vfs_write execution.",
+      "next_step": "Retain independent inner/outer correlation until compat/wrapper/filter and concurrency proof plus negative controls show equivalent acceptance. No automatic removal based on positive result alone.",
+      "evidence": "Reviewer proposal; source contract currently requires result==inner.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R086",
+      "area": "fleet-packaging",
+      "status": "open-design",
+      "finding": "Pinned kernel/BTF builds and manual rebuild/reinstall prevent transparent upgrades; reviewer proposes per-arch CO-RE artifacts and .deb upgrade/uninstall.",
+      "next_step": "Separate load-time ABI admission from compiled CPython layout/native helper constraints, define signed/reproducible artifact and transactional upgrade paths, then test kernel/interpreter drift.",
+      "evidence": "Current verify_build/install contract; distribution design not implemented.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R087",
+      "area": "health-contract",
+      "status": "open-design",
+      "finding": "Cumulative history_gaps latches unhealthy after one loss; reviewer proposes deltas or last-gap timestamps.",
+      "next_step": "Keep lifetime history integrity truthful. Add separate current availability/recent-loss health and gap timestamps instead of clearing evidence of earlier loss.",
+      "evidence": "Current health/status counter-based contract inspected.",
+      "review": "da2d6bd-endpoint-production-review"
+    },
+    {
+      "id": "R088",
+      "area": "operator-interface",
+      "status": "confirmed-open",
+      "finding": "ExecReload sends SIGHUP, which rotates segments rather than reloading policy/config.",
+      "next_step": "Document rotation explicitly or implement validated transactional reload with separate rotate command and signal tests.",
+      "evidence": "Current unit ExecReload and collector rotate_requested path inspected.",
+      "review": "da2d6bd-endpoint-production-review"
     }
   ],
   "review_conflicts": [
@@ -980,6 +1218,14 @@
         "Reviews cannot reproduce some uncommitted-tree hashes and caution against treating them as HEAD tests."
       ],
       "resolution": "Retain reports; add current/historical/rejected index and source provenance. Current kernel-lifecycle report and reviewed Killercoda archive have bounded claims."
+    },
+    {
+      "topic": "Direct current-state resolver for GIL-released writes",
+      "positions": [
+        "Reviewer calls syscall-time runtime/TLS state resolution feasible and sufficient to remove probes.",
+        "CPython current-state pointers are cleared during GIL release; bound-thread TSS has different lifetime/interpreter semantics."
+      ],
+      "resolution": "Retain R059 as an unproven optimization proposal. Require GIL-released/held/native/subinterpreter and competing-thread controls before replacing callbacks."
     }
   ],
   "review_collection_complete": true,
@@ -1037,5 +1283,19 @@
       "remaining": "R033 remains open for genuine driver differences and common reader structure. Native capture remains specialized. No new runtime or CPU claim."
     }
   ],
-  "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."
+  "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized.",
+  "review_reconciliation": {
+    "reviewed_commit": "da2d6bd",
+    "current_commit": "b1386477bbf1146ae08c4d785048bb87d9231dfc",
+    "new_items": "R077-R088",
+    "scope": "Static source inspection and CPython primary-source checks; no implementation or new runtime/CPU measurement.",
+    "suggested_next_batch": [
+      "R081",
+      "R082",
+      "R077 proof contract and stage controls",
+      "R079 final-mm retirement verification",
+      "R080 backlog sampling controls"
+    ],
+    "limits": "Do not weaken preemption admission or replace bindings based solely on reviewer feasibility claims. Preserve lifetime gap evidence and historical reports."
+  }
 }
