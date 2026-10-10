@@ -18,8 +18,12 @@
       "R074",
       "R075"
     ],
-    "previous_batch_evidence": "validation/build-ci-evidence-index.json",
-    "pending_guest_coverage": "Verify no-location fixture branch on Python3.10 and exercise new workflow commands; no existing installation may be overwritten."
+    "previous_batch_evidence": "validation/installation-publication.json",
+    "pending_guest_coverage": "Verify no-location fixture branch on Python3.10 and exercise new workflow commands; no existing installation may be overwritten.",
+    "completed_in_batch": [
+      "R044",
+      "R045 handled-failure installation rollback"
+    ]
   },
   "next_batches": [
     "Module helper attack-surface audit and cleanup",

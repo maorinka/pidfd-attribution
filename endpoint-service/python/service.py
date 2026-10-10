@@ -7,6 +7,7 @@ import os
 import re
 from pathlib import Path
 import shutil
+import signal
 import stat
 import subprocess
 import sys
@@ -344,6 +345,105 @@ def install_python_runtime(staging):
     shutil.copy2(source, shared_python / "backend_settings.py")
 
 
+def validate_install_destination(target, unit):
+    """Refuse existing installations and unsafe unit files before publishing."""
+    if target.exists() or target.is_symlink():
+        raise RuntimeError(
+            f"{target} already exists; stop the service and move the old installation before replacing it"
+        )
+    if unit.exists() or unit.is_symlink():
+        metadata = unit.lstat()
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != 0
+            or metadata.st_mode & 0o022
+            or metadata.st_nlink != 1
+        ):
+            raise RuntimeError(
+                "Existing service unit must be a root-owned regular file without extra links or writable group/other permissions"
+            )
+
+
+def publish_installation(staging, target, destination, unit, config, unit_bytes):
+    """Publish a stopped installation; roll back handled failures before retry.
+
+    Parent directories are root-controlled. This is a rollback transaction for
+    reported I/O/systemctl failures, not a power-failure atomic multi-file commit.
+    Existing policy is preserved and an existing unit is restored on failure.
+    """
+    validate_install_destination(target, unit)
+    old_unit = unit.read_bytes() if unit.exists() else None
+    old_mode = stat.S_IMODE(unit.stat().st_mode) if old_unit is not None else None
+    config_created = target_created = unit_published = False
+    pending_unit = None
+    try:
+        fd, name = tempfile.mkstemp(prefix=".iosec-unit-", dir=unit.parent)
+        pending_unit = Path(name)
+        with os.fdopen(fd, "wb") as out:
+            out.write(unit_bytes)
+            out.flush()
+            os.fchmod(out.fileno(), 0o644)
+            os.fsync(out.fileno())
+        try:
+            fd = os.open(
+                destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
+            )
+        except FileExistsError:
+            metadata = destination.lstat()
+            if (
+                not stat.S_ISREG(metadata.st_mode)
+                or metadata.st_uid != 0
+                or metadata.st_mode & 0o077
+                or metadata.st_nlink != 1
+                or configuration(destination) != config
+            ):
+                raise RuntimeError(
+                    "Existing configuration is unsafe or differs; review it before installation"
+                )
+        else:
+            config_created = True
+            with os.fdopen(fd, "w") as out:
+                out.write(json.dumps(config, indent=2) + "\n")
+                out.flush()
+                os.fsync(out.fileno())
+        os.rename(staging, target)
+        target_created = True
+        os.replace(pending_unit, unit)
+        pending_unit = None
+        unit_published = True
+        subprocess.run(["systemctl", "daemon-reload"], check=True)
+    except BaseException:
+        if unit_published:
+            if old_unit is None:
+                unit.unlink()
+            else:
+                fd, name = tempfile.mkstemp(prefix=".iosec-restore-", dir=unit.parent)
+                restore = Path(name)
+                try:
+                    with os.fdopen(fd, "wb") as out:
+                        out.write(old_unit)
+                        out.flush()
+                        os.fchmod(out.fileno(), old_mode)
+                        os.fsync(out.fileno())
+                    os.replace(restore, unit)
+                finally:
+                    restore.unlink(missing_ok=True)
+        if target_created:
+            shutil.rmtree(target)
+        if config_created:
+            destination.unlink()
+        if unit_published:
+            # Preserve the original failure even if the manager is unavailable.
+            try:
+                subprocess.run(["systemctl", "daemon-reload"], check=True)
+            except (OSError, subprocess.CalledProcessError):
+                pass
+        raise
+    finally:
+        if pending_unit is not None:
+            pending_unit.unlink(missing_ok=True)
+
+
 def install(config_path):
     linux_root()
     config = configuration(config_path)
@@ -361,6 +461,7 @@ def install(config_path):
             not stat.S_ISREG(metadata.st_mode)
             or metadata.st_uid != 0
             or metadata.st_mode & 0o077
+            or metadata.st_nlink != 1
         ):
             raise RuntimeError(
                 "Existing /etc/iosec-endpoint.json must be a private root-owned regular file"
@@ -370,11 +471,9 @@ def install(config_path):
                 "Existing /etc/iosec-endpoint.json differs; review it before installation"
             )
     target = Path("/opt/iosec-endpoint")
-    if target.exists() or target.is_symlink():
-        raise RuntimeError(
-            "/opt/iosec-endpoint already exists; stop the service and move the old installation before replacing it"
-        )
-    staging = Path(tempfile.mkdtemp(prefix=".iosec-endpoint-", dir="/opt"))
+    unit = Path("/etc/systemd/system/iosec-endpoint.service")
+    validate_install_destination(target, unit)
+    staging = Path(tempfile.mkdtemp(prefix=".iosec-endpoint-", dir=target.parent))
     try:
         (staging / "build").mkdir()
         for name in ("collector", "reader.bpf.o", "manifest.json"):
@@ -383,31 +482,12 @@ def install(config_path):
         for path in staging.rglob("*"):
             path.chmod(0o755 if path.is_dir() or path.name == "collector" else 0o644)
         staging.chmod(0o755)
-        os.rename(staging, target)
+        publish_installation(
+            staging, target, destination, unit, config, (ROOT / unit.name).read_bytes()
+        )
     finally:
         if staging.exists():
             shutil.rmtree(staging)
-    # Exclusive creation preserves existing fleet policy/configuration.
-    try:
-        fd = os.open(
-            destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600
-        )
-    except FileExistsError:
-        existing = configuration(destination)
-        if existing != config:
-            raise RuntimeError(
-                "Existing /etc/iosec-endpoint.json differs; review it before starting the installed service"
-            )
-    else:
-        with os.fdopen(fd, "w") as out:
-            out.write(json.dumps(config, indent=2) + "\n")
-    # The shipped unit deliberately grants writes only to its StateDirectory.
-    unit = Path("/etc/systemd/system/iosec-endpoint.service")
-    if unit.is_symlink():
-        raise RuntimeError("Refusing to replace a symlinked service unit")
-    shutil.copyfile(ROOT / unit.name, unit)
-    unit.chmod(0o644)
-    subprocess.run(["systemctl", "daemon-reload"], check=True)
     print("Installed. Start with: sudo systemctl enable --now iosec-endpoint")
 
 
@@ -542,6 +622,10 @@ def main():
             child.add_argument("--follow", action="store_true")
             child.add_argument("--writes-only", action="store_true")
     args = parser.parse_args()
+    if args.command == "run":
+        # Rotation requests during admission are ignored. SIG_IGN survives exec
+        # until the collector installs its rotation handler before attaching BPF.
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
     if (
         hasattr(args, "config")
         and args.config is None

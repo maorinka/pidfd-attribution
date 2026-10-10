@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "baseline_commit": "404eac1fae8e0031ca0b2ce106fc3764703120e4",
+  "scope": "Handled installation publication failures and Python admission SIGHUP; no BPF changes.",
+  "source_sha256": {
+    "endpoint-service/python/service.py": "3856457f99a1507b82e7214aa5a7d2a2d2782cf4d6a33b2dac67a4f248a4b4ab",
+    "endpoint-service/tests/test_service.py": "5771989d1db740df98b3e2e51e12edb0c8592afe670722f083b85eb72cdd5fa6"
+  },
+  "offline": {
+    "root_tests": 38,
+    "endpoint_tests": 28,
+    "mac_root_owned_policy_control_skipped": true,
+    "ubuntu24_root_all_28_passed": true
+  },
+  "controls": [
+    "complete publication and private config permissions",
+    "daemon-reload failure rollback and successful retry",
+    "prior unit contents/mode restored",
+    "rename and unit replace failures remove published files",
+    "config fsync ENOSPC removes partial policy",
+    "existing root-owned policy byte-preserved on rollback",
+    "existing installation and symlink unit rejected",
+    "real process survives admission SIGHUP and returns permanent refusal"
+  ],
+  "limits": [
+    "No existing /opt installation, unit or policy on the owned VM was modified; controls use private temporary directories.",
+    "Power loss or process kill during publication may still leave partial files; no upgrade/uninstall API in this batch.",
+    "Root-owned build/evidence and dependency cache layout remains unresolved."
+  ],
+  "prior_hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38058707037"
+}

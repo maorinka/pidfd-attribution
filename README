@@ -233,6 +233,10 @@ incomplete; identity acceptance is separate. PyCode_Type is resolved once per
 capture, while every frame still checks both readable type fields.
 
 Configuration reload is unsupported. Change the config and restart the service.
+SIGHUP during Python admission is ignored; rotation becomes available when the
+collector installs its handlers. Installation rolls back reported publication
+failures, including daemon-reload failure, and preserves existing policy. This
+is not a power-loss atomic transaction or an in-place upgrade mechanism.
 For an explicit storage rotation use:
   sudo systemctl kill --kill-who=main --signal=SIGHUP iosec-endpoint
 The unit intentionally exposes no ExecReload operation. Its file descriptor limit

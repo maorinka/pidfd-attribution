@@ -767,10 +767,10 @@
     {
       "id": "R044",
       "area": "service",
-      "status": "reported-unverified",
+      "status": "fixed-tested",
       "finding": "SIGHUP before collector handlers can terminate Python preflight.",
-      "next_step": "Handle signal startup window deliberately; test reload during admission/build checks and restart policy.",
-      "evidence": "",
+      "next_step": "Resolved: ignore SIGHUP during run admission; collector replaces inherited ignore with its rotation handler before attachment.",
+      "evidence": "validation/installation-publication.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
@@ -781,10 +781,10 @@
     {
       "id": "R045",
       "area": "installation",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "Partial installation leaves existing /opt directory and retry refuses; root-owned evidence/.deps written into checkout.",
-      "next_step": "Transactional install with safe recovery; separate generated/root-owned artifacts from source tree.",
-      "evidence": "",
+      "next_step": "Handled publication failures now roll back with verified retry and policy/unit preservation. Still implement upgrade/uninstall recovery and separate generated/root-owned artifacts from checkout.",
+      "evidence": "validation/installation-publication.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
