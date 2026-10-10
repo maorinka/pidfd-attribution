@@ -9,15 +9,16 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Module helper authority and unused surface",
+    "name": "Build and guest CI, current evidence index",
     "items": [
-      "R021",
-      "R022",
-      "R023",
-      "R024",
-      "R025"
+      "R034",
+      "R035",
+      "R036",
+      "R038",
+      "R070",
+      "R071"
     ],
-    "previous_batch_evidence": "validation/source-location-robustness.json"
+    "previous_batch_evidence": "validation/module-helper-authority.json"
   },
   "next_batches": [
     "Module helper attack-surface audit and cleanup",

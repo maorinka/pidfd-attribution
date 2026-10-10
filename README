@@ -237,3 +237,12 @@ For an explicit storage rotation use:
   sudo systemctl kill --kill-who=main --signal=SIGHUP iosec-endpoint
 The unit intentionally exposes no ExecReload operation. Its file descriptor limit
 is 1024; map/program/link resource limits and memory bounds still apply.
+
+Module-backed research helpers require CAP_SYS_MODULE at BPF load time, including
+tracing, legacy tracepoints and explicitly enabled SCHED_CLS controls. A loader
+with only BPF/perf privileges is denied while ordinary upstream BPF remains
+available. Caller-chosen program names do not authenticate a sensor object.
+The module backend trusts kernel-module administrators and still requires
+lockdown none; use the upstream-only endpoint backend for module-prohibited hosts.
+Unused native_read8 and module serializer scratch are removed. Module-owned BTF
+releases helper registrations during normal unload and failed initialization.

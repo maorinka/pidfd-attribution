@@ -1,0 +1,286 @@
+{
+  "passed": true,
+  "baseline_commit": "f5e671590558f5d6ba091de7d2bffa54a7daf1b3",
+  "scope": "Module helper access requires module-administrator authority at load time; remove unused read helper and serializer map.",
+  "offline": {
+    "root_tests": 34,
+    "endpoint_tests": 20,
+    "style_passed": true
+  },
+  "registration": {
+    "passed": true,
+    "kernel": "6.8.0-146-generic",
+    "module_sha256": "dea3429a610672f648059fec3b3e3d5d4d63c9b5cb825cac21553e0439c4254e",
+    "trials": [
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_registration",
+        "module_authority": true,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_registration",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_tracing",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_tracing",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_tracepoint",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_tracepoint",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_raw",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_raw",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_sleepable",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_sleepable",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_upstream",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": false,
+        "parameter": "N",
+        "program": "test_upstream",
+        "module_authority": false,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_registration",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_registration",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_tracing",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_tracing",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_tracepoint",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_tracepoint",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_raw",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_raw",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_sleepable",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_sleepable",
+        "module_authority": false,
+        "expected_load": false,
+        "exit_code": 1
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_upstream",
+        "module_authority": true,
+        "expected_load": true,
+        "exit_code": 0
+      },
+      {
+        "enabled": true,
+        "parameter": "Y",
+        "program": "test_upstream",
+        "module_authority": false,
+        "expected_load": true,
+        "exit_code": 0
+      }
+    ],
+    "baseline_bpf_ids": [
+      2,
+      18,
+      1048,
+      1049,
+      1050,
+      1051,
+      1052,
+      1053,
+      1054,
+      1055,
+      1056,
+      1057,
+      1058,
+      1059,
+      1102
+    ],
+    "final_bpf_ids": [
+      2,
+      18,
+      1048,
+      1049,
+      1050,
+      1051,
+      1052,
+      1053,
+      1054,
+      1055,
+      1056,
+      1057,
+      1058,
+      1059,
+      1102
+    ],
+    "module_removed": true,
+    "cleanup_ok": true
+  },
+  "correctness": {
+    "status": "correctness-checks-passed; CPU not measured by this script",
+    "cleanup_ok": true,
+    "controls": [
+      "hypothesis",
+      "build",
+      "attach-check",
+      "regression",
+      "deep",
+      "held",
+      "status",
+      "remaining_bpf_programs",
+      "cleanup_ok"
+    ],
+    "report_sha256": "802ea52e10d5b00ab327126f3beb35104a185043aefa15435e74aa04790b7069"
+  },
+  "tested_source_sha256": {
+    "core/reader.bpf.c": "ee56412de579c106dbf6eed9ea412d56deae5f2a7b4b6957821dfdeebf21599d",
+    "core/module/iosec_native.c": "c6031e2df28b371168064fd3e41ec17c8bfa1de728bfba33caffb99fca5ab425",
+    "tests/kfunc_registration.bpf.c": "25f882f137810f6e8cdd51f9e2b395e12af3347633ed9c41a4fe894f474cc432",
+    "tests/kfunc_registration.c": "e47f6b48ecfce297aeeeee3cdada9e2504c4ec9df82f794ab358b1f4ae5b272e",
+    "tests/kfunc_registration_guest.py": "46fe7a0ae80d7989763b7f476fd4b519aae6668dd456b1de9b31a3425d4eca64"
+  },
+  "registration_report_sha256": "9f1812b6f36eb166dd2ec0c7d63b5f452b6a515eb8cbb256671bae15c571604e",
+  "registration_lifetime_audit": {
+    "result": "Module-owned BTF owns kfunc tables. MODULE_STATE_GOING on failed initialization and normal unload drops module BTF; destruction frees registration tables. Empty module exit is correct for this API.",
+    "primary_sources": [
+      "https://github.com/torvalds/linux/blob/v6.8/kernel/bpf/btf.c",
+      "https://github.com/torvalds/linux/blob/v6.8/kernel/module/main.c"
+    ],
+    "runtime_failed_init_injected": false
+  },
+  "retained_attempts": [
+    "New tracing test originally returned a helper scalar; kernel required return0. Corrected test return without changing helper gate.",
+    "Immediate BPF-set audit rejected a transient difference. Exact audit retained with bounded cleanup grace. Subsequent serialized controls passed; original report retained privately."
+  ],
+  "limits": [
+    "This load-time authority gate does not authenticate object names, defend against hostile module administrators, or make Python/process metadata attested.",
+    "Runtime matrix is kernel6.8.0-146 x86_64. Firmware Secure Boot and7.0 were not tested.",
+    "No CPU percentage measured in this batch. The endpoint backend is unchanged and continues to use only upstream helpers."
+  ]
+}

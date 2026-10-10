@@ -543,8 +543,8 @@ static __always_inline struct event *ensure_write(unsigned long long tid) {
  * ring-memory arithmetic, no stale/map-value pointer escape beyond this
  * hook: the slice is used only as the pack destination inside its own case
  * branch and the reservation is either submitted or discarded exactly once
- * on every path. wire_scratch is declared but unused so the map count
- * stays 19. */
+ * on every path. Mutable attribution-map cleanup is audited independently
+ * of serializer scratch storage. */
 struct wire_header {
   unsigned int magic, version, size, reserved;
   unsigned long long file, files, generation, target, targetbirth, inode;
@@ -571,12 +571,6 @@ _Static_assert(__builtin_offsetof(struct wire_header, actors) == 104,
 _Static_assert(__builtin_offsetof(struct event, file) ==
                    3 * sizeof(struct source_event),
                "event tail offset");
-struct {
-  __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
-  __uint(max_entries, 1);
-  __type(key, unsigned int);
-  __type(value, struct wire_record);
-} wire_scratch SEC(".maps");
 /* Native bounded serializer: packs header + only populated frames in one C
  * call. Non-sleepable; TRACING set for production emit, tests-only
  * SCHED_CLS set for the encoder test_run controls. */

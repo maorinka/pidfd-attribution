@@ -9,6 +9,7 @@
 #include <linux/bpf.h>
 #include <linux/btf.h>
 #include <linux/btf_ids.h>
+#include <linux/capability.h>
 #include <linux/errno.h>
 #include <linux/module.h>
 #include <linux/uaccess.h>
@@ -284,16 +285,6 @@ static int native_line(const u8 *bytes, u32 size, int target, int firstline,
 }
 
 __bpf_kfunc_start_defs();
-__bpf_kfunc int iosec_native_read8(u64 address, void *out, u32 out__sz) {
-  if (out__sz != sizeof(u64))
-    return -EINVAL;
-  /* access_ok and fault handling are supplied by copy_from_user. Only the
-   * current process's user address is read; verifier bounds the output. */
-  return copy_from_user(out, (const void __user *)(unsigned long)address,
-                        sizeof(u64))
-             ? -EFAULT
-             : 0;
-}
 __bpf_kfunc int iosec_native_capture(u64 state, void *out, u32 out__sz,
                                      void *bytes, u32 bytes__sz) {
   struct source_event *e = out;
@@ -721,7 +712,6 @@ __bpf_kfunc int iosec_write_snapshot(void *to, u32 to__sz, const void *from,
 __bpf_kfunc_end_defs();
 
 BTF_KFUNCS_START(iosec_native_functions)
-BTF_ID_FLAGS(func, iosec_native_read8, KF_SLEEPABLE)
 BTF_ID_FLAGS(func, iosec_native_capture, KF_SLEEPABLE)
 BTF_ID_FLAGS(func, iosec_map_copy, 0)
 BTF_ID_FLAGS(func, iosec_map_zero, 0)
@@ -739,20 +729,34 @@ BTF_ID_FLAGS(func, iosec_map_zero, 0)
 BTF_ID_FLAGS(func, iosec_emit_pack, 0)
 BTF_ID_FLAGS(func, iosec_write_snapshot, 0)
 BTF_KFUNCS_END(iosec_mapcopy_functions)
+/* Module helpers require the authority to install kernel code. A BPF-only
+ * loader must not gain new fault-capable or memory-copy helpers from another
+ * administrator's module. Names/aux metadata are caller supplied and cannot
+ * authenticate the attribution object. This is a load-time privilege gate,
+ * not a promise against a hostile kernel-module administrator. */
+static int iosec_module_loader_filter(const struct bpf_prog *prog,
+                                      u32 kfunc_id) {
+  (void)prog;
+  (void)kfunc_id;
+  return capable(CAP_SYS_MODULE) ? 0 : -EACCES;
+}
 static const struct btf_kfunc_id_set iosec_native_set = {
     .owner = THIS_MODULE,
     .set = &iosec_native_functions,
+    .filter = iosec_module_loader_filter,
 };
 static const struct btf_kfunc_id_set iosec_mapcopy_set = {
     .owner = THIS_MODULE,
     .set = &iosec_mapcopy_functions,
+    .filter = iosec_module_loader_filter,
 };
 /* Linux 6.8 does not map legacy tracepoint program types to the TRACING
  * kfunc group. Register only the bounded, non-sleepable memory helpers in
  * COMMON, filtered to the two program types that need them. Never expose
  * fault-capable user-memory capture through this group. */
 static int iosec_legacy_filter(const struct bpf_prog *prog, u32 kfunc_id) {
-  (void)kfunc_id;
+  if (iosec_module_loader_filter(prog, kfunc_id))
+    return -EACCES;
   return prog->type == BPF_PROG_TYPE_TRACEPOINT ||
                  prog->type == BPF_PROG_TYPE_RAW_TRACEPOINT
              ? 0
@@ -784,6 +788,9 @@ static int __init iosec_native_init(void) {
   }
   return register_btf_kfunc_id_set(BPF_PROG_TYPE_UNSPEC, &iosec_legacy_set);
 }
+/* Sets belong to module BTF. The kernel's MODULE_STATE_GOING notifier drops
+ * that BTF on init failure and normal unload; BTF destruction releases its
+ * kfunc table. There is no independent registration to manually unregister. */
 static void __exit iosec_native_exit(void) {}
 module_init(iosec_native_init);
 module_exit(iosec_native_exit);

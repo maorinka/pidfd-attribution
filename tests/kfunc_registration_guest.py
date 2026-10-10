@@ -12,9 +12,12 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 from settings import ARCH, BPF_INCLUDES, BPF_LIBS, PREPARED
+from shared.python.validation_lock import validation_lock
+
 
 if not (sys.platform == "linux" and os.geteuid() == 0):
     raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
+validation_fd = validation_lock()
 module = ROOT / "evidence/build/iosec_native.ko"
 if not (module.is_file() and not Path("/sys/module/iosec_native").exists()):
     raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
@@ -33,6 +36,7 @@ subprocess.run(
         "-D__TARGET_ARCH_" + ARCH,
         *BPF_INCLUDES,
         "-I" + str(PREPARED),
+        "-I" + str(ROOT / "core"),
         "-c",
         str(ROOT / "tests/kfunc_registration.bpf.c"),
         "-o",
@@ -70,6 +74,7 @@ report = dict(
     kernel=os.uname().release,
     module_sha256=hashlib.sha256(module.read_bytes()).hexdigest(),
     trials=[],
+    baseline_bpf_ids=baseline,
 )
 try:
     for enabled in (False, True):
@@ -87,28 +92,57 @@ try:
                 raise RuntimeError(
                     "Guest control failed in kfunc_registration_guest.py"
                 )
-            trial = subprocess.run(
-                [str(loader), str(obj)], capture_output=True, text=True
-            )
-            report["trials"].append(
-                dict(
-                    enabled=enabled,
-                    parameter=parameter,
-                    exit_code=trial.returncode,
-                    stdout=trial.stdout,
-                    stderr=trial.stderr,
-                )
-            )
-            if enabled:
-                if not (trial.returncode == 0):
-                    raise RuntimeError(trial.stderr)
-            else:
-                if not (
-                    trial.returncode != 0
-                    and "iosec_map_zero" in trial.stderr
-                    and "not allowed" in trial.stderr
-                ):
-                    raise RuntimeError(trial.stderr)
+            for program in (
+                "test_registration",
+                "test_tracing",
+                "test_tracepoint",
+                "test_raw",
+                "test_sleepable",
+                "test_upstream",
+            ):
+                for module_authority in (True, False):
+                    prefix = (
+                        []
+                        if module_authority
+                        else [
+                            "setpriv",
+                            "--bounding-set=-sys_module",
+                            "--inh-caps=-sys_module",
+                            "--ambient-caps=-sys_module",
+                        ]
+                    )
+                    trial = subprocess.run(
+                        [*prefix, str(loader), str(obj), program],
+                        capture_output=True,
+                        text=True,
+                    )
+                    expected = program == "test_upstream" or (
+                        module_authority and (enabled or program != "test_registration")
+                    )
+                    report["trials"].append(
+                        dict(
+                            enabled=enabled,
+                            parameter=parameter,
+                            program=program,
+                            module_authority=module_authority,
+                            expected_load=expected,
+                            exit_code=trial.returncode,
+                            stdout=trial.stdout,
+                            stderr=trial.stderr,
+                        )
+                    )
+                    if expected:
+                        if trial.returncode != 0:
+                            raise RuntimeError(trial.stderr)
+                    elif not (
+                        trial.returncode != 0
+                        and (
+                            "iosec_map_zero" in trial.stderr
+                            or "iosec_native_capture" in trial.stderr
+                        )
+                        and "not allowed" in trial.stderr
+                    ):
+                        raise RuntimeError(trial.stderr)
         finally:
             deadline = time.monotonic() + 10
             while (
@@ -117,12 +151,19 @@ try:
             ):
                 time.sleep(0.05)
             subprocess.run(["rmmod", "iosec_native"], check=True)
-        if not (ids() == baseline):
-            raise RuntimeError("Guest control failed in kfunc_registration_guest.py")
+        # Closing the last program FD can precede deferred kernel teardown.
+        # Keep the exact audit, but allow a bounded cleanup grace period.
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline and ids() != baseline:
+            time.sleep(0.05)
+        if ids() != baseline:
+            raise RuntimeError("BPF program set changed after cleanup grace period")
     report["passed"] = True
 finally:
+    report["final_bpf_ids"] = ids()
+    report["module_removed"] = not Path("/sys/module/iosec_native").exists()
     report["cleanup_ok"] = (
-        ids() == baseline and not Path("/sys/module/iosec_native").exists()
+        report["final_bpf_ids"] == baseline and report["module_removed"]
     )
     (ROOT / "evidence/kfunc-registration.json").write_text(
         json.dumps(report, indent=2) + "\n"

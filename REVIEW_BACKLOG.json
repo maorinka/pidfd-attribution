@@ -388,42 +388,77 @@
     {
       "id": "R021",
       "area": "module",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Tracing helper registration is host-wide; copy/zero helpers rely on verifier pointer/size contracts. Scope/security implications need review.",
-      "next_step": "Prefer module-free deployment; verify contracts and feasible registration scope. Program name alone is forgeable; arbitrary kernel-write exploit is not established.",
-      "evidence": ""
+      "next_step": "All module helper groups require CAP_SYS_MODULE at BPF load time; BPF/perf-only loaders cannot gain helper capabilities. Trust boundary is kernel-module administrators, not spoofable object metadata.",
+      "evidence": "validation/module-helper-authority.json",
+      "resolution_history": [
+        {
+          "batch": 11,
+          "detail": "24 load-only controls cover tracing, legacy tracepoint/raw, explicit SCHED_CLS, sleepable capture and upstream positive control. BPF-only helper loads denied; ordinary upstream BPF succeeds. Live root attribution/regression/deep/held controls passed.",
+          "evidence": "validation/module-helper-authority.json"
+        }
+      ]
     },
     {
       "id": "R022",
       "area": "module",
-      "status": "reported-unverified",
+      "status": "closed-not-reproduced",
       "finding": "Reviewer alleges partial-init kfunc registrations are not unwound; exit function is empty.",
-      "next_step": "Check kernel owner/unload and failed-init cleanup semantics before concluding stale registration. Empty exit alone is insufficient evidence.",
-      "evidence": ""
+      "next_step": "Module-owned BTF registration lifetime is managed by kernel module notifier/BTF destruction on init failure and normal unload; no missing manual unregister defect established.",
+      "evidence": "validation/module-helper-authority.json",
+      "resolution_history": [
+        {
+          "batch": 11,
+          "detail": "Linux6.8 primary-source ownership/destruction audit. Normal unload verified in privilege trials and root pipeline. Failed-init path source-traced, not fault-injected.",
+          "evidence": "validation/module-helper-authority.json"
+        }
+      ]
     },
     {
       "id": "R023",
       "area": "module",
-      "status": "fixed-partial",
+      "status": "fixed-tested",
       "finding": "Tests-only SCHED_CLS kfunc registration was unconditional; now gated by enable_test_kfuncs=false default. Legacy UNSPEC group remains type-filtered, not pipeline-scoped.",
-      "next_step": "Retain gate; audit legacy and tracing surface.",
-      "evidence": "Current registration code confirms parameter gate."
+      "next_step": "Default-denied test-only SCHED_CLS and CAP_SYS_MODULE gate for legacy groups; their type filter remains.",
+      "evidence": "validation/module-helper-authority.json",
+      "resolution_history": [
+        {
+          "batch": 11,
+          "detail": "Default/enabled load controls with and without module authority passed for all groups; no fault-capable helpers exposed through legacy groups.",
+          "evidence": "validation/module-helper-authority.json"
+        }
+      ]
     },
     {
       "id": "R024",
       "area": "module",
-      "status": "reported-unverified",
+      "status": "fixed-tested",
       "finding": "iosec_native_read8 sleepable kfunc reportedly has no caller.",
-      "next_step": "Search all generated controls and object dependencies; remove unused registration/function if confirmed.",
-      "evidence": ""
+      "next_step": "Unused iosec_native_read8 implementation and BTF registration removed.",
+      "evidence": "validation/module-helper-authority.json",
+      "resolution_history": [
+        {
+          "batch": 11,
+          "detail": "No current callers found; module built/BTF generated, privilege tests and root attribution controls passed.",
+          "evidence": "validation/module-helper-authority.json"
+        }
+      ]
     },
     {
       "id": "R025",
       "area": "memory",
-      "status": "reported-unverified",
+      "status": "fixed-tested",
       "finding": "Module wire_scratch map reportedly unused and retained to preserve fixture map count19.",
-      "next_step": "Remove if dead; make map audits derive required map inventory instead of preserving dead objects.",
-      "evidence": ""
+      "next_step": "Unused root serializer scratch map removed. Mutable attribution-map cleanup audit remains19 entries, independent of scratch map count.",
+      "evidence": "validation/module-helper-authority.json",
+      "resolution_history": [
+        {
+          "batch": 11,
+          "detail": "Root compiled, loaded and passed all attribution/regression/deep/held checks, including cleanup audit.",
+          "evidence": "validation/module-helper-authority.json"
+        }
+      ]
     },
     {
       "id": "R026",
@@ -1379,6 +1414,12 @@
       "status": "validated",
       "evidence": "validation/source-location-robustness.json",
       "remaining": "Module attack surface, CI/install/evidence/coverage/saturation and measured CPU work remain."
+    },
+    {
+      "batch": "11-module-helper-authority",
+      "status": "validated",
+      "evidence": "validation/module-helper-authority.json",
+      "remaining": "Module-administrator trust is explicit; runtime compatibility matrix, CI/install/evidence/coverage/CPU work remains."
     }
   ],
   "authorization_followup": "User approved implementation of the reconciled priority reliability batch. History rewriting remains unauthorized.",
