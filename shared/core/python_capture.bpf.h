@@ -68,6 +68,15 @@ static __always_inline int capture_python_source(struct source_event *e) {
   e->pid_tid = tid;
   struct task_struct *task = (void *)bpf_get_current_task_btf();
   e->birth = BPF_CORE_READ(task, start_time);
+#if IOSEC_CAPTURE_CONTINUOUS
+  /* Following admitted descriptors does not extend interpreter observation
+   * to actors whose current task is outside opener/source policy.
+   */
+  if (!task_is_monitored()) {
+    e->flags = IOSEC_SOURCE_UNKNOWN;
+    return 0;
+  }
+#endif
   struct python_binding *state = lookup_python_binding(tid);
   if (!state) {
     e->flags = IOSEC_SOURCE_UNKNOWN;

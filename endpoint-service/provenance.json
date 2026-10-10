@@ -2,7 +2,7 @@
   "backend": "continuous-module-free-endpoint-attribution",
   "base_commit": "9146989db87e024417fb4052554e9aa434a422c9",
   "base_directory": "module-free",
-  "upstream_helpers_only": true,
+  "upstream_helpers_only": false,
   "third_party_kernel_modules": false,
   "wire_version": 2,
   "credits": [
@@ -18,5 +18,40 @@
     "Avoid subject allowlist lifetime dependence and per-install full-map label counting",
     "Skip untracked writes before allocating per-thread state; retire aborted syscall state on exit/exec"
   ],
-  "review_fixes": "Canonical architecture/layout/install helpers; readable harness and shared parameterized verifier where applicable. Fresh runtime evidence: validation/review-fixes-ubuntu24.json. Backlog retry before sleep; schema-checked status; logged preservation of unmanaged retained segments; five additional tested systemd restrictions."
+  "review_fixes": "Canonical architecture/layout/install helpers; readable harness and shared parameterized verifier where applicable. Fresh runtime evidence: validation/review-fixes-ubuntu24.json. Backlog retry before sleep; schema-checked status; logged preservation of unmanaged retained segments; five additional tested systemd restrictions.",
+  "upstream_only": true,
+  "upstream_kfuncs": [
+    "bpf_rcu_read_lock",
+    "bpf_rcu_read_unlock"
+  ],
+  "static_consultations": [
+    {
+      "tool": "Muse CLI",
+      "exit_code": 0,
+      "artifact": "pidfd-muse-cgroup-review.txt",
+      "sha256": "7076d3e98983243ed2209179f1c434c3e4a60127910b41260bfd8c7763c3b22d",
+      "role": "Read-only design review; not runtime validation. Local artifact retained separately."
+    },
+    {
+      "tool": "Muse CLI",
+      "exit_code": 0,
+      "artifact": "pidfd-muse-ancestry-review-retry.txt",
+      "sha256": "e8cb73e374b203ac76e38dcdf57415b9366517df65e0abc99eac235e0a78590a",
+      "role": "Read-only design review; not runtime validation. Local artifact retained separately."
+    },
+    {
+      "tool": "Claude CLI",
+      "exit_code": 0,
+      "artifact": "pidfd-claude-scratch-review.txt",
+      "sha256": "eedbf7a0a81e633d9ee83c43ec9490173f77b16c9826aa36f3e6ff31954e9935",
+      "role": "Read-only design review; not runtime validation. Local artifact retained separately."
+    },
+    {
+      "tool": "Claude CLI",
+      "exit_code": 0,
+      "artifact": "pidfd-claude-header-followup.txt",
+      "sha256": "0c169962aac9522626ca3acb8f6d17a0c6c16d340d40d00d9f245aae1af76392",
+      "role": "Read-only design review; not runtime validation. Local artifact retained separately."
+    }
+  ]
 }

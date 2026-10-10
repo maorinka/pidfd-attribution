@@ -78,8 +78,14 @@ unit allows 512 MiB total; retained event data and workloads still need sizing.
 Write attribution currently covers write(2), not writev, pwrite, sendfile,
 copy_file_range, io_uring, or mmap writes. path_prefix matches the raw opening
 name, not a canonical path: relative names, symlinks, and alternate names can
-bypass it. cgroup_id selects one exact cgroup v2 ID, not descendants. Global
-uprobes impose breakpoint overhead on every process mapping the selected
+bypass it. cgroup_id admits openers in the selected cgroup v2 subtree. Once
+a file is admitted, its descriptor identity follows acquirers and writers outside
+that subtree, including the excluded collector PID; their Python frames are
+reported unknown. Unrelated outside files remain excluded. Whole-host mode
+(cgroup_id: 0, the default) has no cgroup boundary and captures supported Python
+frames on either side of a descriptor transfer. Optional subtree checks use
+upstream RCU guards around CO-RE ancestry reads; no third-party module is used.
+Global uprobes impose breakpoint overhead on every process mapping the selected
 Python executable, even when policy excludes it. Adaptive degradation keeps
 lifecycle bookkeeping attached while skipping Python stack decoding.
 

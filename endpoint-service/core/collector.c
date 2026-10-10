@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <limits.h>
+#include <linux/magic.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -24,6 +25,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <sys/vfs.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -35,6 +37,8 @@ static int output_prepare(unsigned long long batch);
 
 struct configuration {
   const char *state_dir;
+  const char *cgroup_path;
+  int cgroup_fd;
   unsigned long long segment_bytes;
   unsigned int max_segments, poll_ms, health_ms, sync_ms, state_entries;
   struct endpoint_policy policy;
@@ -46,7 +50,8 @@ static struct configuration cfg = {.state_dir = "/var/lib/iosec-endpoint",
                                    .poll_ms = 20,
                                    .health_ms = 1000,
                                    .sync_ms = 1000,
-                                   .state_entries = 1024};
+                                   .state_entries = 1024,
+                                   .cgroup_fd = -1};
 static int directory_fd = -1, lock_fd = -1;
 static char session[33], active_segment[96], boot_id[40];
 static unsigned long long segment_number, session_bytes, deleted_segments;
@@ -729,6 +734,7 @@ static int parse_options(int argc, char **argv) {
       {"state-entries", required_argument, NULL, 'e'},
       {"path-prefix", required_argument, NULL, 'f'},
       {"cgroup-id", required_argument, NULL, 'g'},
+      {"cgroup-path", required_argument, NULL, 'G'},
       {"capture-python", no_argument, NULL, 'c'},
       {"bpf-stats", no_argument, NULL, 't'},
       {NULL, 0, NULL, 0}};
@@ -744,6 +750,9 @@ static int parse_options(int argc, char **argv) {
       break;
     case 'g':
       cfg.policy.cgroup_id = number(optarg);
+      break;
+    case 'G':
+      cfg.cgroup_path = optarg;
       break;
     case 't':
       cfg.bpf_stats = true;
@@ -788,9 +797,39 @@ static int parse_options(int argc, char **argv) {
                  cfg.health_ms > 5000 || cfg.sync_ms < 100 ||
                  cfg.sync_ms > 60000 || cfg.state_entries < 128 ||
                  cfg.state_entries > 2048 ||
+                 (cfg.policy.cgroup_id &&
+                  (!cfg.cgroup_path || cfg.cgroup_path[0] != '/')) ||
+                 (!cfg.policy.cgroup_id && cfg.cgroup_path) ||
                  (cfg.policy.prefix_length && cfg.policy.path_prefix[0] != '/')
              ? -1
              : 0;
+}
+static int configure_cgroup(struct bpf_object *obj) {
+  if (!cfg.policy.cgroup_id)
+    return 0;
+  int fd =
+      open(cfg.cgroup_path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  if (fd < 0)
+    return -1;
+  struct stat metadata;
+  struct statfs filesystem;
+  int result = fstat(fd, &metadata);
+  if (!result)
+    result = fstatfs(fd, &filesystem);
+  if (!result && ((unsigned long long)metadata.st_ino != cfg.policy.cgroup_id ||
+                  filesystem.f_type != CGROUP2_SUPER_MAGIC)) {
+    errno = EINVAL;
+    result = -1;
+  }
+  (void)obj;
+  if (!result) {
+    cfg.cgroup_fd = fd; /* Pin identity until all links are detached. */
+    return 0;
+  }
+  int saved_error = errno;
+  close(fd);
+  errno = saved_error;
+  return result;
 }
 static int configure_maps(struct bpf_object *obj) {
   const char *state_maps[] = {
@@ -970,6 +1009,7 @@ int main(int argc, char **argv) {
     failure_errno = errno ? errno : (load_error < 0 ? -load_error : EIO);
     goto cleanup;
   }
+  CHECK_SENSOR(configure_cgroup(obj));
   CHECK_SENSOR(
       bpf_map_freeze(bpf_object__find_map_fd_by_name(obj, "zero_bytes")));
   stats_object = obj;
@@ -1099,6 +1139,10 @@ cleanup:
         break;
       }
     }
+  }
+  if (cfg.cgroup_fd >= 0) {
+    close(cfg.cgroup_fd);
+    cfg.cgroup_fd = -1;
   }
   if (obj && policy_fd >= 0 && read_diagnostics(obj))
     result = 1;

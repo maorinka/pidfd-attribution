@@ -34,6 +34,9 @@ from wire import records
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-service-test-", dir="/var/tmp"))
 BASE.chmod(0o700)
 SOURCE_LINE_ERROR = 8
+SOURCE_UNKNOWN = 64
+POLICY_VALUE_SIZE = 104
+POLICY_EXCLUDED_TGID_OFFSET = 8
 REPORT = ROOT / "evidence/integration.json"
 REPORT.parent.mkdir(exist_ok=True)
 active = []
@@ -220,7 +223,7 @@ def verify_writes(state, application, source=False):
         raise RuntimeError("Confirmed acquisition was not retained for CLOSE")
     if source and not all(event["source_complete"] for event in closes):
         raise RuntimeError("CLOSE lost confirmed source metadata")
-    if source:
+    if source is True:
         if not (all(e["source_complete"] for e in writes)):
             raise RuntimeError(writes)
         if not (
@@ -230,7 +233,7 @@ def verify_writes(state, application, source=False):
             )
         ):
             raise RuntimeError("Guest control failed in integration_guest.py")
-    else:
+    elif source is False:
         if not (
             all(
                 not e["source_complete"]
@@ -884,8 +887,8 @@ try:
         gate.unlink()
         wait_for(lambda: "STORAGE_RECOVERED" in log_path.read_text())
         application = demo(name)
-        verify_writes(state, application)
         stopped = stop(process, state)
+        verify_writes(state, application)
         if stopped["session"] != initial_session or stopped["storage_stalls"] < 1:
             raise RuntimeError(f"Storage recovery lost its session: {mode}")
         result["storage_operations"][mode] = dict(
@@ -1126,8 +1129,8 @@ try:
     result["ring_pressure"] = dict(
         explicit_history_gap=True, ring_drops=stopped["ring_drops"]
     )
-    # cgroup admission is exact, not subtree matching. Validate a real current
-    # cgroup ID and a deliberately nonmatching ID.
+    # Resolve the selected cgroup object, reject unknown IDs, and verify
+    # subtree admission independently from following admitted descriptors.
     cgroup_path = next(
         line.split("::", 1)[1]
         for line in Path("/proc/self/cgroup").read_text().splitlines()
@@ -1158,12 +1161,18 @@ try:
     time.sleep(0.3)
     stop(process, state)
     verify_writes(state, application)
-    process, state, _ = start_sensor("cgroup-excluded", cgroup_id=2**64 - 1)
-    demo("excluded-demo")
-    time.sleep(0.3)
-    stop(process, state)
-    if not (not read_events(state)):
-        raise RuntimeError("Guest control failed in integration_guest.py")
+    empty_group.mkdir()
+    try:
+        process, state, _ = start_sensor(
+            "cgroup-excluded", cgroup_id=empty_group.stat().st_ino
+        )
+        demo("excluded-demo")
+        time.sleep(0.3)
+        stop(process, state)
+        if read_events(state):
+            raise RuntimeError("Unrelated outside descriptors entered cgroup policy")
+    finally:
+        empty_group.rmdir()
     result["cgroup"] = dict(
         exact_id=cgroup_id,
         matching_writes=application["writes"],
@@ -1171,6 +1180,180 @@ try:
         unknown_id_rejected=True,
         empty_group_accepted=True,
     )
+    # The selected directory admits descendants, while already-admitted file
+    # identities follow callers across group and excluded-TGID boundaries.
+    group_root = Path("/sys/fs/cgroup") / ("pidfd-boundary-" + str(os.getpid()))
+    watched = group_root / "watched"
+    descendant = watched / "nested"
+    outside = group_root / "outside"
+    for directory in (group_root, watched, descendant, outside):
+        directory.mkdir()
+    boundary_results = []
+    try:
+        for (
+            name,
+            opener_group,
+            writer_group,
+            capture,
+            exclude,
+            whole_host,
+            admitted,
+        ) in (
+            ("descendant", descendant, descendant, False, False, False, True),
+            ("outside", descendant, outside, True, False, False, True),
+            ("excluded", descendant, descendant, True, True, False, True),
+            ("whole-host", descendant, outside, True, False, True, True),
+            ("unrelated", outside, outside, True, False, False, False),
+        ):
+            process, state, _ = start_sensor(
+                "boundary-" + name,
+                capture=capture,
+                cgroup_id=0 if whole_host else watched.stat().st_ino,
+            )
+            report_path = BASE / ("boundary-" + name + ".json")
+            fixture_log = (BASE / ("boundary-" + name + ".fixture.log")).open("w")
+            fixture = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ROOT / "tests/cgroup_boundary_fixture.py"),
+                    "--path",
+                    str(BASE / "files" / ("boundary-" + name)),
+                    "--opener-cgroup",
+                    str(opener_group),
+                    "--writer-cgroup",
+                    str(writer_group),
+                    "--result",
+                    str(report_path),
+                    "--wait-for-start",
+                ],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=fixture_log,
+                text=True,
+                start_new_session=True,
+            )
+            try:
+                if not select.select([fixture.stdout], [], [], 30)[0]:
+                    raise TimeoutError("Boundary fixture did not become ready")
+                ready = json.loads(fixture.stdout.readline())
+                if ready != dict(ready=True, pid=fixture.pid):
+                    raise RuntimeError("Unexpected boundary fixture identity")
+                if exclude:
+                    policy_id = None
+                    for fdinfo in (
+                        Path("/proc") / str(process.pid) / "fdinfo"
+                    ).iterdir():
+                        try:
+                            rows = dict(
+                                line.split(":", 1)
+                                for line in fdinfo.read_text().splitlines()
+                                if ":" in line
+                            )
+                        except FileNotFoundError:
+                            continue
+                        if "map_id" not in rows:
+                            continue
+                        map_id = int(rows["map_id"])
+                        metadata = json.loads(
+                            subprocess.check_output(
+                                ["bpftool", "-j", "map", "show", "id", str(map_id)]
+                            )
+                        )
+                        if metadata["name"] == "policy":
+                            if metadata["bytes_value"] != POLICY_VALUE_SIZE:
+                                raise RuntimeError("Unexpected policy ABI")
+                            policy_id = map_id
+                            break
+                    if policy_id is None:
+                        raise RuntimeError("Collector policy map was not found")
+                    libbpf = ctypes.CDLL(
+                        ctypes.util.find_library("bpf"), use_errno=True
+                    )
+                    libbpf.bpf_map_get_fd_by_id.argtypes = [ctypes.c_uint]
+                    libbpf.bpf_map_get_fd_by_id.restype = ctypes.c_int
+                    libbpf.bpf_map_lookup_elem.argtypes = [
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_void_p,
+                    ]
+                    libbpf.bpf_map_update_elem.argtypes = [
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_void_p,
+                        ctypes.c_ulonglong,
+                    ]
+                    policy_fd = libbpf.bpf_map_get_fd_by_id(policy_id)
+                    if policy_fd < 0:
+                        raise OSError(ctypes.get_errno(), "open owned policy map")
+                    try:
+                        key = ctypes.c_uint(0)
+                        policy_value = ctypes.create_string_buffer(POLICY_VALUE_SIZE)
+                        if libbpf.bpf_map_lookup_elem(
+                            policy_fd, ctypes.byref(key), policy_value
+                        ):
+                            raise OSError(ctypes.get_errno(), "read owned policy")
+                        struct.pack_into(
+                            "<I", policy_value, POLICY_EXCLUDED_TGID_OFFSET, fixture.pid
+                        )
+                        if libbpf.bpf_map_update_elem(
+                            policy_fd, ctypes.byref(key), policy_value, 0
+                        ):
+                            raise OSError(
+                                ctypes.get_errno(), "update private exclusion control"
+                            )
+                    finally:
+                        os.close(policy_fd)
+                fixture.communicate("start\n", timeout=60)
+                if fixture.returncode:
+                    raise RuntimeError(
+                        "Boundary fixture failed; inspect " + str(fixture_log.name)
+                    )
+            finally:
+                if fixture.poll() is None:
+                    os.killpg(fixture.pid, signal.SIGKILL)
+                    fixture.wait(timeout=30)
+                fixture_log.close()
+            application = json.loads(report_path.read_text())
+            time.sleep(0.3)
+            stop(process, state)
+            if admitted:
+                verify_writes(
+                    state,
+                    application,
+                    source=True if whole_host else None if capture else False,
+                )
+            elif read_events(state):
+                raise RuntimeError("Unrelated outside file entered cgroup policy")
+            writes = [
+                e
+                for e in read_events(state)
+                if e["stage"] == 9 and e["inode"] == application["inode"]
+            ]
+            if (
+                capture
+                and not whole_host
+                and not all(
+                    not e["actors"][actor]["frames"]
+                    and e["actors"][actor]["source_flags"] & SOURCE_UNKNOWN
+                    for e in writes
+                    for actor in ("acquirer", "writer")
+                )
+            ):
+                raise RuntimeError("Outside/excluded interpreter state was observed")
+            boundary_results.append(
+                dict(
+                    case=name,
+                    writes=len(writes),
+                    identities_accepted=admitted,
+                    whole_host=whole_host,
+                    application=application,
+                    source_policy_preserved=True,
+                )
+            )
+    finally:
+        for directory in (descendant, outside, watched, group_root):
+            directory.rmdir()
+    result["cgroup_boundaries"] = boundary_results
     result["final_bpf_ids"] = programs()
     result["global_bpf_set_restored"] = result["final_bpf_ids"] == baseline_programs
     result["modules_unchanged"] = modules() == baseline_modules

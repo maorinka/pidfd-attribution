@@ -49,6 +49,16 @@ with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
         assert reason in completed.stderr, completed.stderr
 
     attempt(2, "Invalid collector options", "--state-entries", "0")
+    attempt(2, "Invalid collector options", "--cgroup-id", "1")
+    attempt(2, "Invalid collector options", "--cgroup-path", "/sys/fs/cgroup")
+    attempt(
+        2,
+        "Invalid collector options",
+        "--cgroup-id",
+        "1",
+        "--cgroup-path",
+        "relative/path",
+    )
     startup_directory.chmod(0o755)
     attempt(78, "private state directory")
     startup_directory.chmod(0o700)

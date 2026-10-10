@@ -1,0 +1,664 @@
+{
+  "schema_version": 1,
+  "role": "Runtime validation, not static review",
+  "base_commit": "f1dee0c0d716c7e01fab7b3c80831dc04111774b",
+  "working_tree_dirty": true,
+  "tested_source_sha256": {
+    "shared/core/reader_impl.bpf.h": "3f19b70dcc540ba9a4a03ab60feb2b70b76f76b89d030a8899be084fedce43d8",
+    "shared/core/python_capture.bpf.h": "debae067a7fef5941109d3ea773091da8c535363a06e1d5a97ed356c9ee683bf",
+    "endpoint-service/core/reader.bpf.c": "35aee0adbef880b63bc8f453740a4429eda6620f297accee62fe1d19de16bfe1",
+    "endpoint-service/core/collector.c": "d9320b2bfcab292b2fd04154bf7b9fe025619c24c8361e210222382001c0880b",
+    "endpoint-service/python/service.py": "08021dd1457e08e8e0833c877d4b61628da949e52e018f31b9659316aad6ac67",
+    "endpoint-service/core/policy.h": "9b2706dddc7e10e672abd14f75030df380e1d327e634c4edb10a2c3abf7cef2f",
+    "endpoint-service/core/protocol.h": "9c0c78c09ed2bd0b15cc717292868b2eae9d61f7c256e893067c5af5649f5411",
+    "endpoint-service/tests/integration_guest.py": "0a807122624ecc3f8cddd33432ab82ade9b55c0ea6d4a9e042f7d60e261240ab",
+    "endpoint-service/tests/cgroup_boundary_fixture.py": "64c474611a4194f380995809b31c63fd7b879cd55f8fd4d734d6bbd55e1e14d7",
+    "endpoint-service/tests/check_storage.py": "c70d8243121cc58843503b3689f18818b1a05610d1a87cd1ec0cb3027c9c5df6",
+    "endpoint-service/tests/test_service.py": "96ce0f007d0dd3fb631fe28f5d7319635a21d8c0d2da0d41a6da6fcd0a1fad83",
+    "shared/python/fixture_drivers/run_collector_path_guest.py": "c5a7bd3ed4ae6f0150386cd2f880ff68d72e927ded45bbce171536133daa991d"
+  },
+  "scope": "Whole-host cgroup_id0 remains the intended endpoint default. Optional cgroup policy admits descendants and follows admitted file identities across actor boundaries without expanding Python observation.",
+  "offline": {
+    "root_tests": 62,
+    "endpoint_tests": 30,
+    "mac_root_only_skip": 1,
+    "style": "passed"
+  },
+  "guests": {
+    "arm": {
+      "kernel": "6.8.0-138-generic",
+      "architecture": "aarch64",
+      "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+      "passed": true,
+      "cleanup_ok": true,
+      "owned_program_retirements": 32,
+      "modules_unchanged": true,
+      "global_bpf_set_restored": true,
+      "cgroup": {
+        "exact_id": 5470,
+        "matching_writes": 3,
+        "excluded_records": 0,
+        "unknown_id_rejected": true,
+        "empty_group_accepted": true
+      },
+      "boundaries": [
+        {
+          "case": "descendant",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 25637,
+            "target": 25638,
+            "inode": 827864,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-25149/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-25149/watched/nested"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "outside",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 25643,
+            "target": 25644,
+            "inode": 827874,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-25149/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-25149/outside"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "excluded",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 25649,
+            "target": 25699,
+            "inode": 827884,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-25149/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-25149/watched/nested"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "whole-host",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": true,
+          "application": {
+            "pid": 25704,
+            "target": 25705,
+            "inode": 827894,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-25149/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-25149/outside"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "unrelated",
+          "writes": 0,
+          "identities_accepted": false,
+          "whole_host": false,
+          "application": {
+            "pid": 25710,
+            "target": 25711,
+            "inode": 827904,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-25149/outside",
+            "writer_cgroup": "0::/pidfd-boundary-25149/outside"
+          },
+          "source_policy_preserved": true
+        }
+      ],
+      "identity": {
+        "health": {
+          "schema_version": 1,
+          "state": "stopped",
+          "pid": 25159,
+          "session": "548605e9c6ea405af7571f4fdc08a29c",
+          "boot_id": "cb279ef7-8fe0-4c8e-89af-4e0d5f715068",
+          "start_monotonic_ns": 9190252155290,
+          "updated_monotonic_ns": 9193307779711,
+          "updated_realtime_ns": 1791652424790144104,
+          "attachments": 29,
+          "capture_python": false,
+          "records": 18,
+          "session_bytes": 4032,
+          "active_segment": "events-00000000000000000001-548605e9c6ea405af7571f4fdc08a29c-0000000000.bin",
+          "segments_created": 1,
+          "segments_deleted": 0,
+          "retention_skipped": 0,
+          "malformed_records": 0,
+          "storage_blocked": false,
+          "storage_stalls": 0,
+          "unflushed_ring_bytes": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "cleanup_fallback": 0,
+          "history_gaps": false,
+          "errno": 0,
+          "reservation_state": 1,
+          "reservation_errno": 0,
+          "max_rss_kib": 18836,
+          "restart_resets_history": true,
+          "requested_capture_python": false,
+          "effective_capture_python": false,
+          "capture_epoch": 1,
+          "capture_transitions": 0,
+          "degraded_ns": 0,
+          "ring_backlog_bytes": 0,
+          "uprobe_missed_callbacks": null,
+          "cache_pressure": 0,
+          "cleanup_index_failures": 0,
+          "source_state_errors": 0,
+          "cleanup_scans": 2,
+          "python_entries": 0,
+          "python_returns": 0,
+          "binding_invalidations": 0,
+          "return_depth_overflow": 0,
+          "binding_unavailable": 0,
+          "bpf_stats_enabled": false,
+          "bpf_runtime": []
+        },
+        "independent_existing_process_writes": 5,
+        "pidfd_writes": 3,
+        "duplicate_rejected": true,
+        "slot_acceptance_retained_after_return": true
+      },
+      "source": {
+        "health": {
+          "schema_version": 1,
+          "state": "stopped",
+          "pid": 25168,
+          "session": "08a9c976e73eeafcd489f620d849c859",
+          "boot_id": "cb279ef7-8fe0-4c8e-89af-4e0d5f715068",
+          "start_monotonic_ns": 9193418072059,
+          "updated_monotonic_ns": 9198378701740,
+          "updated_realtime_ns": 1791652429861066174,
+          "attachments": 35,
+          "capture_python": true,
+          "records": 50,
+          "session_bytes": 118600,
+          "active_segment": "events-00000000000000000001-08a9c976e73eeafcd489f620d849c859-0000000005.bin",
+          "segments_created": 6,
+          "segments_deleted": 3,
+          "retention_skipped": 0,
+          "malformed_records": 0,
+          "storage_blocked": false,
+          "storage_stalls": 0,
+          "unflushed_ring_bytes": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "cleanup_fallback": 0,
+          "history_gaps": false,
+          "errno": 0,
+          "reservation_state": 1,
+          "reservation_errno": 0,
+          "max_rss_kib": 18968,
+          "restart_resets_history": true,
+          "requested_capture_python": true,
+          "effective_capture_python": true,
+          "capture_epoch": 1,
+          "capture_transitions": 0,
+          "degraded_ns": 0,
+          "ring_backlog_bytes": 0,
+          "uprobe_missed_callbacks": null,
+          "cache_pressure": 0,
+          "cleanup_index_failures": 0,
+          "source_state_errors": 0,
+          "cleanup_scans": 6,
+          "python_entries": 47685,
+          "python_returns": 47682,
+          "binding_invalidations": 0,
+          "return_depth_overflow": 0,
+          "binding_unavailable": 6,
+          "bpf_stats_enabled": false,
+          "bpf_runtime": []
+        },
+        "serial_writes": 3,
+        "threaded_writes": 13,
+        "oracle_frames": 279,
+        "leader_first_exit_writes": 5,
+        "rotation_keeps_session": true,
+        "bounded_segments": true
+      },
+      "storage_recovery": {
+        "partial_write_rolled_back": true,
+        "writes": 3,
+        "same_session": true,
+        "history_gaps": false
+      },
+      "storage_operations": {
+        "event-open": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-open": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-write": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "event-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "directory-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "health-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        }
+      },
+      "storage_check": {
+        "passed": true,
+        "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+        "rotations": 5,
+        "retained_segments": 3,
+        "input_records": 38400,
+        "decoded_retained_records": 1024,
+        "record_boundaries_preserved": true,
+        "no_preallocated_zero_tail": true,
+        "failed_write_does_not_release_ring": true,
+        "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+        "admin_modified_segments_preserved": true,
+        "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+        "startup_permanent_and_transient_exits": true,
+        "drained_burst_degrades_without_drops": true,
+        "bounded_consumer_backlog_retry": true,
+        "busy_record_no_spin": true,
+        "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1 drained_burst_degrades_without_drops=1",
+        "recovery_output": "STORAGE_RECOVERY_OK transactional_pair=1 partial_event_rollback_retry=1 partial_journal_rollback_retry=1 reservation_rebuilt=1 all_rotation_faults=1 health_fault=1 quota_wait_retry=1 monotonic_session_order=1 legacy_seed=1 durable_counter_without_segments=1 interrupted_publication=1 corrupt_counter_refused=1",
+        "partial_write_rollback_then_retry": true,
+        "transactional_event_journal_rotation": true,
+        "clock_rollback_session_order": true
+      },
+      "report_sha256": "2a33909988e27cb132c2abfe1f941deee836ccef3760c0e983e6430c968dd045",
+      "storage_log_sha256": "a5a3f58c950e7b61fab10cd6f56a4c2277b3e1f67f16a3a90fd37f06dfc376f1"
+    },
+    "x86": {
+      "kernel": "6.8.0-146-generic",
+      "architecture": "x86_64",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "passed": true,
+      "cleanup_ok": true,
+      "owned_program_retirements": 32,
+      "modules_unchanged": true,
+      "global_bpf_set_restored": true,
+      "cgroup": {
+        "exact_id": 4422,
+        "matching_writes": 3,
+        "excluded_records": 0,
+        "unknown_id_rejected": true,
+        "empty_group_accepted": true
+      },
+      "boundaries": [
+        {
+          "case": "descendant",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 5506,
+            "target": 5507,
+            "inode": 792026,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-4999/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-4999/watched/nested"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "outside",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 5512,
+            "target": 5513,
+            "inode": 792032,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-4999/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-4999/outside"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "excluded",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": false,
+          "application": {
+            "pid": 5518,
+            "target": 5568,
+            "inode": 792046,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-4999/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-4999/watched/nested"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "whole-host",
+          "writes": 3,
+          "identities_accepted": true,
+          "whole_host": true,
+          "application": {
+            "pid": 5574,
+            "target": 5575,
+            "inode": 792056,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-4999/watched/nested",
+            "writer_cgroup": "0::/pidfd-boundary-4999/outside"
+          },
+          "source_policy_preserved": true
+        },
+        {
+          "case": "unrelated",
+          "writes": 0,
+          "identities_accepted": false,
+          "whole_host": false,
+          "application": {
+            "pid": 5580,
+            "target": 5581,
+            "inode": 792062,
+            "writes": 3,
+            "opener_cgroup": "0::/pidfd-boundary-4999/outside",
+            "writer_cgroup": "0::/pidfd-boundary-4999/outside"
+          },
+          "source_policy_preserved": true
+        }
+      ],
+      "identity": {
+        "health": {
+          "schema_version": 1,
+          "state": "stopped",
+          "pid": 5019,
+          "session": "f65466e256e7bf91482fd7254e2fbfe0",
+          "boot_id": "594f1837-18ff-488c-9fb5-962e14e6a0c7",
+          "start_monotonic_ns": 5153042146954,
+          "updated_monotonic_ns": 5158144725434,
+          "updated_realtime_ns": 1791652732676844412,
+          "attachments": 29,
+          "capture_python": false,
+          "records": 18,
+          "session_bytes": 4032,
+          "active_segment": "events-00000000000000000001-f65466e256e7bf91482fd7254e2fbfe0-0000000000.bin",
+          "segments_created": 1,
+          "segments_deleted": 0,
+          "retention_skipped": 0,
+          "malformed_records": 0,
+          "storage_blocked": false,
+          "storage_stalls": 0,
+          "unflushed_ring_bytes": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "cleanup_fallback": 0,
+          "history_gaps": false,
+          "errno": 0,
+          "reservation_state": 1,
+          "reservation_errno": 0,
+          "max_rss_kib": 21052,
+          "restart_resets_history": true,
+          "requested_capture_python": false,
+          "effective_capture_python": false,
+          "capture_epoch": 1,
+          "capture_transitions": 0,
+          "degraded_ns": 0,
+          "ring_backlog_bytes": 0,
+          "uprobe_missed_callbacks": null,
+          "cache_pressure": 0,
+          "cleanup_index_failures": 0,
+          "source_state_errors": 0,
+          "cleanup_scans": 2,
+          "python_entries": 0,
+          "python_returns": 0,
+          "binding_invalidations": 0,
+          "return_depth_overflow": 0,
+          "binding_unavailable": 0,
+          "bpf_stats_enabled": false,
+          "bpf_runtime": []
+        },
+        "independent_existing_process_writes": 5,
+        "pidfd_writes": 3,
+        "duplicate_rejected": true,
+        "slot_acceptance_retained_after_return": true
+      },
+      "source": {
+        "health": {
+          "schema_version": 1,
+          "state": "stopped",
+          "pid": 5028,
+          "session": "38d02f25d0c773eb934da102bfa69d0c",
+          "boot_id": "594f1837-18ff-488c-9fb5-962e14e6a0c7",
+          "start_monotonic_ns": 5158358030854,
+          "updated_monotonic_ns": 5167939898450,
+          "updated_realtime_ns": 1791652742472021430,
+          "attachments": 35,
+          "capture_python": true,
+          "records": 50,
+          "session_bytes": 118600,
+          "active_segment": "events-00000000000000000001-38d02f25d0c773eb934da102bfa69d0c-0000000005.bin",
+          "segments_created": 6,
+          "segments_deleted": 3,
+          "retention_skipped": 0,
+          "malformed_records": 0,
+          "storage_blocked": false,
+          "storage_stalls": 0,
+          "unflushed_ring_bytes": 0,
+          "ring_drops": 0,
+          "state_errors": 0,
+          "cleanup_fallback": 0,
+          "history_gaps": false,
+          "errno": 0,
+          "reservation_state": 1,
+          "reservation_errno": 0,
+          "max_rss_kib": 21180,
+          "restart_resets_history": true,
+          "requested_capture_python": true,
+          "effective_capture_python": true,
+          "capture_epoch": 1,
+          "capture_transitions": 0,
+          "degraded_ns": 0,
+          "ring_backlog_bytes": 0,
+          "uprobe_missed_callbacks": null,
+          "cache_pressure": 0,
+          "cleanup_index_failures": 0,
+          "source_state_errors": 0,
+          "cleanup_scans": 6,
+          "python_entries": 13963,
+          "python_returns": 13963,
+          "binding_invalidations": 0,
+          "return_depth_overflow": 0,
+          "binding_unavailable": 6,
+          "bpf_stats_enabled": false,
+          "bpf_runtime": []
+        },
+        "serial_writes": 3,
+        "threaded_writes": 13,
+        "oracle_frames": 279,
+        "leader_first_exit_writes": 5,
+        "rotation_keeps_session": true,
+        "bounded_segments": true
+      },
+      "storage_recovery": {
+        "partial_write_rolled_back": true,
+        "writes": 3,
+        "same_session": true,
+        "history_gaps": false
+      },
+      "storage_operations": {
+        "event-open": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-open": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-write": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "event-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "journal-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "directory-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        },
+        "health-sync": {
+          "stayed_alive": true,
+          "recovered": true,
+          "writes": 3,
+          "same_session": true,
+          "storage_stalls": 1,
+          "history_gaps": false
+        }
+      },
+      "storage_check": {
+        "passed": true,
+        "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+        "rotations": 5,
+        "retained_segments": 3,
+        "input_records": 38400,
+        "decoded_retained_records": 1024,
+        "record_boundaries_preserved": true,
+        "no_preallocated_zero_tail": true,
+        "failed_write_does_not_release_ring": true,
+        "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+        "admin_modified_segments_preserved": true,
+        "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+        "startup_permanent_and_transient_exits": true,
+        "drained_burst_degrades_without_drops": true,
+        "bounded_consumer_backlog_retry": true,
+        "busy_record_no_spin": true,
+        "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1 drained_burst_degrades_without_drops=1",
+        "recovery_output": "STORAGE_RECOVERY_OK transactional_pair=1 partial_event_rollback_retry=1 partial_journal_rollback_retry=1 reservation_rebuilt=1 all_rotation_faults=1 health_fault=1 quota_wait_retry=1 monotonic_session_order=1 legacy_seed=1 durable_counter_without_segments=1 interrupted_publication=1 corrupt_counter_refused=1",
+        "partial_write_rollback_then_retry": true,
+        "transactional_event_journal_rotation": true,
+        "clock_rollback_session_order": true
+      },
+      "report_sha256": "e4ccc4ba6c36ac733f66a88784e4d29e6f6220e2da5ac096751d066600228ff8",
+      "storage_log_sha256": "8e31ad49e519924e2a2b69c8a52ec90ade5a1e5c7d8cff8eacd6e48daeaa51ad"
+    }
+  },
+  "fixture_backends": {
+    "module-free": {
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "attached": 35,
+      "report_sha256": "807f82a946ea95f5d32503a8286bb74395baaf39abc3faeab395d6308e538497"
+    },
+    "native": {
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "attached": 35,
+      "report_sha256": "2c102ffc40e4736902d236f380e52e5c3bd28473757f7a10ee889928a827b62d",
+      "module_removed": true
+    }
+  },
+  "limitations": [
+    "Owned6.8 guests only;7.0 full/lazy admission remains refused.",
+    "Source metadata is unattested and requires the selected supported interpreter.",
+    "Excluded-PID boundary control changes only the owned collector policy map; it tests the exact exclusion predicate with a fixture PID.",
+    "No new hardware CPU benchmark or proof of shared-fdtable concurrency.",
+    "Unobserved outside openers cannot be backfilled by a scoped policy. Whole-host default avoids that cgroup coverage restriction."
+  ],
+  "retained_attempts": [
+    {
+      "reason": "CGROUP_ARRAY rejected in sleepable programs",
+      "result": "Failed closed at program load; replaced with protected CO-RE ancestry"
+    },
+    {
+      "reason": "CO-RE preserve-access expression included a local struct member",
+      "result": "Failed closed at relocation; kernel pointer separated from local context"
+    },
+    {
+      "reason": "Verifier requires each bpf_loop callback to balance its own RCU region",
+      "result": "Failed closed; lock/unlock now wholly inside callback"
+    },
+    {
+      "reason": "Storage test read records before collector final drain",
+      "result": "Test now shuts down/drains before checking recovery writes"
+    },
+    {
+      "reason": "Native fixture invoked without module scope wrapper",
+      "result": "No module dependency loaded; rerun through owned module wrapper passed and removed module"
+    }
+  ],
+  "primary_source": "https://raw.githubusercontent.com/torvalds/linux/v6.8/kernel/bpf/helpers.c"
+}

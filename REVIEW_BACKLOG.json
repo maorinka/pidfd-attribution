@@ -108,10 +108,17 @@
     {
       "id": "R001",
       "area": "coverage",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Exact caller-cgroup filtering drops pidfd_getfd acquisitions by outside callers, including excluded_tgid. Current scope is actors, not tracked-object provenance.",
-      "next_step": "Define actor/object scope separately; test cross-cgroup transfers in both directions and collector exclusion.",
-      "evidence": "Confirmed task_is_monitored gate in endpoint syscall_begin."
+      "next_step": "Preserve whole-host default and object-following semantics during subsequent alias/capacity/concurrency changes; those remaining requirements are tracked separately.",
+      "evidence": "validation/cgroup-boundary-coverage.json",
+      "resolution_history": [
+        {
+          "batch": 19,
+          "evidence": "validation/cgroup-boundary-coverage.json",
+          "detail": "Both owned6.8 ARM/x86 suites passed descendant admission, admitted-file acquisition/writes outside subtree and excluded PID, full-source whole-host transfer across real groups, and unrelated outside negative control. Explicit upstream RCU guards balance inside each ancestry callback. Scoped source remains unknown for excluded actors; unobserved opener history is not backfilled."
+        }
+      ]
     },
     {
       "id": "R002",
@@ -886,15 +893,22 @@
     {
       "id": "R052",
       "area": "coverage",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Only write(2) recorded, not writev/pwrite/sendfile/copy_file_range/io_uring/mmap; raw opening path prefix bypassable by relative/symlink/alternate paths; cgroup exact ID excludes descendants.",
-      "next_step": "Keep explicit coverage contract; plan extensions with negative controls and overhead measurement.",
-      "evidence": "",
+      "next_step": "Preserve whole-host default and object-following semantics during subsequent alias/capacity/concurrency changes; those remaining requirements are tracked separately.",
+      "evidence": "validation/cgroup-boundary-coverage.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Ancestor/subtree filters do not automatically cover theft by outside callers (R001). Raw-path entry prefilter proposal is recorded separately as R084."
+      ],
+      "resolution_history": [
+        {
+          "batch": 19,
+          "evidence": "validation/cgroup-boundary-coverage.json",
+          "detail": "Both owned6.8 ARM/x86 suites passed descendant admission, admitted-file acquisition/writes outside subtree and excluded PID, full-source whole-host transfer across real groups, and unrelated outside negative control. Explicit upstream RCU guards balance inside each ancestry callback. Scoped source remains unknown for excluded actors; unobserved opener history is not backfilled."
+        }
       ]
     },
     {
@@ -1523,6 +1537,15 @@
       "status": "validated-locally",
       "evidence": "validation/build-ci-evidence-index.json",
       "remaining": "Hosted job still to execute after push; opt-in guest matrix not yet qualified. Installer/preflight, coverage/lifecycle, consolidation and performance work remain."
+    },
+    {
+      "batch": 19,
+      "name": "Whole-host and optional cgroup boundary coverage",
+      "evidence": "validation/cgroup-boundary-coverage.json",
+      "items": [
+        "R001",
+        "R052"
+      ]
     }
   ],
   "authorization_followup": "User approved implementation of the reconciled priority reliability batch. History rewriting remains unauthorized.",

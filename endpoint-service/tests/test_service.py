@@ -25,8 +25,30 @@ from service import (
     PermanentStartupError,
     publish_installation,
     validate_install_destination,
+    verify_upstream_dependencies,
 )
 from wire import HEADER, FRAME, decode, records
+
+
+class UpstreamDependenciesTest(unittest.TestCase):
+    def test_only_upstream_rcu_guards_are_allowed(self):
+        symbols = "\n".join(
+            "1: 00000000 0 NOTYPE GLOBAL DEFAULT UND " + name
+            for name in ("bpf_rcu_read_lock", "bpf_rcu_read_unlock")
+        )
+        self.assertEqual(
+            verify_upstream_dependencies(symbols, ".ksyms"),
+            ["bpf_rcu_read_lock", "bpf_rcu_read_unlock"],
+        )
+        self.assertEqual(verify_upstream_dependencies("", ""), [])
+        for unexpected in ("iosec_native_capture", "unrecognized_kernel_function"):
+            with self.assertRaisesRegex(RuntimeError, "Non-upstream"):
+                verify_upstream_dependencies(
+                    symbols + "\n2: 00000000 0 NOTYPE GLOBAL DEFAULT UND " + unexpected,
+                    ".ksyms",
+                )
+        with self.assertRaisesRegex(RuntimeError, "Non-upstream"):
+            verify_upstream_dependencies("", ".ksyms")
 
 
 def record(counts=(0, 0, 0)):
@@ -111,6 +133,18 @@ class ConfigurationTests(unittest.TestCase):
 
 
 class AdmissionTests(unittest.TestCase):
+    def test_collector_receives_the_resolved_cgroup_path(self):
+        config = configuration()
+        config["cgroup_id"] = 123
+        with patch(
+            "service.validate_cgroup", return_value=dict(path="/sys/fs/cgroup/watched")
+        ) as resolve:
+            command = collector_command(config)
+        resolve.assert_called_once_with(config)
+        index = command.index("--cgroup-path")
+        self.assertEqual(command[index + 1], "/sys/fs/cgroup/watched")
+        self.assertNotIn("--cgroup-path", collector_command(configuration()))
+
     def test_exact_empty_cgroup_and_unsupported_or_unknown_ids(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

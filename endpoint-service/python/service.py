@@ -123,6 +123,8 @@ def collector_command(config, build_dir=None):
         result.append("--capture-python")
     if config["bpf_stats"]:
         result.append("--bpf-stats")
+    if config["cgroup_id"]:
+        result.extend(["--cgroup-path", validate_cgroup(config)["path"]])
     return result
 
 
@@ -177,6 +179,21 @@ def linux_root():
         )
 
 
+UPSTREAM_KFUNCS = frozenset(("bpf_rcu_read_lock", "bpf_rcu_read_unlock"))
+
+
+def verify_upstream_dependencies(symbols, sections):
+    """Allow only the upstream RCU guards required by cgroup ancestry reads."""
+    undefined = {
+        fields[-1]
+        for line in symbols.splitlines()
+        if len(fields := line.split()) > 7 and "UND" in fields
+    }
+    if undefined - UPSTREAM_KFUNCS or (".ksyms" in sections and not undefined):
+        raise RuntimeError("Non-upstream BPF dependencies detected")
+    return sorted(undefined)
+
+
 def build():
     linux_root()
     from doctor_guest import doctor
@@ -224,16 +241,10 @@ def build():
     symbols = subprocess.check_output(
         ["readelf", "-Ws", "reader.bpf.o"], cwd=directory, text=True
     )
-    undefined = [
-        line
-        for line in symbols.splitlines()
-        if " UND " in line and len(line.split()) > 7
-    ]
     sections = subprocess.check_output(
         ["readelf", "-SW", "reader.bpf.o"], cwd=directory, text=True
     )
-    if undefined or ".ksyms" in sections:
-        raise RuntimeError("Non-upstream BPF dependencies detected")
+    upstream_kfuncs = verify_upstream_dependencies(symbols, sections)
     subprocess.run(
         [
             "gcc",
@@ -254,6 +265,7 @@ def build():
     manifest = dict(
         schema_version=1,
         upstream_only=True,
+        upstream_kfuncs=upstream_kfuncs,
         pins=pins,
         sources={name: sha256_file(directory / name) for name in PRODUCTION},
         artifacts={

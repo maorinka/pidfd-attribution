@@ -9,13 +9,15 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Cgroup boundary and descendant coverage",
+    "name": "Descriptor aliases and scratch ownership",
     "items": [
-      "R001",
-      "R052"
+      "R029",
+      "R039",
+      "R002"
     ],
-    "previous_batch_evidence": "validation/fixture-driver-and-source-export.json",
-    "pending_guest_coverage": "Shared driver and source archive passed owned6.8 runs. Cgroup policy behavior not yet changed."
+    "previous_batch_evidence": "validation/cgroup-boundary-coverage.json",
+    "pending_guest_coverage": "Cgroup batch passed both6.8 architectures,32 owned retirement audits each; native and module-free fixtures passed. Alias and scratch changes not yet implemented.",
+    "whole_host_requirement": "cgroup_id0 remains the intended default, with supported interpreter capture across workload cgroups."
   },
   "next_batches": [
     "Finish shared fixture drivers and portable source packaging",

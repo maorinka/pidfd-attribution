@@ -611,13 +611,73 @@ static __always_inline struct event *reset_scratch_event(void) {
   return e;
 }
 
+#if IOSEC_ENDPOINT_POLICY
+/* Sleepable tracing cannot reference a cgroup-array map. Read the current
+ * unified hierarchy through CO-RE instead; the collector pins the configured
+ * cgroup directory for the attachment lifetime. Explicit upstream RCU guards
+ * protect css_set/cgroup ancestry even in sleepable program contexts. The
+ * critical section contains no fault-capable user reads. Whole-host admission
+ * skips this traversal entirely.
+ */
+#define IOSEC_MAX_CGROUP_ANCESTORS (1U << 23)
+extern void bpf_rcu_read_lock(void) __ksym;
+extern void bpf_rcu_read_unlock(void) __ksym;
+struct cgroup_membership {
+  unsigned long long selected_id;
+  unsigned int matched;
+  unsigned int read_failed;
+};
+static long match_cgroup_ancestor(unsigned int index, void *context) {
+  struct cgroup_membership *membership = context;
+  struct task_struct *task = (void *)bpf_get_current_task_btf();
+  struct cgroup *current = 0, *ancestor = 0;
+  struct kernfs_node *node = 0;
+  unsigned long long id = 0;
+  int level = -1;
+  long stop = 1;
+  /* Each callback owns its RCU section. No kernel pointer survives a callback;
+   * a concurrent migration is observed at one protected membership read.
+   */
+  bpf_rcu_read_lock();
+  current = BPF_CORE_READ(task, cgroups, dfl_cgrp);
+  if (!current || bpf_core_read(&level, sizeof(level), &current->level) ||
+      level < 0 || (unsigned int)level >= IOSEC_MAX_CGROUP_ANCESTORS) {
+    membership->read_failed = 1;
+    goto unlock;
+  }
+  if (index > (unsigned int)level)
+    goto unlock;
+  if (bpf_core_read(&ancestor, sizeof(ancestor), &current->ancestors[index]) ||
+      !ancestor || bpf_core_read(&node, sizeof(node), &ancestor->kn) || !node ||
+      bpf_core_read(&id, sizeof(id), &node->id)) {
+    membership->read_failed = 1;
+    goto unlock;
+  }
+  membership->matched = id == membership->selected_id;
+  stop = membership->matched;
+unlock:
+  bpf_rcu_read_unlock();
+  return stop;
+}
+static __always_inline int task_under_cgroup(unsigned long long selected_id) {
+  struct cgroup_membership membership = {.selected_id = selected_id};
+  long result = bpf_loop(IOSEC_MAX_CGROUP_ANCESTORS, match_cgroup_ancestor,
+                         &membership, 0);
+  if (result < 0 || membership.read_failed) {
+    increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
+    return 0;
+  }
+  return membership.matched;
+}
+#endif
+
 static __always_inline int task_is_monitored(void) {
   unsigned long long pid = bpf_get_current_pid_tgid() >> 32;
 #if IOSEC_ENDPOINT_POLICY
   struct endpoint_policy *p = get_policy();
   if (!p || !p->enabled || pid == p->excluded_tgid)
     return 0;
-  return !p->cgroup_id || bpf_get_current_cgroup_id() == p->cgroup_id;
+  return !p->cgroup_id || task_under_cgroup(p->cgroup_id);
 #else
   return bpf_map_lookup_elem(&subjects, &pid) != 0;
 #endif
@@ -1210,6 +1270,15 @@ int BPF_PROG(reference_bound, struct task_struct *task, unsigned int fd,
     unsigned long long file = (unsigned long long)ret;
     e->file = file && file < 0xfffffffffffff001ULL ? file : 0;
     struct event *o = e->file ? bpf_map_lookup_elem(&origins, &e->file) : 0;
+#if IOSEC_ENDPOINT_POLICY
+    /* Scope admits openers. An outside acquirer is retained only after the
+     * resolved kernel file has admitted history; unrelated attempts stay quiet.
+     */
+    if (!task_is_monitored() && !o) {
+      bpf_map_delete_elem(&acquiring, &tid);
+      return 0;
+    }
+#endif
     if (o) {
       if (copy_source(&e->opener, &o->opener)) {
         e->opener.count = 0;
@@ -1297,6 +1366,12 @@ int acquire_finish(struct trace_event_raw_sys_exit *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
   if (e) {
+#if IOSEC_ENDPOINT_POLICY
+    if (!task_is_monitored() && !e->stage) {
+      bpf_map_delete_elem(&acquiring, &tid);
+      return 0;
+    }
+#endif
     if (!e->acquirer.pid_tid && capture_python_source(&e->acquirer)) {
       bpf_map_delete_elem(&acquiring, &tid);
       return 0;
@@ -1394,9 +1469,10 @@ static __always_inline void write_entry_snapshot(unsigned long long fd) {
  * is a verifier-known kernel pointer. Direct CO-RE loads match arm64
  * syscall_get_arguments: orig_x0 for arg0, regs[1] for arg1. One shared
  * handler filters syscall IDs before the subject-map lookup; unsupported
- * IDs return without touching task/source/history state. No history join,
- * delayed snapshot, new map, or source/cache change. Global dispatch for
- * other syscalls remains a full-system CPU accounting requirement. */
+ * IDs return without touching task/source/history state. Endpoint opener
+ * admission is separate from following already-admitted descriptors across
+ * cgroup and collector exclusions. Global dispatch remains a full-system
+ * CPU accounting requirement. */
 SEC("tp_btf/sys_enter")
 int BPF_PROG(syscall_begin, struct pt_regs *regs, long id) {
   if (id != IOSEC_NR_WRITE && id != IOSEC_NR_PIDFD_GETFD)
@@ -1406,8 +1482,14 @@ int BPF_PROG(syscall_begin, struct pt_regs *regs, long id) {
   struct task_struct *task = (void *)bpf_get_current_task_btf();
   if (IOSEC_COMPAT(task))
     return 0;
+#if IOSEC_ENDPOINT_POLICY
+  struct endpoint_policy *p = get_policy();
+  if (!p || !p->enabled)
+    return 0;
+#else
   if (!task_is_monitored())
     return 0;
+#endif
   if (id == IOSEC_NR_WRITE)
     write_entry_snapshot(IOSEC_ARG0(regs));
   else
@@ -1477,8 +1559,16 @@ int write_finish(struct trace_event_raw_sys_exit *ctx) {
 }
 SEC("tracepoint/syscalls/sys_enter_fcntl")
 int alias_begin(struct trace_event_raw_sys_enter *ctx) {
-  if (!task_is_monitored() || (ctx->args[1] != 1030 && ctx->args[1] != 0))
+  if (ctx->args[1] != 1030 && ctx->args[1] != 0)
     return 0;
+#if IOSEC_ENDPOINT_POLICY
+  struct endpoint_policy *p = get_policy();
+  if (!p || !p->enabled)
+    return 0;
+#else
+  if (!task_is_monitored())
+    return 0;
+#endif
   struct pidfd_slot s = {.files = current_files_identity(), .fd = ctx->args[0]};
   struct event *e = bpf_map_lookup_elem(&slots, &s);
   if (e) {
@@ -1591,8 +1681,15 @@ static long clone_slot(void *map, const struct pidfd_slot *s, struct event *e,
 #define IOSEC_DUP_PARAMS struct files_struct *oldf, struct fd_range *punch_hole
 #endif
 SEC("fentry/dup_fd") int BPF_PROG(table_duplicate_begin, IOSEC_DUP_PARAMS) {
+#if IOSEC_ENDPOINT_POLICY
+  struct endpoint_policy *p = get_policy();
+  if (!p || !p->enabled ||
+      !has_cleanup_index(&tracked_tables, (unsigned long long)oldf))
+    return 0;
+#else
   if (!task_is_monitored())
     return 0;
+#endif
   unsigned long long tid = bpf_get_current_pid_tgid(),
                      old = (unsigned long long)oldf;
   UPDATE(&duplicating, &tid, &old, BPF_ANY);
