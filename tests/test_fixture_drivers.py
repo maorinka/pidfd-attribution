@@ -50,7 +50,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('read')), \
      patch('subprocess.Popen', side_effect=AssertionError('Popen')):
     for name in ('compat_guest', 'fixture_guest', 'held_collector_path_guest',
                  'history_guest', 'measure_collector_path_guest',
-                 'verify_deep_collector_path_guest', 'prepare_guest'):
+                 'verify_deep_collector_path_guest', 'prepare_guest', 'run_collector_path_guest'):
         importlib.import_module(name)
 """
         for backend in (ROOT, ROOT / "module-free"):

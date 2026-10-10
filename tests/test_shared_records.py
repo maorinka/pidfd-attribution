@@ -1,6 +1,7 @@
 """Offline regression checks for import safety and the shared wire-v1 ABI."""
 
 import ctypes as c
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -18,6 +19,24 @@ import re
 
 
 class SharedRecordsTests(unittest.TestCase):
+    def shared_reference(self, path, expected=None):
+        if path.is_symlink():
+            canonical = path.resolve()
+        else:
+            manifest = json.loads((ROOT / "SOURCE_EXPORT.json").read_text())
+            self.assertTrue(manifest["aliases_materialized"])
+            rows = {row["path"]: row for row in manifest["files"]}
+            row = rows[str(path.relative_to(ROOT))]
+            canonical = ROOT / row["canonical_path"]
+            self.assertTrue(canonical.resolve().is_relative_to(ROOT / "shared"))
+            self.assertEqual(
+                hashlib.sha256(path.read_bytes()).hexdigest(), row["sha256"]
+            )
+            self.assertEqual(path.read_bytes(), canonical.read_bytes())
+        if expected is not None:
+            self.assertEqual(canonical, expected)
+        return canonical
+
     def test_import_does_not_read_argv_or_touch_files_or_start_processes(self):
         code = """
 import sys
@@ -116,6 +135,67 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
         }
         self.assertEqual(names, wire.STAGES)
 
+    def test_endpoint_layout_reference_belongs_to_shared_code(self):
+        reference = ROOT / "endpoint-service/core/support/expected314.h"
+        self.shared_reference(reference, ROOT / "shared/core/python314_layout.h")
+        self.assertNotIn("CODE_TYPE_ADDRESS", reference.read_text())
+
+    def test_fixture_pipeline_import_is_inert(self):
+        code = """
+import importlib.util, sys, types
+from pathlib import Path
+from unittest.mock import patch
+root = Path.cwd()
+sys.modules['settings'] = types.SimpleNamespace(
+    ROOT=root, RUNTIME_DIR=Path('/unused'), PREPARED=Path('/unused'))
+spec = importlib.util.spec_from_file_location(
+    'pipeline', root / 'shared/python/fixture_drivers/run_collector_path_guest.py')
+module = importlib.util.module_from_spec(spec)
+with patch('subprocess.check_output', side_effect=AssertionError('process start')), \
+     patch('subprocess.run', side_effect=AssertionError('process start')), \
+     patch.object(Path, 'mkdir', side_effect=AssertionError('filesystem mutation')):
+    spec.loader.exec_module(module)
+"""
+        subprocess.run([sys.executable, "-c", code], cwd=ROOT, check=True)
+
+    def test_fixture_pipeline_records_cleanup_after_a_control_fails(self):
+        code = """
+import importlib.util, json, sys, tempfile, types
+from pathlib import Path
+root = Path.cwd()
+sys.modules['settings'] = types.SimpleNamespace(
+    ROOT=root, RUNTIME_DIR=Path('/unused'), PREPARED=Path('/unused'), MODULE_BACKED=False)
+spec = importlib.util.spec_from_file_location(
+    'pipeline', root / 'shared/python/fixture_drivers/run_collector_path_guest.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+module.programs = lambda: ['baseline']
+module.preflight = lambda allowed_programs=None: None
+module.build = lambda: {}
+module.attach_check = lambda: {'passed': True}
+def fail():
+    raise RuntimeError('control failure')
+module.regression = fail
+with tempfile.TemporaryDirectory() as directory:
+    module.EVIDENCE_DIR = Path(directory)
+    try:
+        module.main()
+    except RuntimeError as error:
+        assert str(error) == 'control failure'
+    else:
+        raise AssertionError('failure was swallowed')
+    report = json.loads((module.EVIDENCE_DIR / 'correctness.json').read_text())
+    assert report['cleanup_ok'] is True
+    assert report['remaining_bpf_programs'] == ['baseline']
+    assert report['status'].startswith('FAILED at regression:')
+"""
+        subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=ROOT,
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+
     def test_reader_translation_units_only_select_the_shared_backend(self):
         for backend, native, endpoint in (
             (ROOT, 1, 0),
@@ -128,16 +208,17 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
                 '#include "reader_impl.bpf.h"\n'
             )
             self.assertEqual((backend / "core/reader.bpf.c").read_text(), expected)
-            self.assertEqual(
-                (backend / "core/reader_impl.bpf.h").resolve(),
+            self.shared_reference(
+                backend / "core/reader_impl.bpf.h",
                 ROOT / "shared/core/reader_impl.bpf.h",
             )
 
     def test_fixture_collectors_and_rings_share_one_implementation(self):
         for relative in ("core/loader.c", "core/direct_ring.h"):
             paths = [backend / relative for backend in (ROOT, ROOT / "module-free")]
-            self.assertTrue(all(path.is_symlink() for path in paths))
-            self.assertEqual(paths[0].resolve(), paths[1].resolve())
+            self.assertEqual(
+                self.shared_reference(paths[0]), self.shared_reference(paths[1])
+            )
 
     def test_shared_primitives_are_symlinked_in_all_backends(self):
         for relative in (
@@ -162,8 +243,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
                 backend / relative
                 for backend in (ROOT, ROOT / "module-free", ROOT / "endpoint-service")
             ]
-            self.assertTrue(all(path.is_symlink() for path in paths))
-            self.assertEqual(len({path.resolve() for path in paths}), 1)
+            self.assertEqual(len({self.shared_reference(path) for path in paths}), 1)
 
 
 if __name__ == "__main__":

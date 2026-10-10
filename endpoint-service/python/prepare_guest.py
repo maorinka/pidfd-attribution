@@ -68,7 +68,6 @@ def prepare():
         )
         if k != "CODE_TYPE_ADDRESS"
     }
-    expected["UNICODE_LENGTH"] = 16
     if offsets["PYTHON_MINOR"] != target_version[1]:
         raise RuntimeError("Interpreter and development headers differ")
     # The historical 3.14 layout remains pinned; older adapters use their

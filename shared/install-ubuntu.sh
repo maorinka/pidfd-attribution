@@ -34,6 +34,20 @@ if [[ "$VERSION_ID" == 22.04 ]]; then
   # Reuse verified artifacts; publish new builds outside the source checkout.
   apt-get install -y pkg-config
   canonical_installer="$(readlink -f -- "${BASH_SOURCE[0]}")"
-  python3 "$(dirname -- "$canonical_installer")/libbpf_cache.py"
+  installer_directory="$(dirname -- "$canonical_installer")"
+  cache_helper=
+  for candidate in "$installer_directory/libbpf_cache.py" \
+                   "$installer_directory/shared/libbpf_cache.py" \
+                   "$installer_directory/../shared/libbpf_cache.py"; do
+    if [[ -f "$candidate" ]]; then
+      cache_helper="$candidate"
+      break
+    fi
+  done
+  if [[ -z "$cache_helper" ]]; then
+    echo 'The source checkout is missing shared/libbpf_cache.py.' >&2
+    exit 1
+  fi
+  python3 "$cache_helper"
 fi
 echo "Dependencies installed. Continue with this backend's ./run.sh commands."

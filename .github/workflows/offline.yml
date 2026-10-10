@@ -19,6 +19,15 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_*.py'
       - run: python endpoint-service/tests/test_service.py
       - run: python tools/check_style.py
+      - name: Test a portable source export without symlinks or Git metadata
+        shell: bash
+        run: |
+          python tools/export_source.py --output /tmp/pidfd-source.tar.gz
+          source_directory=$(mktemp -d)
+          tar -xzf /tmp/pidfd-source.tar.gz -C "$source_directory"
+          cd "$source_directory/pidfd-attribution"
+          python -m unittest discover -s tests -p 'test_*.py'
+          python endpoint-service/tests/test_service.py
       - run: python tools/index_evidence.py --output /tmp/evidence-index.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

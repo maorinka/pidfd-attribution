@@ -34,6 +34,23 @@ Integrity lockdown blocked this debugfs read on the tested Ubuntu 24.04 kernel.
 Such hosts are refused even by the module-free backend; boot arguments alone
 do not prove the running preemption mode. Firmware Secure Boot was not tested.
 
+Portable source archive
+-----------------------
+Use a Git checkout that preserves symlinks, or export a self-contained archive:
+python3 tools/export_source.py --output /tmp/pidfd-attribution.tar.gz
+
+Copy the archive to the Ubuntu computer and extract it with:
+tar -xzf pidfd-attribution.tar.gz
+cd pidfd-attribution
+
+The exporter includes tracked source only, materializes internal aliases as
+regular files, preserves executable modes, and records hashes and the source
+revision in SOURCE_EXPORT.json. Dirty exports are explicitly marked. It refuses
+broken aliases or targets outside the checkout. It includes no build outputs,
+dependency caches or Git history. GitHub's default ZIP is not this archive and
+may preserve aliases as link text; use the exporter for a flattened checkout.
+Building and running still require the Linux prerequisites below.
+
 Endpoint quick start
 --------------------
 cd endpoint-service

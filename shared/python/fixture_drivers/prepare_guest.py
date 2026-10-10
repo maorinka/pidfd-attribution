@@ -63,12 +63,13 @@ def prepare():
         k: int(v)
         for k, v in re.findall(
             r"^#define (\w+) (\d+)$",
-            (ROOT / "fixtures/prerequisites/config.h").read_text(),
+            (
+                Path(__file__).resolve().parents[2] / "core/python314_layout.h"
+            ).read_text(),
             re.M,
         )
         if k != "CODE_TYPE_ADDRESS"
     }
-    expected["UNICODE_LENGTH"] = 16
     if offsets["PYTHON_MINOR"] != target_version[1]:
         raise RuntimeError("Interpreter and development headers differ")
     # The historical 3.14 layout remains pinned; older adapters use their

@@ -249,15 +249,21 @@
     {
       "id": "R010",
       "area": "privacy",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Prior git commits retain local paths and SSH host public keys; review cites 7 commits and 16c3e67.",
-      "next_step": "Audit history; decide separately whether to rewrite public history. Paths/public keys are identifying metadata, not private credentials.",
-      "evidence": "",
+      "next_step": "Remote verified public and restored private under prior private-repository instruction. Prepare a reviewable local history-redaction mirror and audit HEAD tree equivalence before requesting authorization for a destructive remote history rewrite.",
+      "evidence": "validation/fixture-driver-and-source-export.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Reviewer repeats historical local paths and public SSH key metadata. History rewrite is still unauthorized; no rewriting or claim those historical commits sanitized."
+      ],
+      "resolution_history": [
+        {
+          "scope": "Remote is now PRIVATE, with zero forks at visibility change. Existing downloads and old commits remain outside that correction.",
+          "evidence": "validation/fixture-driver-and-source-export.json"
+        }
       ]
     },
     {
@@ -561,8 +567,8 @@
       "area": "maintenance",
       "status": "partially-fixed",
       "finding": "Three reader programs and several Python drivers remain hand-maintained with semantic drift; history timeouts differ20/120 seconds. Shared symlinks do not eliminate all duplication.",
-      "next_step": "Finish remaining genuinely different fixture driver consolidation and canonical packaging ownership. Reader state machine, walkers, capture/string helpers, thread retirement and ring mechanics are shared.",
-      "evidence": "validation/reader-source-consolidation.json; earlier consolidation reports retained",
+      "next_step": "Consolidate remaining doctor/oracle/string/full-validation differences with explicit backend policy, and simplify workflow duplication.",
+      "evidence": "validation/reader-source-consolidation.json; validation/fixture-driver-and-source-export.json",
       "additional_reviews": [
         "final-bfb1249",
         "da2d6bd-endpoint-production-review"
@@ -604,6 +610,12 @@
           "status": "validated",
           "scope": "One shared reader_impl.bpf.h with three selector-only translation units. Native/upstream and fixture/continuous branches compile to unchanged instructions and CO-RE relocations.",
           "evidence": "validation/reader-source-consolidation.json"
+        },
+        {
+          "target": "Fixture build and correctness pipeline",
+          "status": "validated",
+          "scope": "One driver with backend-selected runtime prefix and native/upstream dependency admission; inert imports and truthful failure/cleanup reports. Stock3.14 field reference is owned by shared core.",
+          "evidence": "validation/fixture-driver-and-source-export.json"
         }
       ],
       "review_details": [
@@ -1161,10 +1173,19 @@
     {
       "id": "R072",
       "area": "maintenance",
-      "status": "partially-fixed",
+      "status": "fixed-with-scope",
       "finding": "Proposal single driver set with runtime-prefix settings and single BPF source with backend conditional switches; symlink chains fragile in flattened archives/Windows checkouts.",
-      "next_step": "Canonical BPF reader implemented. Source aliases still require a symlink-preserving checkout; finish portable packaging and remaining driver ownership.",
-      "evidence": "validation/reader-source-consolidation.json"
+      "next_step": "Canonical reader and shared fixture pipeline implemented. Supported source distribution is a symlink-preserving Git checkout or exporter archive. GitHub default ZIP is explicitly unsupported; Windows is an export/check-out portability scope, not a Linux runtime qualification.",
+      "evidence": "validation/fixture-driver-and-source-export.json",
+      "resolution": {
+        "canonical_reader": true,
+        "self_contained_source_export": true,
+        "git_link_text_and_index_execute_modes_supported": true,
+        "broken_outward_cyclic_and_untracked_targets_refused": true,
+        "no_git_or_symlinks_in_archive": true,
+        "archive_runtime_qualified": "Ubuntu22 ARM/Python3.10 kernel6.8",
+        "remaining_driver_differences": "Tracked separately in R033"
+      }
     },
     {
       "id": "R073",

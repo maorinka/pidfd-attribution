@@ -9,13 +9,13 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Finish fixture driver consolidation",
+    "name": "Cgroup boundary and descendant coverage",
     "items": [
-      "R033",
-      "R072"
+      "R001",
+      "R052"
     ],
-    "previous_batch_evidence": "validation/reader-source-consolidation.json",
-    "pending_guest_coverage": "Canonical reader qualified on Ubuntu22 ARM/Python3.10 and Ubuntu24 x86/Python3.12, kernel6.8. Driver changes not yet made."
+    "previous_batch_evidence": "validation/fixture-driver-and-source-export.json",
+    "pending_guest_coverage": "Shared driver and source archive passed owned6.8 runs. Cgroup policy behavior not yet changed."
   },
   "next_batches": [
     "Finish shared fixture drivers and portable source packaging",
@@ -24,5 +24,5 @@
     "Transactional upgrade/uninstall and generated-output ownership",
     "Physical hardware CPU measurements and remaining qualification"
   ],
-  "tracker_note": "create_goal refused because the thread retains an unfinished older blocked research goal. New objective preserved here; older goal is not falsely completed."
+  "tracker_note": "The user reset and activated the matching thread goal; the full review ledger remains the completion contract."
 }

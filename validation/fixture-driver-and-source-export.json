@@ -1,0 +1,435 @@
+{
+  "passed": true,
+  "baseline_commit": "f765fa27c84ffca9691a6dc02701b7b4b06095e1",
+  "scope": "Shared fixture build/correctness driver, canonical interpreter-layout ownership and self-contained source export. No CPU or fleet Secure Boot qualification claimed.",
+  "source_sha256": {
+    ".github/workflows/offline.yml": "612451f3bf37ca6a1758f8ba9d009726e7acafa32a92e20d967916daf8314926",
+    "README": "7ab880761dc79a315b4f083b32260bbf9671b1cda74616512e8f8c8b8285fdab",
+    "endpoint-service/core/support/expected314.h": "b24ae299c0b4da4c29d8421eb0c9a14e297a116599f526cbaf9c7c0485a0e2a2",
+    "endpoint-service/python/prepare_guest.py": "79c31ba9e509b8f0184b6eb98a4b1d1ded46367c53b1d579531b819bb752f339",
+    "module-free/python/run_collector_path_guest.py": "d4b934ca0f013f9c1b54f0c5da5ecd790c314c9c27a1d647192618fbe291a3a4",
+    "python/run_collector_path_guest.py": "d4b934ca0f013f9c1b54f0c5da5ecd790c314c9c27a1d647192618fbe291a3a4",
+    "shared/core/python314_layout.h": "b24ae299c0b4da4c29d8421eb0c9a14e297a116599f526cbaf9c7c0485a0e2a2",
+    "shared/install-ubuntu.sh": "fc2227f955fa635aa80b49b1c1a583f0c14853af4e6476ca9699818109b546c6",
+    "shared/python/fixture_drivers/prepare_guest.py": "399bb0356736b2469680f16f9bd256aa4cb67582a7ac78d2f69f9571eedb1e31",
+    "shared/python/fixture_drivers/run_collector_path_guest.py": "c5a7bd3ed4ae6f0150386cd2f880ff68d72e927ded45bbce171536133daa991d",
+    "tests/test_fixture_drivers.py": "447dc1d6d4752d3c36c6dfeb14f1baa76b86e57d4fa90d48cffa32e4b4d28141",
+    "tests/test_shared_records.py": "7426f23f7aa8c652bf62d5977894cc3d8122678f178643788fcbdf4c5aac8066",
+    "tests/test_source_export.py": "4257d24bec1b1880f46a3364b49ca852848654b4ae89b48729c4c1418a2b310f",
+    "tools/export_source.py": "47b8caedaa5fdcbfe0c7362a571f06d222d3a236f8f38b720e969f9fcfb4e469"
+  },
+  "offline": {
+    "root_tests": 62,
+    "endpoint_tests": 28,
+    "mac_root_policy_test_skipped": 1,
+    "extracted_archive_tests_passed": true
+  },
+  "runtime": [
+    {
+      "guest": "pidfd-ubuntu22",
+      "report_sha256": "e4a47ada273f0c0508b5091721355f28569ccdf8925f991c8c9a254a32c3b243",
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "attach_check": {
+        "exit_code": 0,
+        "attached": [
+          "ATTACH_OK prog=seed_thread sec=uprobe",
+          "ATTACH_OK prog=eval_return sec=uretprobe",
+          "ATTACH_OK prog=write_fused_entry sec=fentry.s/__arm64_sys_write",
+          "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__arm64_sys_pidfd_getfd",
+          "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__arm64_sys_openat",
+          "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__arm64_sys_openat2",
+          "ATTACH_OK prog=open_begin sec=fentry/do_filp_open",
+          "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+          "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+          "ATTACH_OK prog=open_bound sec=fexit/do_filp_open",
+          "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+          "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+          "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+          "ATTACH_OK prog=installed sec=fentry/fd_install",
+          "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+          "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+          "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+          "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+          "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+          "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+          "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+          "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+          "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+          "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+          "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+          "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+          "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+          "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+          "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+          "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+          "ATTACH_OK prog=file_released sec=fentry/__fput",
+          "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+          "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+          "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+          "ATTACH_OK prog=warm_mm_retired sec=fentry/exit_mmap"
+        ],
+        "failed": []
+      },
+      "regression": {
+        "passed": true,
+        "profiles": {
+          "direct": {
+            "kernel_records": 24,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "fe7948b150c043d20b9448e2e7d62533562d5032db73ae94e6a2f7c73e32394a"
+          },
+          "controls": {
+            "kernel_records": 31,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "4a3fca136246e60385bc80713ee1315cd18a4bb1a4baeb3129eb835af0dc4a94"
+          },
+          "native": {
+            "kernel_records": 10,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "8ad3531ebbea60ea399eab0fd90b2e677f5d0242442efe556ae1d67ca0bbeaac"
+          },
+          "lifetime": {
+            "kernel_records": 38,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "ece207e9f0d46a32ba5310eb29e12c1643e1435fb11741bab3f5860950e513ba"
+          },
+          "pressure": {
+            "kernel_records": 412,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 1,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "6e9781cf7a96a3c62604c64d2dff929ea3e21f941ea496f403877e1396b0c435"
+          }
+        },
+        "kernel_records": 515,
+        "exact_source_ASTs_and_file_reference_install_write_identity": true,
+        "native_source_unknown": true,
+        "reaped_target_dup_fork_badwrite_and_descriptor_reuse_controls": true,
+        "exec_CLOEXEC_unshare_actual_table_copy_and_mutated_source_unknown_recovery": true,
+        "actual_128_slot_capacity_unknown_write_and_fresh_recovery": true,
+        "guest_compiled_source_and_binary_hashes_preserved": true,
+        "old_shared_table_physical_retirement_while_file_survives": true,
+        "build_sha256": {
+          "reader.bpf.c": "043d8ebbd957f974ca295d105df0f4cc3e567156c79f014f315599bdd10af51b",
+          "reader_impl.bpf.h": "11fe449aa1db9b3761046ed1c62a5bc9ff0034efac2a80071a6c6ad699041faf",
+          "loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+          "fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+          "fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
+          "config.h": "2b8a579bb0f4ea1168141d099231a4dcec0d20e209176b624e7625d2eabcbc84",
+          "reader.bpf.o": "a7e98c262689481202f213ae16e0704cc882c41dff1295e5a8cb149870ba7da3",
+          "loader": "3e5f29b096d8fb5bb3f0410d2e2fd815ada090ac7bcb0b05053fcf194facffcb",
+          "control": "6a9a5940d64b9d5503c4133d3ceb261692c3206a5351f720770415589a2fa405",
+          "share.so": "6665e2e9e2fd230e54b4ad27d3deba72aa7df468a42f0efbe9153a8e671c6808"
+        },
+        "counts_as_tested_solution": false,
+        "count_increment": 0,
+        "scope": "Selected-interpreter serial owned Python/root and native fixtures. Source metadata mutable/unattested; accepted gates matching actual file and successful inner/outer transfer or write; complete additionally gates all required source sections. Neither attests source metadata. Opener bound at the selected file-open hook return before installation; acquirer frozen at syscall entry and associated with actual fget_task/receive_fd/fd_install file. Descriptor label keyed by actual files_struct/fd; physical file/table release removes labels.",
+        "unproven": "Concurrent/batched syscall or shared-table races; other map pressure, cold/corrupt frames, performance/portability. Bounded warmed ASCII CPython metadata is mutable and unattested; no byte-authorship claim.",
+        "source_sha256": {
+          "experiments/pidfd_lineage/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "experiments/pidfd_lineage/reader.bpf.c": "043d8ebbd957f974ca295d105df0f4cc3e567156c79f014f315599bdd10af51b",
+          "experiments/pidfd_lineage/loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+          "experiments/pidfd_lineage/control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "experiments/pidfd_lineage/share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "experiments/pidfd_lineage/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40"
+        }
+      },
+      "deep": {
+        "status": "passed",
+        "results": [
+          {
+            "depth": 4,
+            "actual_frames": 10,
+            "captured_frames": 10,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "b21a249a6a542fe03a763e172126117dd0520dc2e6c2e32e10d5acdb6505242d"
+          },
+          {
+            "depth": 10,
+            "actual_frames": 16,
+            "captured_frames": 16,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "29bf1665c9b0d343a0b98fa4ba3b386d659a14775e30fce33a81fb8b1c8d16cb"
+          },
+          {
+            "depth": 11,
+            "actual_frames": 17,
+            "captured_frames": 16,
+            "complete": false,
+            "flags": 32,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "17f9dee2260dfa9c15a74991c869f88e3cfe736f8a21ea094214bafc2ab740f7"
+          }
+        ],
+        "fixture_sha256": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
+        "shared_reader_sha256": "11fe449aa1db9b3761046ed1c62a5bc9ff0034efac2a80071a6c6ad699041faf",
+        "bpf_source_sha256": "043d8ebbd957f974ca295d105df0f4cc3e567156c79f014f315599bdd10af51b"
+      },
+      "held": {
+        "passed": true,
+        "test": "ctypes.PyDLL write retains the GIL",
+        "profiles": [
+          {
+            "profile": "serial",
+            "complete_writes": 3
+          },
+          {
+            "profile": "threads",
+            "complete_writes": 13
+          }
+        ]
+      }
+    },
+    {
+      "guest": "pidfd-ubuntu24",
+      "report_sha256": "94d87ee31580bae1ef856034008c6de0bc0ecc1de9f65d4490bd543b84e258ab",
+      "status": "correctness-checks-passed; CPU not measured by this script",
+      "cleanup_ok": true,
+      "attach_check": {
+        "exit_code": 0,
+        "attached": [
+          "ATTACH_OK prog=seed_thread sec=uprobe",
+          "ATTACH_OK prog=eval_return sec=uretprobe",
+          "ATTACH_OK prog=write_fused_entry sec=fentry.s/__x64_sys_write",
+          "ATTACH_OK prog=acquire_fused_entry sec=fentry.s/__x64_sys_pidfd_getfd",
+          "ATTACH_OK prog=openat_fused_entry sec=fentry.s/__x64_sys_openat",
+          "ATTACH_OK prog=openat2_fused_entry sec=fentry.s/__x64_sys_openat2",
+          "ATTACH_OK prog=open_begin sec=fentry/do_filp_open",
+          "ATTACH_OK prog=openat_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat",
+          "ATTACH_OK prog=openat2_fused_cleanup sec=tracepoint/syscalls/sys_exit_openat2",
+          "ATTACH_OK prog=open_bound sec=fexit/do_filp_open",
+          "ATTACH_OK prog=target_bound sec=fentry/fget_task",
+          "ATTACH_OK prog=reference_bound sec=fexit/fget_task",
+          "ATTACH_OK prog=receive_bound sec=fentry/receive_fd",
+          "ATTACH_OK prog=installed sec=fentry/fd_install",
+          "ATTACH_OK prog=receive_return sec=fexit/receive_fd",
+          "ATTACH_OK prog=acquire_finish sec=tracepoint/syscalls/sys_exit_pidfd_getfd",
+          "ATTACH_OK prog=syscall_begin sec=tp_btf/sys_enter",
+          "ATTACH_OK prog=write_file sec=fentry/vfs_write",
+          "ATTACH_OK prog=write_inner sec=fexit/vfs_write",
+          "ATTACH_OK prog=write_finish sec=tracepoint/syscalls/sys_exit_write",
+          "ATTACH_OK prog=alias_begin sec=tracepoint/syscalls/sys_enter_fcntl",
+          "ATTACH_OK prog=alias_file sec=fentry/f_dupfd",
+          "ATTACH_OK prog=alias_finish sec=tracepoint/syscalls/sys_exit_fcntl",
+          "ATTACH_OK prog=slot_close_begin sec=fentry/file_close_fd_locked",
+          "ATTACH_OK prog=slot_close_done sec=fexit/file_close_fd_locked",
+          "ATTACH_OK prog=table_duplicate_begin sec=fentry/dup_fd",
+          "ATTACH_OK prog=table_duplicate_done sec=fexit/dup_fd",
+          "ATTACH_OK prog=forked sec=raw_tracepoint/sched_process_fork",
+          "ATTACH_OK prog=exec_close_begin sec=fentry/do_close_on_exec",
+          "ATTACH_OK prog=exec_close_done sec=fexit/do_close_on_exec",
+          "ATTACH_OK prog=file_released sec=fentry/__fput",
+          "ATTACH_OK prog=table_physically_freed sec=tracepoint/kmem/kmem_cache_free",
+          "ATTACH_OK prog=executed sec=tracepoint/sched/sched_process_exec",
+          "ATTACH_OK prog=exited sec=tracepoint/sched/sched_process_exit",
+          "ATTACH_OK prog=warm_mm_retired sec=fentry/exit_mmap"
+        ],
+        "failed": []
+      },
+      "regression": {
+        "passed": true,
+        "profiles": {
+          "direct": {
+            "kernel_records": 24,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "8324526dac8ac3847f5aa246a4262195cbd09010fddbee466810fc21f3028567"
+          },
+          "controls": {
+            "kernel_records": 31,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "d0f217b61555ec2a56c6bc4552937c69b6d20e4f0c7c4ae33ea9be965530df87"
+          },
+          "native": {
+            "kernel_records": 10,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "f61e77130ede8811ad833d7212a326a6c084113093ddb2d0248d003c7402b94f"
+          },
+          "lifetime": {
+            "kernel_records": 38,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 0,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "69107877f1e6256e231c0ee2f7ff8fb331cff57a01d7fad22ed9c5f10d539a6f"
+          },
+          "pressure": {
+            "kernel_records": 412,
+            "empty_maps": 19,
+            "ring_diagnostics": 0,
+            "expected_map_capacity_diagnostics": 1,
+            "actual_file_pointer_reuse_observed": false,
+            "raw_log_sha256": "fa797533dd553fbb45f528fb599ec12477802ac01d585c731d17ae0283f4e01d"
+          }
+        },
+        "kernel_records": 515,
+        "exact_source_ASTs_and_file_reference_install_write_identity": true,
+        "native_source_unknown": true,
+        "reaped_target_dup_fork_badwrite_and_descriptor_reuse_controls": true,
+        "exec_CLOEXEC_unshare_actual_table_copy_and_mutated_source_unknown_recovery": true,
+        "actual_128_slot_capacity_unknown_write_and_fresh_recovery": true,
+        "guest_compiled_source_and_binary_hashes_preserved": true,
+        "old_shared_table_physical_retirement_while_file_survives": true,
+        "build_sha256": {
+          "reader.bpf.c": "f013051a31c69f797e38d6cbcecef5cc64116d2058710cfbf4de30070c02d9a5",
+          "reader_impl.bpf.h": "11fe449aa1db9b3761046ed1c62a5bc9ff0034efac2a80071a6c6ad699041faf",
+          "loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+          "fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+          "fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40",
+          "config.h": "2f08972ff7ff14f1ccf7ee9e008b6c8e2274cb2c15b8e06a5f6b03cc52a1f9ee",
+          "reader.bpf.o": "d9e59eba16f564d2941a66b17c2ad53b450ff0005a39931c9f22d38e6baa7d42",
+          "loader": "e75ccd14b8f85721b442a65d711dabbbb562e3afe52e471005200b8b139697c1",
+          "control": "f345ca15c9c3dd092acb4fb179ae5700654d6f2a2f8e798685e5cb6b70464b93",
+          "share.so": "482bb29f0239af1d9c801e6666bb79f52c493ca87f338472a1c24619eac6ec6c"
+        },
+        "counts_as_tested_solution": false,
+        "count_increment": 0,
+        "scope": "Selected-interpreter serial owned Python/root and native fixtures. Source metadata mutable/unattested; accepted gates matching actual file and successful inner/outer transfer or write; complete additionally gates all required source sections. Neither attests source metadata. Opener bound at the selected file-open hook return before installation; acquirer frozen at syscall entry and associated with actual fget_task/receive_fd/fd_install file. Descriptor label keyed by actual files_struct/fd; physical file/table release removes labels.",
+        "unproven": "Concurrent/batched syscall or shared-table races; other map pressure, cold/corrupt frames, performance/portability. Bounded warmed ASCII CPython metadata is mutable and unattested; no byte-authorship claim.",
+        "source_sha256": {
+          "experiments/pidfd_lineage/fixture.py": "4788caae0e955b66674ce839a6d4ae1c9628110c95e282ecd86f0f8223014ec4",
+          "experiments/pidfd_lineage/reader.bpf.c": "f013051a31c69f797e38d6cbcecef5cc64116d2058710cfbf4de30070c02d9a5",
+          "experiments/pidfd_lineage/loader.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+          "experiments/pidfd_lineage/control.c": "7c1334672fc12e8edceda44de041e4aba708c4783ce61ffe721cfb819f034207",
+          "experiments/pidfd_lineage/share.c": "a54740d4674c59b86b962e4eb673d2ef7a9c00c3caec037d17a6df7abcb00229",
+          "experiments/pidfd_lineage/exec_control.py": "64d7b4b8a3c11120dae860ef9b94814a52d521d7722f7fedcb438a472e44ca40"
+        }
+      },
+      "deep": {
+        "status": "passed",
+        "results": [
+          {
+            "depth": 4,
+            "actual_frames": 10,
+            "captured_frames": 10,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "c49754507379bcabb45e09a2bdd2258e777f81568cc24125d72c6871aaa2d6f0"
+          },
+          {
+            "depth": 10,
+            "actual_frames": 16,
+            "captured_frames": 16,
+            "complete": true,
+            "flags": 0,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "5530d26005a3730448b952369f87ae63b7181c64a23008fc0085e4fc43a2c596"
+          },
+          {
+            "depth": 11,
+            "actual_frames": 17,
+            "captured_frames": 16,
+            "complete": false,
+            "flags": 32,
+            "verified_writes": 3,
+            "verified_actor_stacks": 23,
+            "log_sha256": "60f6e879d3ecddb3f836f2c06f9727cc4145a95b651566e30b2b2a6f5cd463a8"
+          }
+        ],
+        "fixture_sha256": "dc49d4e2fa5f8196766c4936d653784f2b59356ee854de0a17382ac3110fccb2",
+        "shared_reader_sha256": "11fe449aa1db9b3761046ed1c62a5bc9ff0034efac2a80071a6c6ad699041faf",
+        "bpf_source_sha256": "f013051a31c69f797e38d6cbcecef5cc64116d2058710cfbf4de30070c02d9a5"
+      },
+      "held": {
+        "passed": true,
+        "test": "ctypes.PyDLL write retains the GIL",
+        "profiles": [
+          {
+            "profile": "serial",
+            "complete_writes": 3
+          },
+          {
+            "profile": "threads",
+            "complete_writes": 13
+          }
+        ]
+      }
+    }
+  ],
+  "portable_runtime": {
+    "passed": true,
+    "kernel": "6.8.0-138-generic",
+    "architecture": "aarch64",
+    "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+    "lockdown": "[none] integrity confidentiality",
+    "cleanup_ok": true,
+    "global_bpf_set_restored": true,
+    "modules_unchanged": true,
+    "report_sha256": "21f24daa6bda6bc4f4a13efaa23e61cefb5ecc152da2e216aaf5e3a01e8ad01f",
+    "retirement_audits": 27,
+    "all_owned_programs_retired": true,
+    "archive_sha256": "6bcca4b48b50bf5ef47ea912023d59f4b6157ced806d725d667bf8c64325a019",
+    "git_metadata_present": false,
+    "symlinks_present": false,
+    "root_tests": 60,
+    "endpoint_tests": 28
+  },
+  "installer": {
+    "passed": true,
+    "target": "Ubuntu22 arm64",
+    "archive_sha256": "1a8f78359bf0f43200e79d22b138e5c5789934c31585f68bfc79653811d73032",
+    "verified_cache_reused": true,
+    "checkout_deps_created": false,
+    "endpoint_build_passed": true,
+    "build_warning": "GNU readelf emitted DWARF-form warnings while auditing the BPF object; build completed. Runtime qualification is recorded independently."
+  },
+  "source_export": {
+    "archive_sha256": "b96a5820c95c142651429c0cdb770b4bbf3f00626bbb789e7513042978456b62",
+    "tracked_file_count": 357,
+    "git_link_text_supported": true,
+    "file_modes_from": "git-index",
+    "reproducible_gzip_and_tar": true,
+    "outward_broken_cyclic_and_untracked_aliases_refused": true,
+    "working_tree_dirty": true
+  },
+  "first_attempt": {
+    "status": "Correctness controls passed; final report envelope raised NameError after baseline snapshot was moved out of import. Corrected and both pipelines rerun successfully. Failure logs retained privately.",
+    "no_success_claim_from_failed_envelope": true
+  },
+  "remote_visibility": {
+    "before": "PUBLIC",
+    "after": "PRIVATE",
+    "github_verified": true,
+    "fork_count_before": 0,
+    "authorization": "Earlier explicit user request for a private remote repository; preference preserved.",
+    "limitations": "Visibility does not erase prior downloads or historical identifying metadata."
+  }
+}
