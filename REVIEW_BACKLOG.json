@@ -500,8 +500,9 @@
         },
         {
           "target": "Frame walkers",
-          "status": "open",
-          "scope": "Compile-time read specialization and caller-owned scratch; preserve flags, limits, cold-page behavior and verifier compatibility."
+          "status": "validated",
+          "scope": "One walker template, compile-time read and scratch specialization, original flags/limits/native exceptions; all reader executable bytes and relocations unchanged in tested compile branches.",
+          "evidence": "validation/frame-walker-consolidation.json"
         },
         {
           "target": "Ring consumer",
@@ -1009,6 +1010,12 @@
       "status": "validated",
       "evidence": "validation/driver-consolidation.json",
       "remaining": "R033 stays open: other backend drivers, frame walkers, ring mechanics and common reader implementation."
+    },
+    {
+      "batch": "6-consolidation-walkers",
+      "status": "validated",
+      "evidence": "validation/frame-walker-consolidation.json",
+      "remaining": "R033 remains open for other driver differences, shared ring mechanics, capture/string wrappers and common reader structure. CPU optimizations remain separate."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."

@@ -35,6 +35,9 @@
     },
     {
       "file": "core/thread_retirement.bpf.h"
+    },
+    {
+      "file": "core/python_frame_walk.bpf.h"
     }
   ]
 }

@@ -161,3 +161,15 @@ python3 tools/check_driver_refactor.py 039c820
 This compares normalized Python syntax for both backend variants. It complements
 the routing, timeout, fixture execution and isolated-installation tests; it does
 not load BPF or replace guest kernel validation.
+
+Shared Python frame walkers
+---------------------------
+shared/core/python_frame_walk.bpf.h defines the walker used by all three readers.
+It is included twice with compile-time read/scratch specialization: nofault reads
+use per-CPU line scratch; sleepable reads retain thread-owned buffers. Callback
+names, statement ordering, limits, flags and native-adapter exceptions are kept.
+Capture wrappers and bounded string callbacks remain separate.
+validation/frame-walker-consolidation.json records instruction/relocation
+comparisons and a fresh Ubuntu 24.04 endpoint integration run. Additional minor
+version comparisons exercise compiler branches with synthetic configs; they do
+not establish interpreter ABI or kernel runtime support on those versions.

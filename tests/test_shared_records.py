@@ -129,6 +129,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
             "core/bpf_task_helpers.h",
             "core/python_binding.bpf.h",
             "core/thread_retirement.bpf.h",
+            "core/python_frame_walk.bpf.h",
             "core/support/offsets.c",
             "python/support/python_layout.py",
             "install-ubuntu.sh",

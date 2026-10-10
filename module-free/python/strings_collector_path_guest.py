@@ -198,6 +198,7 @@ for n in [
     "diagnostics.bpf.h",
     "cleanup_retirement.bpf.h",
     "thread_retirement.bpf.h",
+    "python_frame_walk.bpf.h",
 ]:
     shutil.copy2(ROOT / "evidence/build" / n, RUNTIME_DIR / n)
 for i, cmd in enumerate(
