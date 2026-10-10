@@ -9,15 +9,17 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Descriptor aliases and scratch ownership",
+    "name": "Shared descriptor-table concurrency and carryover cleanup",
     "items": [
-      "R029",
-      "R039",
-      "R002"
+      "R030",
+      "R033",
+      "R053",
+      "R054",
+      "R057"
     ],
-    "previous_batch_evidence": "validation/wire-header-ownership.json",
-    "pending_guest_coverage": "Wire header ownership passed both6.8 endpoint suites and ARM upstream fixture/encoder. Native executable equivalence passed. Other scratch ownership and descriptor aliases remain open.",
-    "whole_host_requirement": "cgroup_id0 remains the intended default, with supported interpreter capture across workload cgroups."
+    "previous_batch_evidence": "validation/descriptor-alias-coverage.json",
+    "pending_guest_coverage": "Alias batch passed both current-source32-audit endpoint regressions and both fixture backends. FUSE barrier prototype remains uncompiled/unqualified; deterministic different-file and same-file/distinct-acquirer races are next.",
+    "whole_host_requirement": "cgroup_id0 remains the intended default. Supported interpreter capture applies across workload cgroups."
   },
   "next_batches": [
     "Finish shared fixture drivers and portable source packaging",

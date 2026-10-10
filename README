@@ -227,10 +227,16 @@ extraction does not change the capture policy or establish a new CPU result.
 
 Lifecycle proof and adaptive sampling
 -------------------------------------
-INSTALL records are pending (accepted=0). After successful pidfd_getfd or fcntl
+INSTALL records are pending (accepted=0). After successful pidfd_getfd, fcntl, or native descriptor-duplication
 return, matching slot generations retain the acquisition proof and source for
 later close/copy/release records. WRITE continues to validate its own inner/outer
-result. Shared-fdtable concurrency limits still apply.
+result. Native dup and dup3 preserve the admitted opener/acquirer chain; x86
+also covers native dup2 (arm64 libc uses dup3). Typed do_dup2 entry/return hooks
+retire replaced history only after success. Prepare verifies its BTF signature;
+missing or unattached hooks refuse startup. Descriptor duplication emits stage16;
+fcntl retains stage10. dup2(fd, fd) leaves the existing slot intact and its
+operation record remains unaccepted because no install occurred. Shared-fdtable
+concurrency limits still apply.
 The final-mm cache hook is selected from typed BTF: exit_mmap, or __mmput
 when mapping teardown is not exposed. BTF presence alone does not prove a
 function is attachable; a refused attachment still stops startup. Retirement requires mm_users=0, covering both final
@@ -242,6 +248,8 @@ IDs and access errors still fail explicitly.
 
 Owned Ubuntu VM controls for the current endpoint build:
 
+sudo python3 endpoint-service/tests/descriptor_alias_guest.py
+sudo python3 endpoint-service/tests/descriptor_alias_guest.py --capture-python
 sudo python3 endpoint-service/tests/integration_guest.py
 sudo python3 endpoint-service/tests/startup_guest.py
 

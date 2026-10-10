@@ -33,6 +33,7 @@ from wire import records
 
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-service-test-", dir="/var/tmp"))
 BASE.chmod(0o700)
+ALIAS_HOOKS = 6 + (2 if os.uname().machine == "x86_64" else 0)
 SOURCE_LINE_ERROR = 8
 SOURCE_UNKNOWN = 64
 POLICY_VALUE_SIZE = 104
@@ -147,11 +148,11 @@ def stop(process, state, crash=False, expect_gaps=False):
     return health(state)
 
 
-def read_events(state):
+def read_events(state, live=False):
     result = []
     for path in sorted(state.glob("events-*.bin")):
         with path.open("rb") as stream:
-            result.extend(event for _, event in records(stream))
+            result.extend(event for _, event in records(stream, tolerate_tail=live))
     return result
 
 
@@ -172,17 +173,38 @@ def demo(name, profile="serial", writes=3):
 
 
 def verify_writes(state, application, source=False):
-    events = read_events(state)
-    writes = [
-        e
-        for e in events
-        if e["stage"] == 9
-        and e["inode"] == application["inode"]
-        and e["accepted"]
-        and e["emitter"]["pid"] == application["pid"]
-        and e["target_pid"] == application["target"]
-        and e["actors"]["acquirer"]["pid"] == application["pid"]
-    ]
+    live = health(state).get("state") == "running"
+    events = []
+
+    def collected_writes():
+        nonlocal events
+        events = read_events(state, live=live)
+        writes = [
+            e
+            for e in events
+            if e["stage"] == 9
+            and e["inode"] == application["inode"]
+            and e["accepted"]
+            and e["emitter"]["pid"] == application["pid"]
+            and e["target_pid"] == application["target"]
+            and e["actors"]["acquirer"]["pid"] == application["pid"]
+        ]
+        if len(writes) < application["writes"]:
+            return None
+        generations = {event["generation"] for event in writes}
+        if live and not any(
+            event["stage"] == 13
+            and event["inode"] == application["inode"]
+            and event["generation"] in generations
+            for event in events
+        ):
+            return None
+        return writes
+
+    if live:
+        writes = wait_for(collected_writes, timeout=10)
+    else:
+        writes = collected_writes() or []
     if not (len(writes) == application["writes"]):
         raise RuntimeError((len(writes), application))
     if not (
@@ -424,7 +446,7 @@ try:
     active.append(worker)
     wait_for(lambda: (BASE / "ready").exists(), timeout=10)
     process, state, config = start_sensor("identity")
-    if not (health(state)["attachments"] == 29):
+    if not (health(state)["attachments"] == 29 + ALIAS_HOOKS):
         raise RuntimeError(health(state))
     duplicate = subprocess.run(
         collector_command(config), cwd=ROOT / "build", capture_output=True, timeout=10
@@ -465,7 +487,7 @@ try:
     active.append(worker)
     wait_for(lambda: (BASE / "ready").exists(), timeout=10)
     process, state, _ = start_sensor("source", capture=True)
-    if not (health(state)["attachments"] == 35):
+    if not (health(state)["attachments"] == 35 + ALIAS_HOOKS):
         raise RuntimeError("Guest control failed in integration_guest.py")
     (BASE / "go").touch()
     worker.wait(timeout=10)
@@ -669,8 +691,8 @@ try:
     )
     filled = fill_map("lines")
     application = demo("cache-pressure")
-    verify_writes(state, application, source=True)
     stopped = stop(process, state)
+    verify_writes(state, application, source=True)
     if not (stopped["cache_pressure"] > 0 and stopped["state_errors"] == 0):
         raise RuntimeError("Guest control failed in integration_guest.py")
     result["cache_pressure"] = dict(

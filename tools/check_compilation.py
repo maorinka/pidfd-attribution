@@ -18,7 +18,10 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from shared.python.kernel_hooks import select_mm_release_hook
+from shared.python.kernel_hooks import (
+    select_mm_release_hook,
+    require_descriptor_replacement_hook,
+)
 from shared.python.interpreter import interpreter_elf, require_interpreter_symbols
 from shared.python.python_layout import layout_header
 
@@ -78,6 +81,7 @@ def generate_inputs(directory, bpftool, headers):
     types = json.loads(
         output([bpftool, "-j", "btf", "dump", "file", btf, "format", "raw"])
     )["types"]
+    require_descriptor_replacement_hook(types)
     by_id = {item["id"]: item for item in types}
     functions = {
         item["name"]: by_id[item["type_id"]] for item in types if item["kind"] == "FUNC"

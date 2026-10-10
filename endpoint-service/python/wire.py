@@ -25,6 +25,7 @@ STAGES = {
     13: "close",
     14: "exec_close",
     15: "table_release",
+    16: "descriptor_duplication",
 }
 
 

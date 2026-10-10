@@ -33,6 +33,10 @@ jobs:
         run: |
           sudo python3 tests/ownership_drift_guest.py --report endpoint-service/evidence/ownership-drift.json
           sudo python3 endpoint-service/tests/check_storage.py
+          sudo python3 endpoint-service/tests/descriptor_alias_guest.py
+          sudo cp endpoint-service/evidence/descriptor-alias.json endpoint-service/evidence/descriptor-alias-identity.json
+          sudo python3 endpoint-service/tests/descriptor_alias_guest.py --capture-python
+          sudo cp endpoint-service/evidence/descriptor-alias.json endpoint-service/evidence/descriptor-alias-source.json
           sudo python3 endpoint-service/tests/integration_guest.py
           sudo python3 endpoint-service/tests/startup_guest.py
       - name: Exercise installation and shipped systemd unit

@@ -6,7 +6,10 @@ from settings import ROOT, PREPARED, ARCH, PYTHON, PYTHON_CONFIG, MODULE_BACKED
 from support.python_layout import layout_header
 from kernel_admission import validate_preemption
 from shared.python.return_depth import detect_return_depth
-from shared.python.kernel_hooks import select_mm_release_hook
+from shared.python.kernel_hooks import (
+    select_mm_release_hook,
+    require_descriptor_replacement_hook,
+)
 from shared.python.interpreter import inspect_interpreter, require_interpreter_symbols
 from settings import BPF_INCLUDES, BPF_LIBS
 
@@ -142,6 +145,7 @@ def prepare():
             ]
         )
     )["types"]
+    require_descriptor_replacement_hook(types)
     by_id = {t["id"]: t for t in types}
     functions = {t["name"]: by_id[t["type_id"]] for t in types if t["kind"] == "FUNC"}
     open_hook = next(
@@ -175,7 +179,8 @@ def prepare():
         offsets=offsets,
         return_depth=return_depth,
         kernel_hooks={
-            name: functions[name] for name in (open_hook, "dup_fd", mm_release_hook)
+            name: functions[name]
+            for name in (open_hook, "dup_fd", "do_dup2", mm_release_hook)
         },
         fixture_inputs={
             name: sha256_file(PREPARED / name)

@@ -212,9 +212,10 @@ def attach_check():
     (EVIDENCE_DIR / "attach-check.json").write_text(json.dumps(report, indent=2) + "\n")
     if not (p.returncode == 0):
         raise RuntimeError(f"collector-batch attach failures: {fails}")
-    if not (len(oks) == 35):
+    expected = 35 + 6 + (2 if settings.ARCH == "x86" else 0)
+    if not (len(oks) == expected):
         raise RuntimeError(
-            f"expected 35 attached programs (30 base + 4 sleepable fused fentry.s + 2 openat fused-cleanup), got {len(oks)}"
+            f"expected {expected} attached programs including native alias/replacement hooks, got {len(oks)}"
         )
     sleepable = [l for l in oks if "fentry.s" in l]
     if not (len(sleepable) == 4):

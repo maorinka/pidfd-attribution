@@ -1143,18 +1143,11 @@ static long count_slot(void *map, const struct pidfd_slot *key, struct event *e,
   return 0;
 }
 #endif
-SEC("fentry/fd_install")
-int BPF_PROG(installed, unsigned int fd, struct file *file) {
-  unsigned long long tid = bpf_get_current_pid_tgid(),
-                     file_addr = (unsigned long long)file;
-  struct pidfd_slot stale = {.files = current_files_identity(), .fd = fd};
-  if (bpf_map_lookup_elem(&slots, &stale))
-    bpf_map_delete_elem(&slots, &stale);
-  struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
-  if (!e)
-    e = bpf_map_lookup_elem(&aliasing, &tid);
+static __always_inline void
+install_descriptor_slot(struct event *e, unsigned long long table,
+                        unsigned int fd, unsigned long long file_addr) {
   if (e && e->file == file_addr && file_addr) {
-    e->files = current_files_identity();
+    e->files = table;
     e->fd = fd;
     e->generation = next_generation();
     e->accepted = 0;
@@ -1174,6 +1167,21 @@ int BPF_PROG(installed, unsigned int fd, struct file *file) {
 #endif
     emit(e, IOSEC_STAGE_INSTALL, rc);
   }
+}
+SEC("fentry/fd_install")
+int BPF_PROG(installed, unsigned int fd, struct file *file) {
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  unsigned long long table = current_files_identity();
+  struct pidfd_slot stale = {.files = table, .fd = fd};
+  if (bpf_map_lookup_elem(&slots, &stale))
+    bpf_map_delete_elem(&slots, &stale);
+  struct event *e = bpf_map_lookup_elem(&acquiring, &tid);
+  if (!e) {
+    e = bpf_map_lookup_elem(&aliasing, &tid);
+    if (e)
+      e->inner = fd;
+  }
+  install_descriptor_slot(e, table, fd, (unsigned long long)file);
   return 0;
 }
 SEC("fexit/receive_fd")
@@ -1249,10 +1257,8 @@ static __always_inline void reset_write_event(struct event *e) {
   e->label_count = 0;
   e->coverage = 0;
 }
-#if IOSEC_ENDPOINT_POLICY
 static __always_inline unsigned long long real_slot(unsigned long long table,
                                                     unsigned int fd);
-#endif
 static __always_inline void write_entry_snapshot(unsigned long long fd) {
   struct pidfd_slot key = {.files = current_files_identity(), .fd = fd};
   unsigned long long tid = bpf_get_current_pid_tgid();
@@ -1387,24 +1393,116 @@ int write_finish(struct trace_event_raw_sys_exit *ctx) {
   }
   return 0;
 }
-SEC("tracepoint/syscalls/sys_enter_fcntl")
-int alias_begin(struct trace_event_raw_sys_enter *ctx) {
-  if (ctx->args[1] != 1030 && ctx->args[1] != 0)
-    return 0;
+/* Alias staging is private to the calling thread. A failed syscall must not
+ * commit the source slot's generation as though a new descriptor was installed.
+ */
+static __always_inline void alias_entry_snapshot(unsigned int fd) {
 #if IOSEC_ENDPOINT_POLICY
   struct endpoint_policy *p = get_policy();
   if (!p || !p->enabled)
-    return 0;
+    return;
 #else
   if (!task_is_monitored())
-    return 0;
+    return;
 #endif
-  struct pidfd_slot s = {.files = current_files_identity(), .fd = ctx->args[0]};
-  struct event *e = bpf_map_lookup_elem(&slots, &s);
-  if (e) {
-    unsigned long long tid = bpf_get_current_pid_tgid();
-    UPDATE(&aliasing, &tid, e, BPF_ANY);
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  struct pidfd_slot key = {.files = current_files_identity(), .fd = fd};
+  struct event *source = bpf_map_lookup_elem(&slots, &key);
+  if (!source)
+    return;
+  if (UPDATE(&aliasing, &tid, source, BPF_ANY))
+    return;
+  struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
+  if (pending) {
+    pending->stage = 0;
+    pending->accepted = 0;
+    pending->complete = 0;
+    pending->generation = 0;
+    pending->inner = -1;
   }
+}
+SEC("tracepoint/syscalls/sys_enter_fcntl")
+int alias_begin(struct trace_event_raw_sys_enter *ctx) {
+  if (ctx->args[1] == IOSEC_F_DUPFD || ctx->args[1] == IOSEC_F_DUPFD_CLOEXEC)
+    alias_entry_snapshot(ctx->args[0]);
+  return 0;
+}
+SEC("tracepoint/syscalls/sys_enter_dup")
+int dup_begin(struct trace_event_raw_sys_enter *ctx) {
+  alias_entry_snapshot(ctx->args[0]);
+  return 0;
+}
+SEC("tracepoint/syscalls/sys_enter_dup3")
+int dup3_begin(struct trace_event_raw_sys_enter *ctx) {
+  alias_entry_snapshot(ctx->args[0]);
+  return 0;
+}
+#if defined(__TARGET_ARCH_x86)
+SEC("tracepoint/syscalls/sys_enter_dup2")
+int dup2_begin(struct trace_event_raw_sys_enter *ctx) {
+  alias_entry_snapshot(ctx->args[0]);
+  return 0;
+}
+#endif
+/* do_dup2 enters with file_lock held and returns the actual replacement result.
+ * Save old history at entry; never retire it on an EBUSY/other failure. The
+ * source pointer is supplied by the kernel rather than an unlocked fdtable
+ * read.
+ */
+SEC("fentry/do_dup2")
+int BPF_PROG(replacement_begin, struct files_struct *files, struct file *file,
+             unsigned int fd, unsigned int flags) {
+  (void)flags;
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  struct pidfd_slot key = {.files = (unsigned long long)files, .fd = fd};
+  struct event *victim = bpf_map_lookup_elem(&slots, &key);
+  if (victim) {
+    UPDATE(&closing, &tid, victim, BPF_ANY);
+    struct event *saved = bpf_map_lookup_elem(&closing, &tid);
+    /* This read is inside the kernel-held table lock. A stale map label is
+     * rejected instead of asserting which file the replacement closes. */
+    if (saved && real_slot(key.files, key.fd) != saved->file) {
+      saved->accepted = 0;
+      saved->complete = 0;
+      saved->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
+      increment_diagnostic(IOSEC_DIAG_STATE_ERRORS);
+    }
+  }
+  struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
+  if (pending && (pending->file != (unsigned long long)file ||
+                  pending->files != key.files))
+    bpf_map_delete_elem(&aliasing, &tid);
+  return 0;
+}
+SEC("fexit/do_dup2")
+int BPF_PROG(replacement_finish, struct files_struct *files, struct file *file,
+             unsigned int fd, unsigned int flags, int ret) {
+  (void)flags;
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  struct pidfd_slot key = {.files = (unsigned long long)files, .fd = fd};
+  struct event *victim = bpf_map_lookup_elem(&closing, &tid);
+  if (ret >= 0 && ret == fd) {
+    if (victim) {
+      struct event *current = bpf_map_lookup_elem(&slots, &key);
+      if (current && current->generation == victim->generation &&
+          current->file == victim->file)
+        bpf_map_delete_elem(&slots, &key);
+      emit(victim, IOSEC_STAGE_CLOSE, 0);
+    } else {
+      /* A staging allocation failure must not preserve displaced provenance.
+       * The failed update has already counted history loss. */
+      struct event *current = bpf_map_lookup_elem(&slots, &key);
+      if (current)
+        bpf_map_delete_elem(&slots, &key);
+    }
+    struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
+    if (pending) {
+      pending->inner = ret;
+      install_descriptor_slot(pending, key.files, fd, (unsigned long long)file);
+    }
+  }
+  if (victim)
+    bpf_map_delete_elem(&closing, &tid);
   return 0;
 }
 SEC("fentry/f_dupfd")
@@ -1418,18 +1516,41 @@ int BPF_PROG(alias_file, unsigned int from, struct file *file,
     bpf_map_delete_elem(&aliasing, &tid);
   return 0;
 }
-SEC("tracepoint/syscalls/sys_exit_fcntl")
-int alias_finish(struct trace_event_raw_sys_exit *ctx) {
+static __always_inline void finish_alias(long result, unsigned int stage) {
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct event *e = bpf_map_lookup_elem(&aliasing, &tid);
-  if (e) {
-    e->accepted = ctx->ret >= 0 && ctx->ret == e->fd && e->file;
+  if (!e)
+    return;
+  int installed = e->stage == IOSEC_STAGE_INSTALL;
+  e->accepted = installed && result >= 0 && result == e->fd &&
+                result == e->inner && e->file;
+  if (installed)
     finish_slot_acceptance(e);
-    emit(e, IOSEC_STAGE_FCNTL_DUPLICATION, ctx->ret);
-    bpf_map_delete_elem(&aliasing, &tid);
-  }
+  emit(e, stage, result);
+  bpf_map_delete_elem(&aliasing, &tid);
+}
+SEC("tracepoint/syscalls/sys_exit_fcntl")
+int alias_finish(struct trace_event_raw_sys_exit *ctx) {
+  finish_alias(ctx->ret, IOSEC_STAGE_FCNTL_DUPLICATION);
   return 0;
 }
+SEC("tracepoint/syscalls/sys_exit_dup")
+int dup_finish(struct trace_event_raw_sys_exit *ctx) {
+  finish_alias(ctx->ret, IOSEC_STAGE_DESCRIPTOR_DUPLICATION);
+  return 0;
+}
+SEC("tracepoint/syscalls/sys_exit_dup3")
+int dup3_finish(struct trace_event_raw_sys_exit *ctx) {
+  finish_alias(ctx->ret, IOSEC_STAGE_DESCRIPTOR_DUPLICATION);
+  return 0;
+}
+#if defined(__TARGET_ARCH_x86)
+SEC("tracepoint/syscalls/sys_exit_dup2")
+int dup2_finish(struct trace_event_raw_sys_exit *ctx) {
+  finish_alias(ctx->ret, IOSEC_STAGE_DESCRIPTOR_DUPLICATION);
+  return 0;
+}
+#endif
 /* This hook returns the actual file removed while the table lock is held. */
 SEC("fentry/file_close_fd_locked")
 int BPF_PROG(slot_close_begin, struct files_struct *files, unsigned int fd) {

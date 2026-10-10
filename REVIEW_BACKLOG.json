@@ -533,18 +533,41 @@
     {
       "id": "R029",
       "area": "aliasing",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "Only fcntl F_DUPFD/F_DUPFD_CLOEXEC alias paths tracked; dup/dup2/dup3 may leave stale rejected context (accepted=0).",
-      "next_step": "Test alias replacement and slot provenance; add coverage or document rejected-record semantics. Replace command literals with named constants.",
-      "evidence": ""
+      "next_step": "Native serial dup/dup3 and x86 dup2 lifecycle paths implemented and verified on6.8 ARM/x86, including failed/noop preservation and unadmitted replacement. Shared-table concurrency remains R030; real do_dup2 EBUSY control remains additional qualification, not claimed by the EINVAL controls.",
+      "evidence": "validation/descriptor-alias-coverage.json",
+      "resolutions": [
+        {
+          "batch": 21,
+          "evidence": "validation/descriptor-alias-coverage.json",
+          "scope": "40 identity/source cases, both32-audit endpoint regressions, upstream ARM and native x86 fixture pipelines. No new CPU qualification."
+        }
+      ]
     },
     {
       "id": "R030",
       "area": "concurrency",
       "status": "confirmed-open",
       "finding": "real_slot unlocked fdtable reads and exec_reconcile deletion may lose valid history during shared-table/RCU swaps.",
-      "next_step": "Review synchronization/revalidation; report history loss explicitly; document in main coverage, not only benchmark scope.",
-      "evidence": ""
+      "next_step": "Review unlocked fdtable/exec reconciliation plus post-do_dup2-unlock publication: unconditional slot deletion or BPF_ANY late install can erase a newer shared-table generation. Muse and Claude confirmed bounded history-loss race; deterministic interleaving control remains required. Do not claim serial alias coverage fixes concurrency.",
+      "evidence": "",
+      "race_control_plan": {
+        "barrier": "Hold synchronous FUSE_FLUSH reply on admitted victim while another shared-table thread replaces the destination, then release the first syscall; quiesce replacers before checking writes.",
+        "rejected_control": "Stock FIFO has no flush callback; final release is deferred task work and does not hold do_dup2 fexit.",
+        "requirements": "Probe FUSE/mount/dependencies, arm exact victim handle/pid, bounded timeout and abort/unmount; no concurrency proof from ordinary stress alone.",
+        "sources": [
+          "https://raw.githubusercontent.com/torvalds/linux/v6.8/fs/file.c",
+          "https://raw.githubusercontent.com/torvalds/linux/v6.8/fs/pipe.c",
+          "https://raw.githubusercontent.com/torvalds/linux/v6.8/fs/open.c",
+          "https://raw.githubusercontent.com/torvalds/linux/v6.8/fs/file_table.c",
+          "https://raw.githubusercontent.com/torvalds/linux/v6.8/fs/fuse/file.c"
+        ],
+        "oracle_variants": [
+          "Different source files: after T2 then delayedT1 complete, probeactualdest to distinguish rejected/stale history fromaccepted lastreplacementB.",
+          "Same struct file via selfpidfd_getfd acquisitions in distinct native threads: kernel filepointercheck alone may accept wrong acquirerTID if delayedT1 overwritesT2 history. Hypothesis requiring actual FUSE barrier run; do not claim onlyhistoryloss without testing."
+        ]
+      }
     },
     {
       "id": "R031",
@@ -1560,6 +1583,15 @@
       "evidence": "validation/wire-header-ownership.json",
       "items": [
         "R039"
+      ]
+    },
+    {
+      "batch": 21,
+      "name": "Native descriptor aliases and generation proof controls",
+      "evidence": "validation/descriptor-alias-coverage.json",
+      "items": [
+        "R029",
+        "R030"
       ]
     }
   ],
