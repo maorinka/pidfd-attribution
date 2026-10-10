@@ -4,6 +4,9 @@
       "file": "core/reader.bpf.c"
     },
     {
+      "file": "core/reader_impl.bpf.h"
+    },
+    {
       "file": "core/loader.c"
     },
     {

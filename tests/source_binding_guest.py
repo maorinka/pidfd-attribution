@@ -86,6 +86,7 @@ report = dict(
             ROOT / "tests/source_binding_fixture.py",
             backend / "core/loader.c",
             backend / "core/reader.bpf.c",
+            backend / "core/reader_impl.bpf.h",
         )
     },
     limitations="Controlled complete loss of eval-return probe plus 64 same-thread state retire/recreate cycles. Does not bound arbitrary missed callbacks or adversarial mutable metadata.",

@@ -9,20 +9,20 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Shared backend source consolidation",
+    "name": "Finish fixture driver consolidation",
     "items": [
       "R033",
       "R072"
     ],
-    "previous_batch_evidence": "validation/jammy-ownership-and-source.json",
-    "pending_guest_coverage": "New ownership audit qualified on Ubuntu22 ARM/kernel6.8; no kernel7/full-preemption qualification claimed."
+    "previous_batch_evidence": "validation/reader-source-consolidation.json",
+    "pending_guest_coverage": "Canonical reader qualified on Ubuntu22 ARM/Python3.10 and Ubuntu24 x86/Python3.12, kernel6.8. Driver changes not yet made."
   },
   "next_batches": [
-    "Module helper attack-surface audit and cleanup",
-    "Build/guest CI and evidence status index",
-    "Install/upgrade/runtime preflight robustness",
-    "Shared backend consolidation",
-    "Coverage, lifecycle, resource saturation and measured CPU redesign"
+    "Finish shared fixture drivers and portable source packaging",
+    "Cgroup boundary/descendant and descriptor alias coverage",
+    "Cleanup index capacity, scratch ownership and capture overhead redesign",
+    "Transactional upgrade/uninstall and generated-output ownership",
+    "Physical hardware CPU measurements and remaining qualification"
   ],
   "tracker_note": "create_goal refused because the thread retains an unfinished older blocked research goal. New objective preserved here; older goal is not falsely completed."
 }

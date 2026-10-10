@@ -116,6 +116,23 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
         }
         self.assertEqual(names, wire.STAGES)
 
+    def test_reader_translation_units_only_select_the_shared_backend(self):
+        for backend, native, endpoint in (
+            (ROOT, 1, 0),
+            (ROOT / "module-free", 0, 0),
+            (ROOT / "endpoint-service", 0, 1),
+        ):
+            expected = (
+                f"#define IOSEC_NATIVE_HELPERS {native}\n"
+                f"#define IOSEC_ENDPOINT_POLICY {endpoint}\n"
+                '#include "reader_impl.bpf.h"\n'
+            )
+            self.assertEqual((backend / "core/reader.bpf.c").read_text(), expected)
+            self.assertEqual(
+                (backend / "core/reader_impl.bpf.h").resolve(),
+                ROOT / "shared/core/reader_impl.bpf.h",
+            )
+
     def test_fixture_collectors_and_rings_share_one_implementation(self):
         for relative in ("core/loader.c", "core/direct_ring.h"):
             paths = [backend / relative for backend in (ROOT, ROOT / "module-free")]
@@ -133,6 +150,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
             "core/python_frame_walk.bpf.h",
             "core/python_capture.bpf.h",
             "core/python_strings.bpf.h",
+            "core/reader_impl.bpf.h",
             "core/slot_acceptance.bpf.h",
             "core/mm_retirement.bpf.h",
             "core/python_string_scan.bpf.h",

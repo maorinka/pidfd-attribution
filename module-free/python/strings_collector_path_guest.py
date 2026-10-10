@@ -186,6 +186,7 @@ if offsets["TSTATE_FRAME_INDIRECT"]:
 (RUNTIME_DIR / "loader.c").write_text(loader)
 for n in [
     "reader.bpf.c",
+    "reader_impl.bpf.h",
     "vmlinux.h",
     "config.h",
     "kernel_layout.h",

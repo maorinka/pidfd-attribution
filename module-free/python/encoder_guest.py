@@ -71,6 +71,9 @@ report = dict(
     invalid_count_cases=3,
     wire_version=1,
     maximum_frames=48,
+    shared_reader_sha256=hashlib.sha256(
+        (ROOT / "core/reader_impl.bpf.h").read_bytes()
+    ).hexdigest(),
     source_sha256=hashlib.sha256((ROOT / "core/reader.bpf.c").read_bytes()).hexdigest(),
 )
 (EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")

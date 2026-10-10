@@ -1,0 +1,641 @@
+{
+  "passed": true,
+  "baseline_commit": "d01fbcc",
+  "scope": "Behavior-preserving canonical reader consolidation. No CPU reduction claimed. Runtime coverage is owned Ubuntu22 ARM/Python3.10 and Ubuntu24 x86/Python3.12 on kernel6.8; synthetic branches are compile equivalence only.",
+  "source_sha256": {
+    "core/reader.bpf.c": "f013051a31c69f797e38d6cbcecef5cc64116d2058710cfbf4de30070c02d9a5",
+    "endpoint-service/benchmarks/system_cpu_guest.py": "665c705445e10fa30ae58398dc67f31e9e6c1a211bb13fea3790d0d578061495",
+    "endpoint-service/core/reader.bpf.c": "35aee0adbef880b63bc8f453740a4429eda6620f297accee62fe1d19de16bfe1",
+    "endpoint-service/python/service.py": "4e3af1c3e8b764ca11bdd51ec7ec4f379dc4c50ad03981d1cbe2563df5da6b8f",
+    "endpoint-service/tests/integration_guest.py": "9ce528770204a2365cda2c33ce327e21e950ad1452a63af9f98c7b6a204edc2a",
+    "module-free/core/reader.bpf.c": "043d8ebbd957f974ca295d105df0f4cc3e567156c79f014f315599bdd10af51b",
+    "module-free/python/encoder_guest.py": "a733b8ac3fd820dc89afc1295dd79c4bd8d7a8f41917e3e2918d4b87d04fe258",
+    "module-free/python/run_collector_path_guest.py": "310318bed1b5747a005dbafe82d681b02a70db7dd47fbb05bebd1747c95dc3c3",
+    "module-free/python/strings_collector_path_guest.py": "ce86fe784f713c0920d0cfd53e4cabc423f9418c941480445a39e7e9965eeca2",
+    "module-free/source_manifest.json": "e50df666146496ecb2a00dbbf540b460020b666b7ffd5e2080003497a20fbfaa",
+    "python/run_collector_path_guest.py": "80a9b91932c83d13bde3dc399950605b42529a0e4fa2f188417e6c4d09a216f2",
+    "shared/core/arch.h": "2e0614db96ac3c8028c99d12f2be0307b0071f3c067a99dadff1ce24dfe5d9a5",
+    "shared/core/bpf_task_helpers.h": "3609701b7fc1f24decc66ea59571994ea9b71441950433859d10ae4a44a56a00",
+    "shared/core/cleanup_index.bpf.h": "dc9791ef0cf0ed1bdfb8ddbb5355ab220b81d213a59460b4e9125bca1e2f1202",
+    "shared/core/cleanup_retirement.bpf.h": "95df3a257f3e806e9393d5d96a985a4a345acea367cb30a7cbf6b5ec1c52751a",
+    "shared/core/diagnostics.bpf.h": "1728d87cb8cb3cad466e6449a5761ce4ef2288e40064132257a9ab02b4234a24",
+    "shared/core/direct_ring_common.h": "848402e37efce9f2be04184ca04ad749c928b2ca946388ec48d31b9bbb84cdbb",
+    "shared/core/direct_ring_v1.h": "a50ef1fd7e14285ae2203c3350b64871c158b0daf8b46094d98d942b12b9a709",
+    "shared/core/fixture_child.h": "840539695865d9c5eda372205c5ad427c68bfcb24805c112807c40064e51319d",
+    "shared/core/mm_retirement.bpf.h": "3b9897437a81f940a28c624d6f075c87d2edfac1baedca30de230485049edc42",
+    "shared/core/python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+    "shared/core/python_capture.bpf.h": "cd5e5d1fdfeb1377343de2a22adc96b59daa8c765d6cb72b2217e69892d49966",
+    "shared/core/python_frame_walk.bpf.h": "92ff6d8692071394ed908e4fe3619ed29e9cb80da4765d44a7c8e50afca082a5",
+    "shared/core/python_string_scan.bpf.h": "cec4993e87a0406b6720360ae818b5e48771aa34dd15599a00139463c2984856",
+    "shared/core/python_strings.bpf.h": "f6630a06831735d469ef8af48f0c218b1a3e0b42b507781852f0d5f2d9c98b68",
+    "shared/core/reader_impl.bpf.h": "11fe449aa1db9b3761046ed1c62a5bc9ff0034efac2a80071a6c6ad699041faf",
+    "shared/core/slot_acceptance.bpf.h": "1fc160032e1b53222322213b3b9fe4febc0ce031714f4e45e080fb20af6b071b",
+    "shared/core/source_protocol.h": "c0b49a884685cc292fcf58ed439b0206dba2a508127ec9a55d88cb9c9823f5e5",
+    "shared/core/thread_retirement.bpf.h": "774e403a26440b7a9ceab403a52073d44a0276cc6fbe5fd55fab446a67c62c11",
+    "shared/python/collector_benchmark.py": "be1f555699b68e63ca1d2d08aa2c28edd7e5275ebddddfb8eb4a07657a300a67",
+    "shared/python/fixture_drivers/verify_deep_collector_path_guest.py": "75622f92dd391de57a88259dc3eb1a31cb6a9cfd07d6b0a131ec9fa3d619d6d3",
+    "shared/python/regression_verifier.py": "63490beb768e597f8514e37afb83f85b5153c2d0e61db7e6b88e7e22a883dae1",
+    "source_manifest.json": "bc3be971e3709a85f2c68b323733d36d3b412f58dc0b36ab8ee67a62fdf6571f",
+    "tests/source_binding_guest.py": "3b32415a3e0a8228e289bfdba5047eb4dbbff97cddcdcf02f4aa11aff6d7f8a4",
+    "tests/test_shared_records.py": "44f883798214d6664b95e9195052253d894dea10d00df93c7f73b5a495258bb7"
+  },
+  "arm_compile_matrix": [
+    {
+      "backend": "root",
+      "python_minor": 10,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "f18ae6a7bea97925e6cc4182d8866c203961f53955223e54e30d3d2c3df2f9e8",
+        "b632070f908290be35f7625c046eb8c4f53ac9d6494ec4e162256a01dde78086"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 10,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "4d3dca49b5f38f86d83cdc3472d8eefc4341cc517d2a0bb5c5fc2413f9fde099",
+        "4ab197fb379b281f84fa8520c3022c0f7a6c3fa041ad254d0c9b01976d141cf1"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 10,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "ab446bc54b55c8779ff430c845e33a10f71a41c6dc4e85b5d3487300be3dd75b",
+        "d7568c10f03e1e82ae2f35a7d777c47f3351c0c5a67e641ab4831ac1538710c9"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 10,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "cc01ec045edc7a484c1c194e948ae0dd3ef83388f5b3610c5ef67b2fcb6234e2",
+        "1bf2c8cd80f53f8015c37bc648a4bef37f4d87b296006c14fdb646a0f0029de2"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 10,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "2bf615e42ae3eaf66baa9385c11922bb326b36d52840c9e6fb5bbf83627b57e3",
+        "75810dc2cb5554ddfe63d5f1909904c149cc59c12455c6af62e47c1875fc7f52"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 10,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": false,
+      "object_sha256": [
+        "8033ab907796e9ffc7e33b7921e806db49f54006b83ca0d2327fc62cd6ec22df",
+        "deced6b173c97b39b338753693fd1dfa4a834eec72eb425e796296994e1488dc"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 11,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "3c0c36a7672ec1022906935dfd6589fd3ca597d72183bda9b039b84d395cd1c1",
+        "4689fbc681534e852a70fbe20108b48dcf25aa8221ef5372b38027d3a8493c00"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 11,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "a122f2a5f3e24d87bc380ff34ad9ef8f6003a854871c19807d952f1b1836efee",
+        "32673cc410dc209a013c04ec0c2dda3735466ba36d1ea89b9573c8e42161e49b"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 11,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "0b3bae89b083fcfbdb4d2682dbaa8769a33b56d1c491afbe6a2264493e9f2167",
+        "019ccd5d721b96f278bbd91a5f2831bf2cbba7140cf455a2e45f51fc54e0daa9"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 11,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "19a362d585a691b499378cde741f060c4374956d62d78c64b4647e9635ad27ab",
+        "3a76cb35d61f6dfbff04b456a5b13b22a33d472720804d791a1b200d86974d37"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 11,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "b115716a22f0c0505e42f704f94196d951d9dcba5d208b6684933f058e560781",
+        "1982df03d0035bb098aac0618f0872aa74536bcde51b2de537dcec46e442df8f"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 11,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "01567f3b0799d7ef1fd4eb6a4d29a8dfe76de5c3acd9d63c41b4f5205180e70d",
+        "5a75b92d18baa7064c7bf464680f9bb6c691beabe49c9785a45adc46c2b25f37"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 12,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dab7cffbe4b0b4d2dc9ea1573c2c39cd145f1ddf4e63bb1315811a00bf3668a6",
+        "ce6608ea04b27814151868ccdd6b299914cb08252e979e4233b61140fe900a42"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 12,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "6e4a140bc9444274ca24665856ece416adf2250d30badcb7174c9f28daa426a6",
+        "732de17cbd2ad6991397310ea75305392bd1040e8669a12d5cf26e351f45e37c"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 12,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "0428b0c37051e90f258040c20c12a5a58a90e590adcd6f7405d343c9287998d9",
+        "6461d6655c41fd0289a5da6d33d1afe1b81ef2ac58b6846837778b016aaf1173"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 12,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "f8047c42e0f5f2588a0483362c017d75040c3a285ec4fdb7ca1bf8cc763196ed",
+        "556a36946204ca8484a66a19d5bca9f8acfdbcd9c6d8101eda013033da1b5c1d"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 12,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dd005534fa983bd5d53403baed89869996e02003374153c62185327f39d78c5e",
+        "2d3593c72c5c12ee0043e8ca94b0cc351904ca22877543813b4add9ee814d99f"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 12,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "ea8685ebf8a3182ed3dab068fdcb15e8e5575fbab2b1a74a560cc19b92c32e36",
+        "96a987ff3f3061baa575124217e314b2949f0e08a8f6322de524cb90afc30173"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 13,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dab7cffbe4b0b4d2dc9ea1573c2c39cd145f1ddf4e63bb1315811a00bf3668a6",
+        "ce6608ea04b27814151868ccdd6b299914cb08252e979e4233b61140fe900a42"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 13,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "6e4a140bc9444274ca24665856ece416adf2250d30badcb7174c9f28daa426a6",
+        "732de17cbd2ad6991397310ea75305392bd1040e8669a12d5cf26e351f45e37c"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 13,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "0428b0c37051e90f258040c20c12a5a58a90e590adcd6f7405d343c9287998d9",
+        "6461d6655c41fd0289a5da6d33d1afe1b81ef2ac58b6846837778b016aaf1173"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 13,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "f8047c42e0f5f2588a0483362c017d75040c3a285ec4fdb7ca1bf8cc763196ed",
+        "556a36946204ca8484a66a19d5bca9f8acfdbcd9c6d8101eda013033da1b5c1d"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 13,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dd005534fa983bd5d53403baed89869996e02003374153c62185327f39d78c5e",
+        "2d3593c72c5c12ee0043e8ca94b0cc351904ca22877543813b4add9ee814d99f"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 13,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "ea8685ebf8a3182ed3dab068fdcb15e8e5575fbab2b1a74a560cc19b92c32e36",
+        "96a987ff3f3061baa575124217e314b2949f0e08a8f6322de524cb90afc30173"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 14,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dab7cffbe4b0b4d2dc9ea1573c2c39cd145f1ddf4e63bb1315811a00bf3668a6",
+        "ce6608ea04b27814151868ccdd6b299914cb08252e979e4233b61140fe900a42"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 14,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "6e4a140bc9444274ca24665856ece416adf2250d30badcb7174c9f28daa426a6",
+        "732de17cbd2ad6991397310ea75305392bd1040e8669a12d5cf26e351f45e37c"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 14,
+      "bias": 0,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "0428b0c37051e90f258040c20c12a5a58a90e590adcd6f7405d343c9287998d9",
+        "6461d6655c41fd0289a5da6d33d1afe1b81ef2ac58b6846837778b016aaf1173"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 14,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "f8047c42e0f5f2588a0483362c017d75040c3a285ec4fdb7ca1bf8cc763196ed",
+        "556a36946204ca8484a66a19d5bca9f8acfdbcd9c6d8101eda013033da1b5c1d"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 14,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "dd005534fa983bd5d53403baed89869996e02003374153c62185327f39d78c5e",
+        "2d3593c72c5c12ee0043e8ca94b0cc351904ca22877543813b4add9ee814d99f"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 14,
+      "bias": 1,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "synthetic_layout": true,
+      "object_sha256": [
+        "ea8685ebf8a3182ed3dab068fdcb15e8e5575fbab2b1a74a560cc19b92c32e36",
+        "96a987ff3f3061baa575124217e314b2949f0e08a8f6322de524cb90afc30173"
+      ]
+    }
+  ],
+  "runtime": [
+    {
+      "passed": true,
+      "kernel": "6.8.0-138-generic",
+      "architecture": "aarch64",
+      "python": "3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]",
+      "lockdown": "[none] integrity confidentiality",
+      "modules_disabled": "0",
+      "cleanup_ok": true,
+      "global_bpf_set_restored": true,
+      "modules_unchanged": true,
+      "report_sha256": "fc8037adfe9cbc7757205e9ef0f9ed7698d4caab055f49fb13fd67ad1262fa15",
+      "retirement_audits": 27,
+      "all_owned_programs_retired": true,
+      "controls": [
+        "identity",
+        "source",
+        "restart",
+        "global",
+        "capacity",
+        "line_gap_frames",
+        "final_mm_cache",
+        "cache_pressure",
+        "cleanup_index_pressure",
+        "outermost_return",
+        "nonleader_exec",
+        "storage_recovery",
+        "storage_operations",
+        "task_birth_guard",
+        "continuous_loop_recovery",
+        "adaptive_capture",
+        "ring_pressure",
+        "cgroup"
+      ],
+      "line_gap_frames": {
+        "line-gap-large-sleepable": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": false
+        },
+        "line-gap-no-location-sleepable": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": false
+        },
+        "line-gap-large-fallback": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": true
+        },
+        "line-gap-no-location-fallback": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": true
+        }
+      }
+    },
+    {
+      "passed": true,
+      "kernel": "6.8.0-146-generic",
+      "architecture": "x86_64",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+      "lockdown": "[none] integrity confidentiality",
+      "modules_disabled": "0",
+      "cleanup_ok": true,
+      "global_bpf_set_restored": true,
+      "modules_unchanged": true,
+      "report_sha256": "4aa5bfaf9d2b1ee664bcc3b23b5cc51ed12c98b5a2a731b6c5fc037a7ef488a4",
+      "retirement_audits": 27,
+      "all_owned_programs_retired": true,
+      "controls": [
+        "identity",
+        "source",
+        "restart",
+        "global",
+        "capacity",
+        "line_gap_frames",
+        "final_mm_cache",
+        "cache_pressure",
+        "cleanup_index_pressure",
+        "outermost_return",
+        "nonleader_exec",
+        "storage_recovery",
+        "storage_operations",
+        "task_birth_guard",
+        "continuous_loop_recovery",
+        "adaptive_capture",
+        "ring_pressure",
+        "cgroup"
+      ],
+      "line_gap_frames": {
+        "line-gap-large-sleepable": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": false
+        },
+        "line-gap-no-location-sleepable": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": false
+        },
+        "line-gap-large-fallback": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": true
+        },
+        "line-gap-no-location-fallback": {
+          "writes": 3,
+          "unknown_line_retained": true,
+          "outer_callers_retained": true,
+          "identity_accepted": true,
+          "source_complete": false,
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "module_free_serializer": {
+    "passed": true,
+    "record_lengths": 49,
+    "byte_comparison_cases": 147,
+    "invalid_count_cases": 3,
+    "wire_version": 1,
+    "architecture": "aarch64"
+  },
+  "offline": {
+    "root_tests": 54,
+    "endpoint_tests": 28,
+    "mac_root_only_skipped": 1,
+    "style_passed": true
+  },
+  "maintenance": {
+    "previous_reader_lines": 3978,
+    "canonical_reader_lines": 1716,
+    "wrapper_lines": 9,
+    "removed_reader_lines": 2253,
+    "backend_selectors": [
+      "IOSEC_NATIVE_HELPERS",
+      "IOSEC_ENDPOINT_POLICY"
+    ],
+    "remaining": "Symlink source packaging and some backend-specific drivers remain separate backlog items."
+  },
+  "x86_compile_matrix": [
+    {
+      "backend": "root",
+      "python_minor": 12,
+      "bias": 0,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "084142048dd81c4d8a0141a10bfbe9b828d03dd0c48201fa7eea249e7acebaf5",
+        "cf5dc5867dc8b75b6e8f36aebb9c581b2d541ef2697c2613c36cab1812683307"
+      ]
+    },
+    {
+      "backend": "root",
+      "python_minor": 12,
+      "bias": 1,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "64f70e42dfb86210aa398c6593941eb4f0ae95e7d2576fc662b9dddc65ba1cbb",
+        "d7934f4f84e84581b507c0ee631693142723beb9a061cc3e286b56a85bed5a14"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 12,
+      "bias": 0,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "a123cb8a381d8a1c377ff4fa640ef0f8f8b4311c367edee69deb1e9b78ba2c87",
+        "f84653805f1141a5b09cf9c11d8bd648cbf783b704bfefdd9e5f6e2151fcefb4"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 12,
+      "bias": 1,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "7c6b9c78e1fd7c926630cba4faa91cd53f52425fbfe420d1103f61e7a2a85d89",
+        "8734ad336ea68cd10bd7bad98eaa6582dfe1c7b0955dc22e7ce123bddfacd2c0"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 12,
+      "bias": 0,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "92e10926903a1973b2b5fc3af5af6b43208f76e4ee50ba2e141c6142254f398f",
+        "568610512bd4f4677442bd05c1a272332d75046bc7b5ee7ac7da41fe2e6dcdb2"
+      ]
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 12,
+      "bias": 1,
+      "synthetic_layout": false,
+      "instructions_and_relocations_equal": true,
+      "core_relocations_equal": true,
+      "object_sha256": [
+        "1ba28b3031bf810f96ae536df55e688b6fd5f9df6e18707498fb9fe9a33e1478",
+        "8aef23b51df6d2d64e1d1acc95ca30d02fff241093304ae9f282fdaf5c147521"
+      ]
+    }
+  ]
+}

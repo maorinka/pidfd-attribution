@@ -1182,6 +1182,7 @@ try:
         name: hashlib.sha256((ROOT / "core" / name).read_bytes()).hexdigest()
         for name in (
             "reader.bpf.c",
+            "reader_impl.bpf.h",
             "collector.c",
             "direct_ring.h",
             "protocol.h",

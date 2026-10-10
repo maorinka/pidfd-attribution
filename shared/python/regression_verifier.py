@@ -442,6 +442,7 @@ def verify(root, runtime, expected_empty_maps=19):
     )
     for name in [
         "reader.bpf.c",
+        "reader_impl.bpf.h",
         "loader.c",
         "fixture_child.h",
         "fixture.py",
@@ -478,6 +479,7 @@ def verify(root, runtime, expected_empty_maps=19):
             ).hexdigest()
             for name in [
                 "reader.bpf.c",
+                "reader_impl.bpf.h",
                 "loader.c",
                 "fixture_child.h",
                 "fixture.py",

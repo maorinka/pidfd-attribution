@@ -33,6 +33,7 @@ DEFAULTS = dict(
 )
 PRODUCTION = (
     "reader.bpf.c",
+    "reader_impl.bpf.h",
     "collector.c",
     "direct_ring.h",
     "direct_ring_common.h",

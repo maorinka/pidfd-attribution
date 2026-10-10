@@ -64,6 +64,7 @@ def build():
         shutil.copy2(PREPARED_DIR / n, B / n)
     for n in [
         "reader.bpf.c",
+        "reader_impl.bpf.h",
         "loader.c",
         "fixture_child.h",
         "direct_ring.h",
@@ -117,6 +118,7 @@ def build():
     b.mkdir(parents=True, exist_ok=True)
     names = [
         "reader.bpf.c",
+        "reader_impl.bpf.h",
         "loader.c",
         "fixture_child.h",
         "config.h",
@@ -197,6 +199,7 @@ def regression():
     lineage = tree / "experiments/pidfd_lineage"
     for n in [
         "reader.bpf.c",
+        "reader_impl.bpf.h",
         "loader.c",
         "fixture_child.h",
         "direct_ring.h",
@@ -205,6 +208,7 @@ def regression():
         shutil.copy2(RUNTIME_DIR / n, lineage / n)
     for n in [
         "reader.bpf.c",
+        "reader_impl.bpf.h",
         "loader.c",
         "fixture_child.h",
         "config.h",
@@ -264,6 +268,7 @@ def regression():
         f"{sha256_file(lineage / n)}  {n}"
         for n in [
             "reader.bpf.c",
+            "reader_impl.bpf.h",
             "loader.c",
             "fixture_child.h",
             "fixture.py",

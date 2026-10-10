@@ -559,10 +559,10 @@
     {
       "id": "R033",
       "area": "maintenance",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "Three reader programs and several Python drivers remain hand-maintained with semantic drift; history timeouts differ20/120 seconds. Shared symlinks do not eliminate all duplication.",
-      "next_step": "Extract common semantics where practical; document intentional backend differences; add precise shared-section checks. Do not demand whole-program equivalence across intentional wire/policy differences.",
-      "evidence": "validation/thread-cleanup-refactor.json (partial consolidation only)",
+      "next_step": "Finish remaining genuinely different fixture driver consolidation and canonical packaging ownership. Reader state machine, walkers, capture/string helpers, thread retirement and ring mechanics are shared.",
+      "evidence": "validation/reader-source-consolidation.json; earlier consolidation reports retained",
       "additional_reviews": [
         "final-bfb1249",
         "da2d6bd-endpoint-production-review"
@@ -601,8 +601,9 @@
         },
         {
           "target": "Reader backends",
-          "status": "open",
-          "scope": "Common implementation with thin wrappers; preserve module/upstream and fixture/continuous policy differences."
+          "status": "validated",
+          "scope": "One shared reader_impl.bpf.h with three selector-only translation units. Native/upstream and fixture/continuous branches compile to unchanged instructions and CO-RE relocations.",
+          "evidence": "validation/reader-source-consolidation.json"
         }
       ],
       "review_details": [
@@ -615,6 +616,13 @@
         "Audit unused binding/shadow fields and cleanup_bits before removal; shadow epoch is read during binding restoration.",
         "Collector common code must preserve endpoint storage fault semantics and fixture child supervision.",
         "Review targets da2d6bd. Later 2ca1bd6 and b138647 share ring mechanics and capture/string helpers with unchanged compiled behavior. Common reader source and genuine driver differences remain open; current readers are still separate."
+      ],
+      "resolution_history": [
+        {
+          "batch": "canonical-reader",
+          "evidence": "validation/reader-source-consolidation.json",
+          "scope": "30 ARM compile cases, six x86 cases and live endpoint suites on Python3.10/3.12; no CPU improvement or untested interpreter qualification claimed."
+        }
       ]
     },
     {
@@ -1153,10 +1161,10 @@
     {
       "id": "R072",
       "area": "maintenance",
-      "status": "reported-unverified",
+      "status": "partially-fixed",
       "finding": "Proposal single driver set with runtime-prefix settings and single BPF source with backend conditional switches; symlink chains fragile in flattened archives/Windows checkouts.",
-      "next_step": "Collapse proven common drivers first; preserve intentional module/upstream,policy and wire differences. Document git/symlink checkout requirements and validate supported packaging.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
+      "next_step": "Canonical BPF reader implemented. Source aliases still require a symlink-preserving checkout; finish portable packaging and remaining driver ownership.",
+      "evidence": "validation/reader-source-consolidation.json"
     },
     {
       "id": "R073",

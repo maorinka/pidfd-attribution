@@ -156,6 +156,9 @@ def benchmark(run_directory, runtime, python, expected_empty_maps=19):
         ),
         candidate="Final CPU snapshot follows all drains, including empty-drain work.",
         scope="Actual four worker threads plus parent; serial50writes/s CPU. Other shared-table races and leader-first exit remain unproven.",
+        shared_reader_sha256=hashlib.sha256(
+            (LOCAL / "reader_impl.bpf.h").read_bytes()
+        ).hexdigest(),
         bpf_source_sha256=hashlib.sha256(
             (LOCAL / "reader.bpf.c").read_bytes()
         ).hexdigest(),

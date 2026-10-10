@@ -229,7 +229,12 @@ def main():
             summary=summary,
             sources={
                 name: hashlib.sha256((ROOT / "core" / name).read_bytes()).hexdigest()
-                for name in ("reader.bpf.c", "collector.c", "direct_ring.h")
+                for name in (
+                    "reader.bpf.c",
+                    "reader_impl.bpf.h",
+                    "collector.c",
+                    "direct_ring.h",
+                )
             },
         )
     finally:

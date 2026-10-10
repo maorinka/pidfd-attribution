@@ -147,6 +147,9 @@ def main(runtime_dir):
         status="passed",
         results=results,
         fixture_sha256=hashlib.sha256(fixture.read_bytes()).hexdigest(),
+        shared_reader_sha256=hashlib.sha256(
+            (RUNTIME_DIR / "reader_impl.bpf.h").read_bytes()
+        ).hexdigest(),
         bpf_source_sha256=hashlib.sha256(
             (RUNTIME_DIR / "reader.bpf.c").read_bytes()
         ).hexdigest(),
