@@ -126,15 +126,20 @@
     {
       "id": "R003",
       "area": "deployment",
-      "status": "partially-fixed",
+      "status": "fixed-with-scope",
       "finding": "Restart=always with no start limit retries permanent admission/build-pin failures every ten seconds, including after kernel upgrades.",
-      "next_step": "Distinct permanent-error exit code plus RestartPreventExitStatus; clarify doctor individual lockdown result versus overall admission.",
-      "evidence": "",
+      "next_step": "Python permanent startup refusals and collector deterministic artifact/permission/config failures stop with2/78. Remaining transient failures are limited to5 starts/300s. Kernel rebuild/upgrade workflow remains open.",
+      "evidence": "validation/endpoint-reliability.json",
       "resolution_history": [
         {
           "batch": 2,
           "evidence": "validation/review-batch2.json",
           "detail": "Permanent run admission/build/config failures use exit78; shipped unit prevents restart on2/78. Offline admission/config tests and installed stale-kernel test passed; ordinary SIGKILL restart still passed."
+        },
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Real private unit verified78/no restart and transient lock1/bounded retries. Original installed sensor untouched."
         }
       ],
       "additional_reviews": [
@@ -1072,11 +1077,18 @@
     {
       "id": "R077",
       "area": "attribution",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "Slots are copied during fd_install before acquire_finish sets syscall acceptance; later lifecycle snapshots retain pre-return accepted/complete values.",
-      "next_step": "Define stage-specific proof semantics. INSTALL cannot prove a future syscall return. Test acquire success/failure and later CLOSE/TABLE_COPY/EXEC_CLOSE/TABLE_RELEASE before updating persisted acceptance.",
-      "evidence": "Current endpoint installed/acquire_finish/emit source inspected; no new runtime test.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "INSTALL remains pending. Acquire/fcntl completion commits acceptance and source to matching file/generation in the slot. Test more concurrent shared-table and TABLE_COPY/EXEC_CLOSE/TABLE_RELEASE permutations.",
+      "evidence": "validation/endpoint-reliability.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Live identity/source tests verify pending INSTALL then accepted acquire/CLOSE. All3 readers use canonical helper; root/module-free compiled, not runtime validated in this batch."
+        }
+      ]
     },
     {
       "id": "R078",
@@ -1090,38 +1102,66 @@
     {
       "id": "R079",
       "area": "cache-lifecycle",
-      "status": "reported-unverified",
+      "status": "fixed-with-runtime-limit",
       "finding": "mmput-only retirement may miss mmput_async final releases, retaining warmed_mms/lines cache entries.",
-      "next_step": "Verify unconditional __mmput BTF hook, sleeping/interrupt assumptions, final-release ordering and async-mm controls before changing hooks.",
-      "evidence": "Current fentry/mmput with mm_users==1 confirmed; async coverage claim not runtime validated.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "Typed exit_mmap preferred, __mmput fallback; mm_users0 retirement. Add explicit asynchronous final-mm control and further kernel matrix coverage.",
+      "evidence": "validation/endpoint-reliability.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Live populated worker warmed-mm and line entries removed at final exit. Linux6.8 sync/async release converge on exit_mmap; explicit mmput_async not forced. Initial __mmput attach EBUSY retained."
+        }
+      ]
     },
     {
       "id": "R080",
       "area": "adaptive-capture",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Controller samples current backlog before direct_consume, not the maximum backlog observed while draining. Short peaks may escape samples.",
-      "next_step": "Track interval high-water backlog and test burst overload, busy records, storage stalls and recovery. Do not claim threshold universally unreachable from static timing arithmetic.",
-      "evidence": "Current collector loop sample ordering inspected; reviewer throughput estimate not benchmarked.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "Controller consumes interval high-water observed inside drain. More overload/storage-stall and physical-workload measurements remain.",
+      "evidence": "validation/endpoint-reliability.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Real mapped-ring C control drains burst to empty yet degrades with zero drops; existing busy/backlog and live adaptive/recovery tests pass."
+        }
+      ]
     },
     {
       "id": "R081",
       "area": "service-availability",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Collector startup errors generally return1, bypassing RestartPreventExitStatus=2 78; cleanup error reason is not consistently printed to stderr.",
-      "next_step": "Classify permanent vs transient failures and print actionable stage/errno. Test real unit behavior for ownership/config/lock, memory budget and attach failures; ENOMEM/lock contention are not automatically permanent.",
-      "evidence": "Current collector main/CHECK_SENSOR and systemd unit inspected; parse_options already returns2.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "Startup error stage/errno printed. Deterministic permission/artifact/bounds failures78; lock/resource pressure1. Further kernel attach/resource fault matrix remains.",
+      "evidence": "validation/endpoint-reliability.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Real collector invalid-options2, unsafe-directory78, missing-object78, held-lock1; private systemd no-restart/bounded retry tests pass. Configured memory boundE2BIG differs from actual ENOMEM."
+        }
+      ]
     },
     {
       "id": "R082",
       "area": "cgroup-admission",
-      "status": "confirmed-open",
+      "status": "fixed",
       "finding": "Cgroup walk rethrows scandir errors; Python run wraps OSError as PermanentStartupError, including possible transient cgroup disappearance.",
-      "next_step": "Handle bounded ENOENT races separately, retry discovery as appropriate and keep genuinely inaccessible/missing configured groups explicit.",
-      "evidence": "Current validate_cgroup failed callback and run exception wrapper inspected.",
-      "review": "da2d6bd-endpoint-production-review"
+      "next_step": "Ignore only ENOENT walk races for removed siblings. Missing configured group and access errors still fail explicitly.",
+      "evidence": "validation/endpoint-reliability.json",
+      "review": "da2d6bd-endpoint-production-review",
+      "resolution_history": [
+        {
+          "batch": 9,
+          "evidence": "validation/endpoint-reliability.json",
+          "detail": "Offline control verifies disappearing sibling tolerated and PermissionError propagated; live cgroup controls pass."
+        }
+      ]
     },
     {
       "id": "R083",
@@ -1281,9 +1321,15 @@
       "status": "validated",
       "evidence": "validation/capture-helper-consolidation.json",
       "remaining": "R033 remains open for genuine driver differences and common reader structure. Native capture remains specialized. No new runtime or CPU claim."
+    },
+    {
+      "batch": "9-endpoint-reliability",
+      "status": "validated",
+      "evidence": "validation/endpoint-reliability.json",
+      "remaining": "Major CPU changes, lockdown admission, packaging, broader kernel/runtime coverage and other open review items remain. No CPU improvement claim."
     }
   ],
-  "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized.",
+  "authorization_followup": "User approved implementation of the reconciled priority reliability batch. History rewriting remains unauthorized.",
   "review_reconciliation": {
     "reviewed_commit": "da2d6bd",
     "current_commit": "b1386477bbf1146ae08c4d785048bb87d9231dfc",

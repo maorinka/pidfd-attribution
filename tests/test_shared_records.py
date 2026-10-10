@@ -133,6 +133,8 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
             "core/python_frame_walk.bpf.h",
             "core/python_capture.bpf.h",
             "core/python_strings.bpf.h",
+            "core/slot_acceptance.bpf.h",
+            "core/mm_retirement.bpf.h",
             "core/python_string_scan.bpf.h",
             "core/support/offsets.c",
             "python/support/python_layout.py",

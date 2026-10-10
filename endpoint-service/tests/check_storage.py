@@ -1,6 +1,7 @@
 """Compile and check the real storage path without attaching BPF programs."""
 
 import json
+import fcntl
 import os
 import stat
 from pathlib import Path
@@ -16,6 +17,49 @@ from wire import records
 with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
     directory = Path(temporary)
     directory.chmod(0o700)
+    startup = directory / "collector"
+    subprocess.run(
+        [
+            "gcc",
+            "-O2",
+            "-std=gnu11",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            *BPF_INCLUDES,
+            "-I" + str(ROOT / "build"),
+            str(ROOT / "core/collector.c"),
+            *BPF_LIBS,
+            "-o",
+            str(startup),
+        ],
+        check=True,
+    )
+    startup_directory = directory / "startup"
+    startup_directory.mkdir(mode=0o700)
+
+    def attempt(expected, reason, *arguments):
+        completed = subprocess.run(
+            [str(startup), "--state-dir", str(startup_directory), *arguments],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        assert completed.returncode == expected, completed.stderr
+        assert reason in completed.stderr, completed.stderr
+
+    attempt(2, "Invalid collector options", "--state-entries", "0")
+    startup_directory.chmod(0o755)
+    attempt(78, "private state directory")
+    startup_directory.chmod(0o700)
+    lock = startup_directory / "collector.lock"
+    with lock.open("w") as stream:
+        lock.chmod(0o600)
+        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        attempt(1, "exclusive collector lock")
+    # No object sits beside this test binary: fail before any BPF loading.
+    attempt(78, "open BPF object")
+
     controller = directory / "capture-controller"
     subprocess.run(
         [
@@ -104,6 +148,8 @@ with tempfile.TemporaryDirectory(prefix="pidfd-storage-") as temporary:
     consumer_output = subprocess.check_output(
         [str(consumer), str(consumer_dir)], text=True
     )
+    result["startup_permanent_and_transient_exits"] = True
+    result["drained_burst_degrades_without_drops"] = True
     result["bounded_consumer_backlog_retry"] = True
     result["busy_record_no_spin"] = True
     result["consumer_output"] = consumer_output.strip()

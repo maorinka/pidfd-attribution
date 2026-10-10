@@ -61,6 +61,8 @@ static int direct_consume(struct direct_ring *r) {
     unsigned long available = prod - cons;
     if (available > r->capacity)
       return -1;
+    if (available > r->backlog_peak)
+      r->backlog_peak = available;
     if (!available)
       break;
     if (available < BPF_RINGBUF_HDR_SZ)

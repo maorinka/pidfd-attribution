@@ -853,6 +853,8 @@ int BPF_PROG(installed, unsigned int fd, struct file *file) {
     e->files = current_files_identity();
     e->fd = fd;
     e->generation = next_generation();
+    e->accepted = 0;
+    e->complete = 0;
     struct pidfd_slot s = {.files = e->files, .fd = e->fd};
     long rc = index_slot(e->files, e->file);
     if (!rc)
@@ -880,6 +882,7 @@ int BPF_PROG(receive_return, struct file *file, int *ufd, unsigned int o_flags,
   }
   return 0;
 }
+#include "slot_acceptance.bpf.h"
 SEC("tracepoint/syscalls/sys_exit_pidfd_getfd")
 int acquire_finish(struct trace_event_raw_sys_exit *ctx) {
   unsigned long long tid = bpf_get_current_pid_tgid();
@@ -891,6 +894,7 @@ int acquire_finish(struct trace_event_raw_sys_exit *ctx) {
     }
     e->accepted =
         ctx->ret >= 0 && ctx->ret == e->inner && ctx->ret == e->fd && e->file;
+    finish_slot_acceptance(e);
     emit(e, IOSEC_STAGE_PIDFD_GETFD, ctx->ret);
     bpf_map_delete_elem(&acquiring, &tid);
   }
@@ -1072,6 +1076,7 @@ int alias_finish(struct trace_event_raw_sys_exit *ctx) {
   struct event *e = bpf_map_lookup_elem(&aliasing, &tid);
   if (e) {
     e->accepted = ctx->ret >= 0 && ctx->ret == e->fd && e->file;
+    finish_slot_acceptance(e);
     emit(e, IOSEC_STAGE_FCNTL_DUPLICATION, ctx->ret);
     bpf_map_delete_elem(&aliasing, &tid);
   }
@@ -1267,12 +1272,4 @@ static long retire_line(void *map, const struct line_key *key,
     bpf_map_delete_elem(map, key);
   return 0;
 }
-SEC("fentry/mmput") int BPF_PROG(warm_mm_retired, struct mm_struct *mm_arg) {
-  unsigned long long mm = (unsigned long long)mm_arg;
-  if (BPF_CORE_READ(mm_arg, mm_users.counter) == 1 &&
-      bpf_map_lookup_elem(&warmed_mms, &mm)) {
-    bpf_for_each_map_elem(&lines, retire_line, &mm, 0);
-    bpf_map_delete_elem(&warmed_mms, &mm);
-  }
-  return 0;
-}
+#include "mm_retirement.bpf.h"

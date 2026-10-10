@@ -201,6 +201,8 @@ for n in [
     "python_frame_walk.bpf.h",
     "python_capture.bpf.h",
     "python_strings.bpf.h",
+    "slot_acceptance.bpf.h",
+    "mm_retirement.bpf.h",
     "python_string_scan.bpf.h",
 ]:
     shutil.copy2(ROOT / "evidence/build" / n, RUNTIME_DIR / n)

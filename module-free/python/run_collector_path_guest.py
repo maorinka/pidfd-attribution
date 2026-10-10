@@ -77,6 +77,8 @@ def build():
         "python_frame_walk.bpf.h",
         "python_capture.bpf.h",
         "python_strings.bpf.h",
+        "slot_acceptance.bpf.h",
+        "mm_retirement.bpf.h",
         "python_string_scan.bpf.h",
     ]:
         shutil.copy2(SOURCE_DIR / "core" / n, B / n)
@@ -167,6 +169,8 @@ def build():
         "python_frame_walk.bpf.h",
         "python_capture.bpf.h",
         "python_strings.bpf.h",
+        "slot_acceptance.bpf.h",
+        "mm_retirement.bpf.h",
         "python_string_scan.bpf.h",
     ]
     for n in names:
@@ -250,6 +254,8 @@ def regression():
         "python_frame_walk.bpf.h",
         "python_capture.bpf.h",
         "python_strings.bpf.h",
+        "slot_acceptance.bpf.h",
+        "mm_retirement.bpf.h",
         "python_string_scan.bpf.h",
     ]:
         shutil.copy2(RUNTIME_DIR / n, tree / "build" / n)

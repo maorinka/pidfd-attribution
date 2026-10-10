@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
     memcpy(record + BPF_RINGBUF_HDR_SZ, &header, sizeof(header));
   }
   producer = 2048 * step;
+  unsigned long initial_backlog = producer;
   struct direct_ring ring = {.consumer = &consumer,
                              .producer = &producer,
                              .data = data,
@@ -34,6 +35,14 @@ int main(int argc, char **argv) {
   assert(consumer == 1024 * step && output_records == 1024);
   assert(direct_consume(&ring) == 0);
   assert(consumer == producer && output_records == 2048);
+  assert(ring.backlog_peak == initial_backlog);
+  /* A fully drained burst still degrades capture without waiting for drops. */
+  struct capture_controller burst = {.requested = true, .effective = true};
+  assert(capture_controller_sample(&burst, CAPTURE_SAMPLE_NS, 0,
+                                   ring.backlog_peak, capacity));
+  assert(!burst.effective && burst.last_drops == 0);
+  ring.backlog_peak = 0;
+  assert(!direct_consume(&ring) && ring.backlog_peak == 0);
   /* Busy producers are waited on without spinning or releasing bytes. */
   consumer = 0;
   producer = step;
@@ -63,6 +72,6 @@ int main(int argc, char **argv) {
   close(directory_fd);
   puts("CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 "
        "discarded_no_output=1 malformed_payload_skipped=1 "
-       "corrupt_envelope_stops=1");
+       "corrupt_envelope_stops=1 drained_burst_degrades_without_drops=1");
   return 0;
 }

@@ -1,4 +1,5 @@
 import io
+import errno
 from contextlib import redirect_stdout, redirect_stderr
 import json
 from pathlib import Path
@@ -129,6 +130,39 @@ class AdmissionTests(unittest.TestCase):
             self.assertFalse(
                 validate_cgroup(dict(cgroup_id=0), mounts, membership)["enabled"]
             )
+
+    def test_cgroup_walk_ignores_removed_sibling_but_keeps_access_errors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.mkdir()
+            mounts = root / "mountinfo"
+            mounts.write_text(f"1 0 0:1 / {root} rw - cgroup2 cgroup rw\n")
+            membership = root / "membership"
+            membership.write_text("0::/\n")
+
+            def racing_walk(path, **kwargs):
+                kwargs["onerror"](FileNotFoundError(errno.ENOENT, "removed sibling"))
+                yield str(target), [], []
+
+            with patch("service.os.walk", side_effect=racing_walk):
+                found = validate_cgroup(
+                    dict(cgroup_id=target.stat().st_ino), mounts, membership
+                )
+                self.assertEqual(found["path"], str(target))
+
+            def denied_walk(path, **kwargs):
+                kwargs["onerror"](
+                    PermissionError(errno.EACCES, "inaccessible hierarchy")
+                )
+                yield str(target), [], []
+
+            with patch("service.os.walk", side_effect=denied_walk), self.assertRaises(
+                PermissionError
+            ):
+                validate_cgroup(
+                    dict(cgroup_id=target.stat().st_ino), mounts, membership
+                )
 
 
 class SegmentTests(unittest.TestCase):

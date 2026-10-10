@@ -6,6 +6,7 @@ from settings import ROOT, PREPARED, ARCH, PYTHON, PYTHON_CONFIG, MODULE_BACKED
 from support.python_layout import layout_header
 from kernel_admission import validate_preemption
 from shared.python.return_depth import detect_return_depth
+from shared.python.kernel_hooks import select_mm_release_hook
 from settings import BPF_INCLUDES, BPF_LIBS
 
 
@@ -188,9 +189,10 @@ def prepare():
         if any(t["kind"] == "STRUCT" and t["name"] == "__filename_head" for t in types)
         else "filename"
     )
+    mm_release_hook = select_mm_release_hook(types)
     return_depth = detect_return_depth(PREPARED, ARCH, BPF_INCLUDES, BPF_LIBS)
     has_close_files = int(functions.get("close_files", {}).get("vlen") == 1)
-    kernel_config = f'#define IOSEC_FILE_OPEN "{open_hook}"\n#define IOSEC_FILENAME_HEAD {filename_type}\n#define IOSEC_DUP_FD_ARGS {functions["dup_fd"]["vlen"]}\n#define IOSEC_HAVE_CLOSE_FILES {has_close_files}\n#define IOSEC_RETURN_DEPTH_BIAS {return_depth["return_depth_bias"]}\n'
+    kernel_config = f'#define IOSEC_FILE_OPEN "{open_hook}"\n#define IOSEC_FILENAME_HEAD {filename_type}\n#define IOSEC_DUP_FD_ARGS {functions["dup_fd"]["vlen"]}\n#define IOSEC_HAVE_CLOSE_FILES {has_close_files}\n#define IOSEC_RETURN_DEPTH_BIAS {return_depth["return_depth_bias"]}\n#define IOSEC_MM_RELEASE_HOOK "{mm_release_hook}"\n'
     (PREPARED / "kernel_layout.h").write_text(kernel_config)
     for name in ("workload.py", "deep_fixture.py"):
         shutil.copy2(ROOT / "fixtures/prerequisites" / name, PREPARED / name)
@@ -203,7 +205,9 @@ def prepare():
         python_version=version,
         offsets=offsets,
         return_depth=return_depth,
-        kernel_hooks={name: functions[name] for name in (open_hook, "dup_fd")},
+        kernel_hooks={
+            name: functions[name] for name in (open_hook, "dup_fd", mm_release_hook)
+        },
         fixture_inputs={
             name: sha256_file(PREPARED / name)
             for name in (

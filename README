@@ -109,7 +109,10 @@ a durable sequence, seeded above legacy names, so new sessions retain their orde
 even if the clock moves backwards. Existing legacy sessions keep their old order.
 Permanent configuration, admission and pinned-build refusals exit 78 (invalid
 collector options exit 2); systemd leaves them failed until an operator fixes and
-starts the service. Transient collector failures still restart after ten seconds.
+starts the service. Transient collector failures restart after ten seconds, limited to five starts
+in five minutes. Lock contention and runtime memory pressure remain transient;
+invalid artifacts, permissions and configured map-budget overruns exit 78.
+Failure logs include the operation, errno and chosen exit code.
 The preemption and lockdown admission rules are unchanged.
 Published evidence normalizes local host identities while preserving original
 artifact hashes.
@@ -198,3 +201,28 @@ NUL scans without runtime dispatch. The guard-page tests include these productio
 headers directly rather than extracting source text from the reader.
 validation/capture-helper-consolidation.json records compile comparisons; this
 extraction does not change the capture policy or establish a new CPU result.
+
+Lifecycle proof and adaptive sampling
+-------------------------------------
+INSTALL records are pending (accepted=0). After successful pidfd_getfd or fcntl
+return, matching slot generations retain the acquisition proof and source for
+later close/copy/release records. WRITE continues to validate its own inner/outer
+result. Shared-fdtable concurrency limits still apply.
+The final-mm cache hook is selected from typed BTF: exit_mmap, or __mmput
+when mapping teardown is not exposed. BTF presence alone does not prove a
+function is attachable; a refused attachment still stops startup. Retirement requires mm_users=0, covering both final
+release paths. Prepare refuses kernels without either supported hook.
+Adaptive capture samples ring high-water backlog over each sampling interval,
+including bursts drained before sampling. Recovery cannot repair past drops.
+Cgroup admission ignores concurrently removed siblings, while unknown target
+IDs and access errors still fail explicitly.
+
+Owned Ubuntu VM controls for the current endpoint build:
+
+sudo python3 endpoint-service/tests/integration_guest.py
+sudo python3 endpoint-service/tests/startup_guest.py
+
+The startup-unit control uses a unique private unit and leaves existing sensor
+installations untouched. It shortens only retry timing, verifies permanent
+refusals are not restarted, and verifies contention retries reach the shipped
+start limit. Neither startup failure reaches BPF object loading.

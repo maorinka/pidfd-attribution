@@ -196,6 +196,23 @@ def verify_writes(state, application, source=False):
         )
     ):
         raise RuntimeError("Guest control failed in integration_guest.py")
+    generation = writes[0]["generation"]
+    lifecycle = [
+        event
+        for event in events
+        if event["inode"] == application["inode"] and event["generation"] == generation
+    ]
+    installs = [event for event in lifecycle if event["stage"] == 4]
+    acquires = [event for event in lifecycle if event["stage"] == 6]
+    closes = [event for event in lifecycle if event["stage"] == 13]
+    if not installs or not acquires or not closes:
+        raise RuntimeError("Missing install/acquire/close lifecycle records")
+    if any(event["accepted"] or event["source_complete"] for event in installs):
+        raise RuntimeError("INSTALL claimed proof before syscall return")
+    if not all(event["accepted"] for event in acquires + closes):
+        raise RuntimeError("Confirmed acquisition was not retained for CLOSE")
+    if source and not all(event["source_complete"] for event in closes):
+        raise RuntimeError("CLOSE lost confirmed source metadata")
     if source:
         if not (all(e["source_complete"] for e in writes)):
             raise RuntimeError(writes)
@@ -304,6 +321,33 @@ def map_value(name, key):
         os.close(fd)
 
 
+def map_keys(name):
+    row = named_map(name)
+    library = map_library()
+    library.bpf_map_get_next_key.argtypes = [
+        ctypes.c_int,
+        ctypes.c_void_p,
+        ctypes.c_void_p,
+    ]
+    fd = library.bpf_map_get_fd_by_id(row["id"])
+    if fd < 0:
+        raise RuntimeError("Cannot inspect cache map")
+    keys = set()
+    previous = None
+    try:
+        for _ in range(row["max_entries"] * 2 + 1):
+            following = ctypes.create_string_buffer(row["bytes_key"])
+            if library.bpf_map_get_next_key(fd, previous, following):
+                if ctypes.get_errno() == errno.ENOENT:
+                    return keys
+                raise RuntimeError("Cannot enumerate cache map")
+            keys.add(following.raw)
+            previous = ctypes.create_string_buffer(following.raw)
+        raise RuntimeError("Cache enumeration exceeded its bound")
+    finally:
+        os.close(fd)
+
+
 def fill_map(name):
     row = named_map(name)
     library = map_library()
@@ -402,6 +446,7 @@ try:
         independent_existing_process_writes=len(native_writes),
         pidfd_writes=len(identity_writes),
         duplicate_rejected=True,
+        slot_acceptance_retained_after_return=True,
     )
     (BASE / "ready").unlink()
     (BASE / "go").unlink()
@@ -501,6 +546,49 @@ try:
     result["capacity"] = dict(
         explicit_history_gap=True, state_errors=stopped["state_errors"]
     )
+    process, state, _ = start_sensor("final-mm-cache", capture=True)
+    worker_source = BASE / "mm-cache-worker.py"
+    worker_source.write_text(
+        "import os, sys\n"
+        "fd = os.open(sys.argv[1], os.O_CREAT | os.O_WRONLY, 0o600)\n"
+        "os.write(fd, b'x')\n"
+        "print('warm', flush=True)\n"
+        "sys.stdin.readline()\n"
+        "os.close(fd)\n"
+    )
+    before_mm = map_keys("warmed_mms")
+    mm_worker = subprocess.Popen(
+        [sys.executable, str(worker_source), str(BASE / "files/mm-cache")],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    active.append(mm_worker)
+    if mm_worker.stdout.readline().strip() != "warm":
+        raise RuntimeError("Cache worker did not reach its hold point")
+    new_mm = map_keys("warmed_mms") - before_mm
+    if len(new_mm) != 1:
+        raise RuntimeError(("Expected one worker mm cache", len(new_mm)))
+    mm_key = next(iter(new_mm))
+    if not any(key[:8] == mm_key for key in map_keys("lines")):
+        raise RuntimeError("Worker did not populate the line cache")
+    mm_worker.stdin.write("exit\n")
+    mm_worker.stdin.flush()
+    if mm_worker.wait(timeout=10) != 0:
+        raise RuntimeError("Cache worker failed")
+    active.remove(mm_worker)
+    mm_worker.stdin.close()
+    mm_worker.stdout.close()
+    wait_for(lambda: mm_key not in map_keys("warmed_mms"))
+    if any(key[:8] == mm_key for key in map_keys("lines")):
+        raise RuntimeError("Final mm release retained line entries")
+    stop(process, state)
+    result["final_mm_cache"] = dict(
+        populated_worker_mm_retired=True,
+        line_entries_retired=True,
+        async_path_basis="Both final-release paths call the selected hook; explicit mmput_async execution not forced by this control.",
+    )
+
     process, state, _ = start_sensor(
         "line-cache-pressure", capture=True, state_entries=128
     )

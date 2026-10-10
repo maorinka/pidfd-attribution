@@ -1,7 +1,8 @@
 [Unit]
 Description=IO.Security module-free endpoint attribution sensor
 After=local-fs.target
-StartLimitIntervalSec=0
+StartLimitIntervalSec=300
+StartLimitBurst=5
 
 [Service]
 Type=notify

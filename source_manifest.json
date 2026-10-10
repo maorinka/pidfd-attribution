@@ -59,6 +59,12 @@
     },
     {
       "file": "core/python_string_scan.bpf.h"
+    },
+    {
+      "file": "core/slot_acceptance.bpf.h"
+    },
+    {
+      "file": "core/mm_retirement.bpf.h"
     }
   ]
 }

@@ -37,7 +37,7 @@ static unsigned long long direct_written, direct_reserve_calls,
     direct_reserved_end;
 struct direct_ring {
 #if IOSEC_DIRECT_ENDPOINT
-  unsigned long long malformed_records;
+  unsigned long long malformed_records, backlog_peak;
 #endif
   unsigned long *consumer, *producer;
   unsigned char *data;

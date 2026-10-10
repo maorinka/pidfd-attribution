@@ -801,8 +801,15 @@ static int configure_maps(struct bpf_object *obj) {
   for (unsigned int i = 0; i < sizeof(state_maps) / sizeof(state_maps[0]);
        i++) {
     struct bpf_map *map = bpf_object__find_map_by_name(obj, state_maps[i]);
-    if (!map || bpf_map__set_max_entries(map, cfg.state_entries))
+    if (!map) {
+      errno = EINVAL;
       return -1;
+    }
+    int error = bpf_map__set_max_entries(map, cfg.state_entries);
+    if (error) {
+      errno = error < 0 ? -error : EINVAL;
+      return -1;
+    }
   }
   int possible_cpus = libbpf_num_possible_cpus();
   if (possible_cpus < 1) {
@@ -828,16 +835,32 @@ static int configure_maps(struct bpf_object *obj) {
             "Map memory estimate %llu exceeds the 256 MiB sensor budget; "
             "reduce state_entries.\n",
             map_bytes);
-    errno = ENOMEM;
+    errno = E2BIG;
     return -1;
   }
   return 0;
+}
+#define COLLECTOR_PERMANENT_EXIT 78
+/* Resource pressure and competing instances can clear without configuration
+ * changes. Invalid artifacts, permissions and fixed bounds require an operator.
+ */
+static int collector_failure_exit(const char *stage, int error, bool running) {
+  int code = 1;
+  if (!running &&
+      (error == EPERM || error == EACCES || error == EINVAL || error == E2BIG ||
+       error == ENOENT || error == ENOTDIR || error == ELOOP ||
+       error == ENOEXEC || error == ENOSYS || error == EOPNOTSUPP))
+    code = COLLECTOR_PERMANENT_EXIT;
+  fprintf(stderr, "SENSOR_%s_FAILED stage=%s errno=%d (%s) exit=%d\n",
+          running ? "RUNTIME" : "STARTUP", stage, error, strerror(error), code);
+  return code;
 }
 #define CHECK_SENSOR(operation)                                                \
   do {                                                                         \
     errno = 0;                                                                 \
     if (operation) {                                                           \
       failure_errno = errno ? errno : EIO;                                     \
+      failure_stage = #operation;                                              \
       goto cleanup;                                                            \
     }                                                                          \
   } while (0)
@@ -856,25 +879,24 @@ int main(int argc, char **argv) {
   start_real_ns = now_ns(CLOCK_REALTIME);
   unsigned char random[16];
   if (getrandom(random, sizeof(random), 0) != (ssize_t)sizeof(random))
-    return 1;
+    return collector_failure_exit("session entropy", errno ? errno : EIO,
+                                  false);
   for (unsigned int i = 0; i < sizeof(random); i++)
     snprintf(session + i * 2, 3, "%02x", random[i]);
   FILE *boot = fopen("/proc/sys/kernel/random/boot_id", "r");
   if (!boot || !fgets(boot_id, sizeof(boot_id), boot))
-    return 1;
+    return collector_failure_exit("boot identity", errno ? errno : EIO, false);
   fclose(boot);
   boot_id[strcspn(boot_id, "\n")] = 0;
   directory_fd = open_directory(cfg.state_dir);
   if (directory_fd < 0) {
-    perror("private state directory");
-    return 1;
+    return collector_failure_exit("private state directory", errno, false);
   }
   lock_fd = openat(directory_fd, "collector.lock",
                    O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
   if (lock_fd < 0 || secure_file(lock_fd) ||
       flock(lock_fd, LOCK_EX | LOCK_NB)) {
-    perror("exclusive collector lock");
-    return 1;
+    return collector_failure_exit("exclusive collector lock", errno, false);
   }
   struct sigaction action = {.sa_handler = signal_handler};
   sigemptyset(&action.sa_mask);
@@ -885,8 +907,10 @@ int main(int argc, char **argv) {
   struct bpf_link *links[64] = {0};
   struct direct_ring ring = {0};
   int result = 1, failure_errno = 0, policy_fd = -1;
+  const char *failure_stage = "collector startup";
   CHECK_SENSOR(STORAGE_RETRY(write_health("starting", 0)));
   if (cfg.bpf_stats) {
+    failure_stage = "BPF runtime statistics";
     errno = 0;
     stats_fd = bpf_enable_stats(BPF_STATS_RUN_TIME);
     if (stats_fd < 0) {
@@ -894,6 +918,7 @@ int main(int argc, char **argv) {
       goto cleanup;
     }
   }
+  failure_stage = "collector executable path";
   char object_path[PATH_MAX], executable_path[PATH_MAX];
   ssize_t executable_length =
       readlink("/proc/self/exe", executable_path, sizeof(executable_path) - 1);
@@ -919,6 +944,7 @@ int main(int argc, char **argv) {
     goto cleanup;
   }
   errno = 0;
+  failure_stage = "open BPF object";
   obj = bpf_object__open_file(object_path, NULL);
   if (libbpf_get_error(obj)) {
     failure_errno = (int)-libbpf_get_error(obj);
@@ -934,9 +960,12 @@ int main(int argc, char **argv) {
       bpf_program__set_autoload(program, false);
   }
   errno = 0;
+  failure_stage = "configure BPF maps";
   int load_error = configure_maps(obj);
-  if (!load_error)
+  if (!load_error) {
+    failure_stage = "load BPF object";
     load_error = bpf_object__load(obj);
+  }
   if (load_error) {
     failure_errno = errno ? errno : (load_error < 0 ? -load_error : EIO);
     goto cleanup;
@@ -952,6 +981,7 @@ int main(int argc, char **argv) {
   CHECK_SENSOR(
       bpf_map_update_elem(policy_fd, &key, &cfg.policy, BPF_ANY) ||
       direct_open(&ring, bpf_object__find_map_fd_by_name(obj, "events")));
+  failure_stage = "attach BPF programs";
   bpf_object__for_each_program(program, obj) {
     if (!bpf_program__autoload(program))
       continue;
@@ -993,22 +1023,27 @@ int main(int argc, char **argv) {
                      last_sync = last_health, last_pruned_records = 0,
                      last_pruned_segment = 0;
   while (!stopping) {
-    unsigned long long before_drain = now_ns(CLOCK_MONOTONIC);
     ring_backlog = __atomic_load_n(ring.producer, __ATOMIC_ACQUIRE) -
                    __atomic_load_n(ring.consumer, __ATOMIC_ACQUIRE);
-    if (capture.requested &&
-        before_drain - capture.last_sample_ns >= CAPTURE_SAMPLE_NS) {
-      CHECK_SENSOR(read_diagnostics(obj));
-      CHECK_SENSOR(capture_controller_sample(&capture, before_drain, ring_drops,
-                                             ring_backlog, IOSEC_RING_BYTES) &&
-                   apply_capture_mode());
-    }
     errno = 0;
     int drain = STORAGE_RETRY(direct_consume(&ring));
     malformed_records = ring.malformed_records;
     if (drain < 0) {
       failure_errno = errno ? errno : EIO;
+      failure_stage = "drain ring records";
       goto cleanup;
+    }
+    unsigned long long sample_ns = now_ns(CLOCK_MONOTONIC);
+    if (capture.requested &&
+        sample_ns - capture.last_sample_ns >= CAPTURE_SAMPLE_NS) {
+      ring_backlog = ring.backlog_peak;
+      CHECK_SENSOR(read_diagnostics(obj));
+      CHECK_SENSOR(capture_controller_sample(&capture, sample_ns, ring_drops,
+                                             ring_backlog, IOSEC_RING_BYTES) &&
+                   apply_capture_mode());
+      ring.backlog_peak = 0;
+    } else if (!capture.requested) {
+      ring.backlog_peak = 0;
     }
     if (output_records != last_pruned_records &&
         segment_number != last_pruned_segment) {
@@ -1093,5 +1128,7 @@ cleanup:
           output_records, ring_drops, state_errors, result);
   close(lock_fd);
   close(directory_fd);
-  return result;
+  return result ? collector_failure_exit(failure_stage, failure_errno,
+                                         sensor_ready)
+                : 0;
 }
