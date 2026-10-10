@@ -1,0 +1,113 @@
+{
+  "passed": true,
+  "baseline_commit": "18feae44e708499b38fa4e2457a506c30f90843b",
+  "scope": "Hosted compile-only checks, opt-in guest suites, immutable evidence currency index and manifest audit.",
+  "source_sha256": {
+    ".github/workflows/offline.yml": "e31964fd461a67061d43b1055820b5fcf04c58caabadf718b66076dcd22b6d78",
+    ".github/workflows/endpoint.yml": "e6e9a282f89b029270102f1e930d6f44248066d39854d7b58dab85efb7399e87",
+    ".github/workflows/compatibility.yml": "3284ff1cacce157d7640e0ac09aefeeda653bfb10c2722744ccd64e61463aaf4",
+    ".github/workflows/module-free.yml": "41972c72fb7c7dee8a22b79f1881d671b5702089fd0f94f482c70093f696c3d1",
+    "tools/check_compilation.py": "01e205252552428f78ab30604fbdd6efcdb3fed29b8c133786932fd2443b4a7c",
+    "tools/index_evidence.py": "8d6513cb6d3dec4548b1fa89ea326cac276fb617d62445d29c4b18aeefb8c27a",
+    "tests/test_evidence_index.py": "7a99a659daf800373edfe9aaca1246a8030b8858ae6efd2f51c5ef5a95f9e237",
+    "tests/kernel_ordering_guest.py": "cd1e1b791371ddeb295bc8bef5b89df13478b29589bd23be33291069a3594b09",
+    "endpoint-service/tests/line_gap_fixture.py": "4aabbb80bd58f0b06d1ee2dac543c9090e0cdf23d87f822d1274fd4ca0cfd42a"
+  },
+  "offline": {
+    "root_tests": 38,
+    "endpoint_tests": 20,
+    "style_passed": true
+  },
+  "compile_check": {
+    "passed": true,
+    "compile_only": true,
+    "python_minor": 12,
+    "kernel_headers": "/usr/src/linux-headers-6.8.0-146-generic",
+    "objects": [
+      {
+        "backend": "root",
+        "return_depth_bias": 0,
+        "sha256": "d1f1d1427b0860de477c9f5fac522268865c3183fce10290ad874bee447dd40d"
+      },
+      {
+        "backend": "root",
+        "return_depth_bias": 1,
+        "sha256": "35027b587e8be81f888b07d0ef792c40b68b563aafb74b210596a79254a6c028"
+      },
+      {
+        "backend": "module-free",
+        "return_depth_bias": 0,
+        "sha256": "c4c0017b77ffba7c37927d69add68a0a13f61630d9bbc5385fc87037824bc00e"
+      },
+      {
+        "backend": "module-free",
+        "return_depth_bias": 1,
+        "sha256": "62a09592f85622249d2bf7d569319e38b29cf4e1e376a8aeecf264385e1bf2f3"
+      },
+      {
+        "backend": "endpoint-service",
+        "return_depth_bias": 0,
+        "sha256": "181883eaa6ba285aeba9b17e47535dd0292838e652bb9f7dbded31b0abfce25d"
+      },
+      {
+        "backend": "endpoint-service",
+        "return_depth_bias": 1,
+        "sha256": "f4ae6d07c679bbb038092715b5e2387ad03a2a9e4d14adf8c3873bb2c4a6341d"
+      }
+    ],
+    "collectors": [
+      "root",
+      "module-free",
+      "endpoint-service"
+    ],
+    "module_compiled": true,
+    "bpf_loaded": false,
+    "module_loaded": false
+  },
+  "ordering_control": {
+    "kernel": "6.8.0-146-generic",
+    "architecture": "x86_64",
+    "scratch_mode": "voluntary",
+    "deployment_admitted": true,
+    "ordering": {
+      "return_depth_bias": 1,
+      "entry_depths": [
+        0,
+        1
+      ],
+      "return_depths": [
+        2,
+        1
+      ]
+    },
+    "source_sha256": {
+      "shared/core/return_depth.c": "017e8f64b0eeff1a8e4764a04a840d85fac641ff5a4dbfc1a139f853dbbc9571",
+      "shared/core/return_depth.bpf.c": "af244613cefa3640718b70ccf5341d1a94fd82fe2c9c1667b6791020ee43708b",
+      "shared/python/return_depth.py": "4ad6e18520c553930b1e5f8b812d66f089d052a0855413f55edbdbc198dc0fb4",
+      "tests/kernel_ordering_guest.py": "cd1e1b791371ddeb295bc8bef5b89df13478b29589bd23be33291069a3594b09"
+    }
+  },
+  "manifest_audit": {
+    "root_arch_pinned": true,
+    "module_free_arch_pinned": true,
+    "endpoint_production_sources": 21,
+    "endpoint_arch_pinned": true,
+    "all_manifest_paths_exist": true,
+    "backends_have_separate_scope": true
+  },
+  "evidence_index_counts": {
+    "current-source-subset": 1,
+    "historical-source": 17,
+    "unresolved-source": 8,
+    "unindexed-history": 41
+  },
+  "retained_attempts": [
+    "Resolved selected interpreter path before deriving its -config helper; generic python3-config absent in owned VM.",
+    "Explicit optional libbpf-prefix referenced no static library on Ubuntu24; reran with installed system libbpf, matching hosted configuration."
+  ],
+  "limits": [
+    "Guest workflow wiring is not a passing guest matrix. Existing owned x86 suite passed in earlier batches; no new arm64/Python3.10 or fresh systemd installation suite claimed here.",
+    "Compiler inputs cover both bias branches but do not choose a valid runtime bias; no BPF/module is loaded by the compile check.",
+    "Evidence indexing compares only explicit recognized source-pin schemas. Matching subset is never whole-tree runtime qualification."
+  ]
+}

@@ -1,5 +1,6 @@
 """Calibrate kernel return ordering without the collector's scratch assumptions."""
 
+import argparse
 import hashlib
 import json
 import os
@@ -11,10 +12,21 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from shared.python.kernel_admission import validate_preemption
+from shared.python.backend_settings import configure_backend
 from shared.python.return_depth import detect_return_depth
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--backend",
+        choices=("root", "module-free", "endpoint-service"),
+        default="module-free",
+    )
+    parser.add_argument("--report", type=Path)
+    args = parser.parse_args()
+    backend = ROOT if args.backend == "root" else ROOT / args.backend
+    settings = configure_backend(backend)
     if sys.platform != "linux" or os.geteuid() != 0:
         raise RuntimeError("Run this owned calibration on Linux as root")
     arch = {"aarch64": "arm64", "x86_64": "x86"}.get(os.uname().machine)
@@ -43,7 +55,7 @@ def main():
                 check=True,
             )
         report["ordering"] = detect_return_depth(
-            prepared, arch, [], ["-lbpf", "-lelf", "-lz"]
+            prepared, arch, settings["BPF_INCLUDES"], settings["BPF_LIBS"]
         )
     report["source_sha256"] = {
         name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
@@ -54,7 +66,10 @@ def main():
             "tests/kernel_ordering_guest.py",
         )
     }
-    print(json.dumps(report, indent=2))
+    encoded = json.dumps(report, indent=2) + "\n"
+    if args.report:
+        args.report.write_text(encoded)
+    print(encoded, end="")
 
 
 if __name__ == "__main__":

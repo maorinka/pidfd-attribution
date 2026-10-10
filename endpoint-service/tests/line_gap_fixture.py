@@ -18,10 +18,12 @@ else:
     def line_gap_inner(fd):
         return demo.write_leaf(fd)
 
-    # Location kind15 represents no source location, one instruction per entry.
+    # 3.10 uses a byte-address delta and -128 no-line sentinel; 3.11+
+    # uses location kind15, one instruction per entry.
     code = line_gap_inner.__code__
+    no_location = b"\x02\x80" if sys.version_info.minor == 10 else b"\xf8"
     line_gap_inner.__code__ = code.replace(
-        co_linetable=b"\xf8" * (len(code.co_code) // 2)
+        co_linetable=no_location * (len(code.co_code) // 2)
     )
     if any(line is not None for _, _, line in line_gap_inner.__code__.co_lines()):
         raise RuntimeError("Fixture retained a source location")

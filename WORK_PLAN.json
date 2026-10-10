@@ -9,16 +9,17 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Build and guest CI, current evidence index",
+    "name": "Installer and selected-interpreter preflight reliability",
     "items": [
-      "R034",
-      "R035",
-      "R036",
-      "R038",
-      "R070",
-      "R071"
+      "R032",
+      "R044",
+      "R045",
+      "R054",
+      "R074",
+      "R075"
     ],
-    "previous_batch_evidence": "validation/module-helper-authority.json"
+    "previous_batch_evidence": "validation/build-ci-evidence-index.json",
+    "pending_guest_coverage": "Verify no-location fixture branch on Python3.10 and exercise new workflow commands; no existing installation may be overwritten."
   },
   "next_batches": [
     "Module helper attack-surface audit and cleanup",

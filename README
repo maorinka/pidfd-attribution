@@ -246,3 +246,34 @@ The module backend trusts kernel-module administrators and still requires
 lockdown none; use the upstream-only endpoint backend for module-prohibited hosts.
 Unused native_read8 and module serializer scratch are removed. Module-owned BTF
 releases helper registrations during normal unload and failed initialization.
+
+Hosted CI compiles all three BPF readers for both return-depth biases, both
+collectors, and the research module against sample kernel headers. It loads
+neither BPF nor modules. These are compile-only checks, not deployment evidence.
+The owned endpoint guest workflow runs integration_guest.py, startup_guest.py,
+and systemd_guest.py on dedicated disposable VMs with no existing installation.
+Admission policy remains enforced; a workflow label is not proof of support.
+
+Retained reports are historical and immutable. Produce an index for your current
+checkout with:
+  python3 tools/index_evidence.py --output /tmp/evidence-index.json
+Only explicit source paths are compared. Current-source-subset means the listed
+files match, not that the whole current tree or another kernel is qualified.
+Unknown older source schemas remain unindexed history. Hosted CI publishes this
+index for every push. No historical report is silently replaced or deleted.
+
+For a refactor expected to preserve executable behavior, compile both revisions
+with identical generated inputs and compare the resulting objects explicitly:
+  python3 tools/check_bpf_equivalence.py BEFORE.bpf.o AFTER.bpf.o
+  python3 tools/check_core_relocations.py BEFORE.bpf.o AFTER.bpf.o
+The first checks instructions and symbol relocations; the second checks CO-RE
+access/type shapes. Behavior changes must use regression tests rather than an
+expected-equality assertion against an older implementation.
+
+Fixture VM workflows also invoke the standalone callback/lifetime and leader-exit
+controls. The module workflow checks helper authority; the upstream-only workflow
+checks fixture-loader failure cleanup. Kernel-ordering calibration uses each
+backend's configured libbpf dependency. These workflows are opt-in; their presence
+alone does not mean every target has passed. Root/module-free source manifests
+cover their own backends, including arch.h. Endpoint builds pin their PRODUCTION
+source list and generated target inputs in build/manifest.json.

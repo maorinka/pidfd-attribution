@@ -19,6 +19,11 @@ jobs:
       - run: python -m unittest discover -s tests -p 'test_*.py'
       - run: python endpoint-service/tests/test_service.py
       - run: python tools/check_style.py
+      - run: python tools/index_evidence.py --output /tmp/evidence-index.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: evidence-index-${{ matrix.python }}
+          path: /tmp/evidence-index.json
       - run: |
           gcc -std=c11 -Wall -Wextra -Werror endpoint-service/tests/capture_controller.c -o /tmp/capture-controller
           /tmp/capture-controller
@@ -37,3 +42,21 @@ jobs:
           HEADER
           python3 endpoint-service/tests/check_storage.py
           gcc -O2 -Wall -Wextra -Werror endpoint-service/benchmarks/bpf_runtime.c -lbpf -lelf -lz -o /tmp/bpf-runtime
+  compilation:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install compiler and sample headers
+        run: sudo apt-get update && sudo apt-get install -y clang llvm gcc linux-tools-generic linux-headers-generic python3-dev libbpf-dev libelf-dev zlib1g-dev binutils pahole
+      - name: Compile all readers, collectors and module without loading them
+        shell: bash
+        run: |
+          compile_headers=(/usr/src/linux-headers-*-generic)
+          /usr/bin/python3 tools/check_compilation.py --kernel-headers "${compile_headers[-1]}" --report /tmp/compilation.json
+      - name: Retain compile-only report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: compile-only
+          path: /tmp/compilation.json
+          if-no-files-found: warn

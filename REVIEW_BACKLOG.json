@@ -620,38 +620,59 @@
     {
       "id": "R034",
       "area": "evidence",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Historical reports pin older or uncommitted source trees; cannot be read as current regression evidence.",
-      "next_step": "Index reports by tested source revision/hash, status and supersedes; retain honest failures. Check which recorded hashes exist in history.",
-      "evidence": "",
+      "next_step": "Historical reports preserved. Per-push artifact indexes explicit source pins as current subset, historical, unresolved or unindexed; unknown schemas never treated as current.",
+      "evidence": "validation/build-ci-evidence-index.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Reviewer estimates stale/uncommitted hash counts at da2d6bd. Preserve historical evidence; newer ring/capture extraction reports pin their own source and expressly do not claim fresh runtime validation."
+      ],
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "4 index fault/semantic tests pass, existing67 reports inventoried. No all-HEAD regression claim from subset match.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
       ]
     },
     {
       "id": "R035",
       "area": "manifest",
-      "status": "reported-unverified",
+      "status": "closed-not-reproduced",
       "finding": "Root source_manifest omits arch.h and endpoint-service; module-free reportedly includes arch.h.",
-      "next_step": "Audit actual pinning path; cover backend/shared dependencies and generated artifacts.",
-      "evidence": ""
+      "next_step": "Current root/module-free manifests include arch.h; endpoint separately pins its21 PRODUCTION inputs plus generated target inputs. Root manifest intentionally scopes only its backend.",
+      "evidence": "validation/build-ci-evidence-index.json",
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "AST/manifest audit finds no missing source paths and arch.h in all3 backend source sets.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
+      ]
     },
     {
       "id": "R036",
       "area": "ci",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "No automated guest workflow for flagship endpoint integration/systemd suites; existing kernel workflows manual and cover fixture backends.",
-      "next_step": "Add opt-in endpoint workflow and kernel matrix; retain distinction between hosted compilation and actual BPF attachment.",
-      "evidence": "",
+      "next_step": "New opt-in endpoint guest workflow invokes storage, integration, private restart-policy and full installation/systemd suites on dedicated disposable runners.",
+      "evidence": "validation/build-ci-evidence-index.json",
       "additional_reviews": [
         "final-bfb1249",
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Reviewer again reports endpoint integration/systemd controls absent from VM workflows. No new guest workflow added in extraction commits."
+      ],
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "Workflow prerequisites explicit. No passing self-hosted matrix claimed until those runners execute it.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
       ]
     },
     {
@@ -675,16 +696,23 @@
     {
       "id": "R038",
       "area": "ci",
-      "status": "partially-fixed",
+      "status": "fixed-with-scope",
       "finding": "check_bpf_equivalence.py and check_core_relocations.py are not wired into checks/docs.",
-      "next_step": "Audit applicability and run meaningful checks; bytecode equivalence inappropriate for intentional semantic differences.",
-      "evidence": "",
+      "next_step": "Instruction/CO-RE equivalence tools documented for same-input refactors; behavior-changing commits use regression checks.",
+      "evidence": "validation/build-ci-evidence-index.json",
       "additional_reviews": [
         "final-bfb1249",
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Both equivalence tools are now used for bounded extraction evidence; CO-RE comparisons passed all 15 capture-helper configurations. Automatic CI wiring remains open."
+      ],
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "Both tools were exercised in prior15-case equivalence validation; README now gives direct commands. No inappropriate equality gate against behavior-changing revisions.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
       ]
     },
     {
@@ -1064,29 +1092,43 @@
     {
       "id": "R070",
       "area": "ci",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "Reviewer reports four tests/*_guest.py controls invoked nowhere and README validation coverage may exceed run.sh coverage.",
-      "next_step": "Inventory every owned guest control and workflow; wire meaningful controls or accurately document standalone scope. Identify exact four scripts before treating claim as confirmed.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Fixture workflows invoke standalone source-binding, leader-exit, ordering, loader-failure and module helper-scope controls. Ordering uses backend libbpf and writes reports as root.",
+      "evidence": "validation/build-ci-evidence-index.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Reviewer additionally identifies endpoint integration_guest.py/systemd_guest.py as not executable/documented through run.sh. Inventory needed; explicit standalone instructions/workflow preferred to assuming all controls already run."
+      ],
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "New backend-aware ordering command passed in owned x86 VM. Additional workflow invocation coverage is not a claim every newly wired matrix ran.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
       ]
     },
     {
       "id": "R071",
       "area": "ci",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "Proposal hosted push-time BPF object/fixture-loader/module compile job; current hosted storage job does compile endpoint collector but attaches no BPF.",
-      "next_step": "Supply trustworthy representative generated BTF/layout fixtures or generation environment; separate build checks from runtime verifier/attachment qualification. Kernel module headers/toolchain need pinned matrix.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Hosted push/PR job compiles6 reader variants,3 backend consumers covering2 implementations, and research module, loading none.",
+      "evidence": "validation/build-ci-evidence-index.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Hosted CI still does not build BPF objects. Existing Linux storage job compiles the real collector without BPF attachment."
+      ],
+      "resolution_history": [
+        {
+          "batch": 12,
+          "detail": "Owned x86 run of exact new compile tool passed with fresh generated samples/system libbpf. Hosted results followed after push.",
+          "evidence": "validation/build-ci-evidence-index.json"
+        }
       ]
     },
     {
@@ -1420,6 +1462,12 @@
       "status": "validated",
       "evidence": "validation/module-helper-authority.json",
       "remaining": "Module-administrator trust is explicit; runtime compatibility matrix, CI/install/evidence/coverage/CPU work remains."
+    },
+    {
+      "batch": "12-build-ci-evidence-index",
+      "status": "validated-locally",
+      "evidence": "validation/build-ci-evidence-index.json",
+      "remaining": "Hosted job still to execute after push; opt-in guest matrix not yet qualified. Installer/preflight, coverage/lifecycle, consolidation and performance work remain."
     }
   ],
   "authorization_followup": "User approved implementation of the reconciled priority reliability batch. History rewriting remains unauthorized.",

@@ -27,9 +27,15 @@ jobs:
       - name: Require the configured test policy
         run: |
           test "$(cat /proc/sys/kernel/modules_disabled)" = 1
-          sudo python3 -c "from pathlib import Path; assert '[integrity]' in Path('/sys/kernel/security/lockdown').read_text()"
+          sudo python3 -c "from pathlib import Path; import sys; sys.exit(0 if '[integrity]' in Path('/sys/kernel/security/lockdown').read_text() else 1)"
       - name: Validate without module-loading capability
         run: sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module ./module-free/run.sh validate
+      - name: Run lifecycle, callback and loader-failure controls
+        run: |
+          sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module python3 tests/source_binding_guest.py --backend module-free
+          sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module python3 tests/leader_exit_guest.py --backend module-free
+          sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module python3 tests/fixture_failures_guest.py
+          sudo setpriv --bounding-set=-sys_module --inh-caps=-sys_module --ambient-caps=-sys_module python3 tests/kernel_ordering_guest.py --backend module-free --report module-free/evidence/kernel-ordering.json
       - name: Retain reports and logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

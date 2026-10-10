@@ -30,6 +30,12 @@ jobs:
         run: |
           sudo ./run.sh doctor
           sudo ./run.sh validate
+      - name: Run lifecycle, callback and helper-authority controls
+        run: |
+          sudo python3 tests/kfunc_registration_guest.py
+          sudo python3 python/collector_path_scope_guest.py tests/source_binding_guest.py --backend root
+          sudo python3 python/collector_path_scope_guest.py tests/leader_exit_guest.py --backend root
+          sudo python3 tests/kernel_ordering_guest.py --backend root --report evidence/kernel-ordering.json
       - name: Retain reports and logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
