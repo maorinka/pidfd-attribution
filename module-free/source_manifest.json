@@ -38,6 +38,9 @@
     },
     {
       "file": "core/python_frame_walk.bpf.h"
+    },
+    {
+      "file": "core/direct_ring_common.h"
     }
   ]
 }

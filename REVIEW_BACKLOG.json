@@ -506,8 +506,9 @@
         },
         {
           "target": "Ring consumer",
-          "status": "open",
-          "scope": "Shared mechanics, explicit wire v1/v2 validation and endpoint storage hooks."
+          "status": "validated",
+          "scope": "Canonical mapping, wire validation, synchronous writev and reservation mechanics; fixture fail-stop and endpoint skip/rollback/budget policies remain explicit.",
+          "evidence": "validation/ring-consolidation.json"
         },
         {
           "target": "Reader backends",
@@ -1016,6 +1017,12 @@
       "status": "validated",
       "evidence": "validation/frame-walker-consolidation.json",
       "remaining": "R033 remains open for other driver differences, shared ring mechanics, capture/string wrappers and common reader structure. CPU optimizations remain separate."
+    },
+    {
+      "batch": "7-consolidation-ring",
+      "status": "validated",
+      "evidence": "validation/ring-consolidation.json",
+      "remaining": "R033 remains open for other driver differences, capture/string wrappers and common reader structure. No CPU benchmark change."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."

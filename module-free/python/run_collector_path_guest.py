@@ -65,6 +65,7 @@ def build():
         "loader.c",
         "fixture_child.h",
         "direct_ring.h",
+        "direct_ring_common.h",
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",
@@ -151,6 +152,7 @@ def build():
         "fentry.bpf.o",
         "loader",
         "direct_ring.h",
+        "direct_ring_common.h",
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",
@@ -213,7 +215,13 @@ def regression():
     (tree / "build").mkdir(exist_ok=True)
     (tree / "evidence").mkdir(exist_ok=True)
     lineage = tree / "experiments/pidfd_lineage"
-    for n in ["reader.bpf.c", "loader.c", "fixture_child.h", "direct_ring.h"]:
+    for n in [
+        "reader.bpf.c",
+        "loader.c",
+        "fixture_child.h",
+        "direct_ring.h",
+        "direct_ring_common.h",
+    ]:
         shutil.copy2(RUNTIME_DIR / n, lineage / n)
     for n in [
         "reader.bpf.c",
@@ -224,6 +232,7 @@ def regression():
         "fentry.bpf.o",
         "loader",
         "direct_ring.h",
+        "direct_ring_common.h",
         "arch.h",
         "source_protocol.h",
         "bpf_task_helpers.h",

@@ -1,0 +1,94 @@
+{
+  "comparisons": [
+    {
+      "backend": "endpoint-service",
+      "preprocessed_tokens_unchanged": true,
+      "executable_text_unchanged": true,
+      "relocations_unchanged": true,
+      "text_sha256": "c13b34be5f6c87834a10b24e770e9930778bda0140be91b828ca3725e97419de",
+      "compiler_flags": [
+        "-O2",
+        "-std=gnu11",
+        "-Wall",
+        "-Werror",
+        "-Wextra"
+      ]
+    },
+    {
+      "backend": "module",
+      "preprocessed_tokens_unchanged": true,
+      "executable_text_unchanged": true,
+      "relocations_unchanged": true,
+      "text_sha256": "ad59e8d57ff78ce3fe8f95d5709290355d56aed1c8dfe5b2e1ba300f7b3a6c09",
+      "compiler_flags": [
+        "-O2",
+        "-std=gnu11",
+        "-Wall",
+        "-Werror"
+      ]
+    },
+    {
+      "backend": "module-free",
+      "preprocessed_tokens_unchanged": true,
+      "executable_text_unchanged": true,
+      "relocations_unchanged": true,
+      "text_sha256": "ad59e8d57ff78ce3fe8f95d5709290355d56aed1c8dfe5b2e1ba300f7b3a6c09",
+      "compiler_flags": [
+        "-O2",
+        "-std=gnu11",
+        "-Wall",
+        "-Werror"
+      ]
+    }
+  ],
+  "storage": {
+    "passed": true,
+    "adaptive_controller": "capture controller: overload, loss, hysteresis, recovery, configured-off passed",
+    "rotations": 5,
+    "retained_segments": 3,
+    "input_records": 38400,
+    "decoded_retained_records": 1024,
+    "record_boundaries_preserved": true,
+    "no_preallocated_zero_tail": true,
+    "failed_write_does_not_release_ring": true,
+    "output": "STORAGE_OK rotation=5 retention=3 records=38400 failed_write_no_release=1 unmanaged_preserved=1 fifo_and_symlink_no_block=1",
+    "admin_modified_segments_preserved": true,
+    "unsafe_fifo_and_symlink_do_not_block_rotation": true,
+    "bounded_consumer_backlog_retry": true,
+    "busy_record_no_spin": true,
+    "consumer_output": "CONSUMER_OK backlog_yields=1 drain_no_backoff=1 busy_no_spin=1 discarded_no_output=1 malformed_payload_skipped=1 corrupt_envelope_stops=1",
+    "recovery_output": "STORAGE_RECOVERY_OK transactional_pair=1 partial_event_rollback_retry=1 partial_journal_rollback_retry=1 reservation_rebuilt=1 all_rotation_faults=1 health_fault=1 quota_wait_retry=1 monotonic_session_order=1 legacy_seed=1 durable_counter_without_segments=1 interrupted_publication=1 corrupt_counter_refused=1",
+    "partial_write_rollback_then_retry": true,
+    "transactional_event_journal_rotation": true,
+    "clock_rollback_session_order": true
+  },
+  "environment": {
+    "os": "Ubuntu 24.04",
+    "architecture": "x86_64",
+    "kernel": "6.8.0-146-generic",
+    "compiler": "13.3.0"
+  },
+  "initial_comparison_attempt": "Adding -Wextra to fixture baseline rejected its existing unused ctx parameter; reran fixtures with their existing -Wall -Werror flags. No source change.",
+  "passed": true,
+  "baseline_commit": "da2d6bda47bee2a46931d72614e42303ae675c2a",
+  "scope": "Userspace ring extraction only; no BPF attachment, kernel lifecycle validation or CPU benchmark.",
+  "offline_tests": {
+    "root": 30,
+    "endpoint": 19,
+    "passed": true
+  },
+  "style_check_passed": true,
+  "source_sha256": {
+    "shared/core/direct_ring_common.h": "26b9ec61ce2c059a2accaa3202fc2696bf664a2231be87654d963f39c569f3a2",
+    "shared/core/direct_ring_v1.h": "a50ef1fd7e14285ae2203c3350b64871c158b0daf8b46094d98d942b12b9a709",
+    "shared/core/fixture_collector.c": "699ead7b38108b39fd9a09df58c49f8c771eadbe9683fb9b8d712d7885a1c062",
+    "endpoint-service/core/direct_ring.h": "ed864f468acbbcf995490984bd133a4c7a738bf48719b8427f25e472bf6f9ffd",
+    "endpoint-service/core/collector.c": "84f2e494f12f1010792a033665e2589c47de3f840910fdb65aae297f97d833f7",
+    "endpoint-service/python/service.py": "365c6b9acf02a28ca3cee5b4d5a13f2d5cd70c1eca46038426561b36a4de8089",
+    "python/run_collector_path_guest.py": "dda8b766ffd32aea5c789c37717d9b94a55a49e1cfe080ef6085c08d4ab6b57d",
+    "module-free/python/run_collector_path_guest.py": "db0adc5d8e3eb263e879db9985c7aa50b8fa3627b9878418a7a474471cff2f05",
+    "source_manifest.json": "82065ce6c362dccd101ae3d2e2f489ad3f73d7c2c99fb164d4d3f72c3da8470a",
+    "module-free/source_manifest.json": "abe3f3f5d02312078aa901eb954bb3e6e14716cd65ec1a5228b2ba9f71f645f0",
+    "tests/test_shared_records.py": "e98f8f67fff7b44548bdab09f9d5b882b83ab60b059c17bc49581b00337bc8ba"
+  }
+}

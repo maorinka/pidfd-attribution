@@ -173,3 +173,17 @@ validation/frame-walker-consolidation.json records instruction/relocation
 comparisons and a fresh Ubuntu 24.04 endpoint integration run. Additional minor
 version comparisons exercise compiler branches with synthetic configs; they do
 not establish interpreter ABI or kernel runtime support on those versions.
+
+Shared ring mechanics
+---------------------
+shared/core/direct_ring_common.h owns mmap setup, wire validation, batched
+writev completion and best-effort reservation for all three collectors. Thin
+backend headers select wire v1/v2 and keep their different commit/drain policies:
+fixtures stop on bad payloads and write failures; the endpoint counts/skips bad
+payloads, rolls back partial writes, rotates storage and yields at its drain
+budget. Corrupt ring boundaries remain fatal in both variants.
+validation/ring-consolidation.json records collector code/relocation comparisons
+and Ubuntu storage fault controls. These tests do not attach BPF or measure CPU.
+Run the Linux storage controls with:
+
+python3 endpoint-service/tests/check_storage.py

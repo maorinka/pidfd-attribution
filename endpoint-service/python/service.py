@@ -34,6 +34,7 @@ PRODUCTION = (
     "reader.bpf.c",
     "collector.c",
     "direct_ring.h",
+    "direct_ring_common.h",
     "arch.h",
     "source_protocol.h",
     "bpf_task_helpers.h",

@@ -124,6 +124,7 @@ with patch.object(Path, 'read_text', side_effect=AssertionError('filesystem read
 
     def test_shared_primitives_are_symlinked_in_all_backends(self):
         for relative in (
+            "core/direct_ring_common.h",
             "core/arch.h",
             "core/source_protocol.h",
             "core/bpf_task_helpers.h",
