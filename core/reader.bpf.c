@@ -281,37 +281,11 @@ static __always_inline int clear_source(struct source_event *e) {
   }
   return 0;
 }
-static __always_inline int capture_python_source(struct source_event *e) {
-  if (clear_source(e)) {
-    e->count = 0;
-    e->flags = IOSEC_SOURCE_READ_ERROR;
-    return -1;
-  }
-  unsigned long long tid = bpf_get_current_pid_tgid();
-  e->pid_tid = tid;
-  struct task_struct *task = (void *)bpf_get_current_task_btf();
-  e->birth = BPF_CORE_READ(task, start_time);
-  struct python_binding *state = lookup_python_binding(tid);
-  if (!state) {
-    e->flags = IOSEC_SOURCE_UNKNOWN;
-    return 0;
-  }
-  struct walk_context walk = {.event = e};
-  int failed = read_u64(state->state + TSTATE_FRAME, &walk.frame);
-#if TSTATE_FRAME_INDIRECT
-  if (!failed)
-    failed = !walk.frame || read_u64(walk.frame + CFRAME_FRAME, &walk.frame);
-#endif
-  if (failed)
-    e->flags |= IOSEC_SOURCE_READ_ERROR;
-  else
-    bpf_loop(32, walk_frame, &walk, 0);
-  if (walk.frame)
-    e->flags |= IOSEC_SOURCE_STACK_TRUNCATED;
-  if (!e->count)
-    e->flags |= IOSEC_SOURCE_UNKNOWN;
-  return 0;
-}
+#define IOSEC_CAPTURE_CONTINUOUS 0
+#define IOSEC_CAPTURE_SLEEPABLE 0
+#include "python_capture.bpf.h"
+#undef IOSEC_CAPTURE_SLEEPABLE
+#undef IOSEC_CAPTURE_CONTINUOUS
 
 /* Per-thread fused line-byte buffer (repurposed warm_tmp). Keyed by pid_tgid;
  * a thread runs at most one wrapped syscall at a time, so its entry is
@@ -356,54 +330,7 @@ static __always_inline long warm_read(void *to, unsigned int size,
  * probe_read_str semantics (NUL-inclusive length, size on truncation). */
 /* bounded NUL scan callback avoids nested verifier
  * path explosion; string size, fault fallback and truncation are unchanged. */
-struct fused_string_context {
-  char *bytes;
-  unsigned int size, length;
-};
-static long fused_string_end(unsigned int index, void *opaque) {
-  struct fused_string_context *s = opaque;
-  if (index >= 128 || index >= s->size)
-    return 1;
-  if (s->length != s->size)
-    s->bytes[index] = 0;
-  else if (!s->bytes[index])
-    s->length = index + 1;
-  return 0;
-}
-static long fused_string_end64(unsigned int index, void *opaque) {
-  struct fused_string_context *s = opaque;
-  if (index >= 64 || index >= s->size)
-    return 1;
-  if (s->length != s->size)
-    s->bytes[index] = 0;
-  else if (!s->bytes[index])
-    s->length = index + 1;
-  return 0;
-}
-/* Read only the validated Unicode payload, including its terminator. This
- * avoids crossing a guard page for short strings. Embedded-NUL tails are
- * zeroed. */
-static __always_inline long fused_read_str(char *to, unsigned int size,
-                                           unsigned long long object) {
-  unsigned long long length = 0;
-  if (warm_read(&length, 8, object + UNICODE_LENGTH) ||
-      length > IOSEC_MAX_BYTECODE_BYTES)
-    return -1;
-  unsigned int amount = length < size ? (unsigned int)length + 1 : size;
-  if (amount == 0 || amount > size ||
-      warm_read(to, amount, object + ASCII_DATA))
-    return -1;
-  if (length < size && to[amount - 1])
-    return -1;
-  to[size - 1] = 0;
-  struct fused_string_context scan = {
-      .bytes = to, .size = size, .length = size};
-  if (size <= 64)
-    bpf_loop(64, fused_string_end64, &scan, 0);
-  else
-    bpf_loop(128, fused_string_end, &scan, 0);
-  return scan.length;
-}
+#include "python_strings.bpf.h"
 static __always_inline int ensure_fused_scratch(unsigned long long tid,
                                                 char **out_buf,
                                                 struct line_value **out_val) {

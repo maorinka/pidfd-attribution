@@ -187,3 +187,14 @@ and Ubuntu storage fault controls. These tests do not attach BPF or measure CPU.
 Run the Linux storage controls with:
 
 python3 endpoint-service/tests/check_storage.py
+
+Shared capture and string helpers
+---------------------------------
+shared/core/python_capture.bpf.h specializes the nofault and upstream sleepable
+capture wrappers. Endpoint tier-transition checks remain compile-time choices;
+module-native capture stays in the module backend. python_strings.bpf.h shares
+the bounded Unicode read, and python_string_scan.bpf.h specializes the 64/128-byte
+NUL scans without runtime dispatch. The guard-page tests include these production
+headers directly rather than extracting source text from the reader.
+validation/capture-helper-consolidation.json records compile comparisons; this
+extraction does not change the capture policy or establish a new CPU result.

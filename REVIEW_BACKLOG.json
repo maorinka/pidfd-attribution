@@ -511,6 +511,12 @@
           "evidence": "validation/ring-consolidation.json"
         },
         {
+          "target": "Capture and bounded string helpers",
+          "status": "validated",
+          "scope": "Shared nofault/upstream capture wrappers, bounded Unicode reader and compile-time 64/128-byte scan callbacks; native helper and endpoint epoch semantics preserved.",
+          "evidence": "validation/capture-helper-consolidation.json"
+        },
+        {
           "target": "Reader backends",
           "status": "open",
           "scope": "Common implementation with thin wrappers; preserve module/upstream and fixture/continuous policy differences."
@@ -1023,6 +1029,12 @@
       "status": "validated",
       "evidence": "validation/ring-consolidation.json",
       "remaining": "R033 remains open for other driver differences, capture/string wrappers and common reader structure. No CPU benchmark change."
+    },
+    {
+      "batch": "8-consolidation-capture",
+      "status": "validated",
+      "evidence": "validation/capture-helper-consolidation.json",
+      "remaining": "R033 remains open for genuine driver differences and common reader structure. Native capture remains specialized. No new runtime or CPU claim."
     }
   ],
   "authorization_followup": "User subsequently approved implementation batches1 and2. History rewriting remains unauthorized."

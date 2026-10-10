@@ -77,6 +77,9 @@ def build():
         "cleanup_retirement.bpf.h",
         "thread_retirement.bpf.h",
         "python_frame_walk.bpf.h",
+        "python_capture.bpf.h",
+        "python_strings.bpf.h",
+        "python_string_scan.bpf.h",
     ]:
         shutil.copy2(SOURCE_DIR / "core" / n, B / n)
     cc = [
@@ -132,6 +135,9 @@ def build():
         "cleanup_retirement.bpf.h",
         "thread_retirement.bpf.h",
         "python_frame_walk.bpf.h",
+        "python_capture.bpf.h",
+        "python_strings.bpf.h",
+        "python_string_scan.bpf.h",
     ]
     for n in names:
         shutil.copy2(B / n, b / n)
@@ -212,6 +218,9 @@ def regression():
         "cleanup_retirement.bpf.h",
         "thread_retirement.bpf.h",
         "python_frame_walk.bpf.h",
+        "python_capture.bpf.h",
+        "python_strings.bpf.h",
+        "python_string_scan.bpf.h",
     ]:
         shutil.copy2(RUNTIME_DIR / n, tree / "build" / n)
     g = RUNTIME_DIR / "regression"

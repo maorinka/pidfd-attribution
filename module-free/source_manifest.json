@@ -41,6 +41,15 @@
     },
     {
       "file": "core/direct_ring_common.h"
+    },
+    {
+      "file": "core/python_capture.bpf.h"
+    },
+    {
+      "file": "core/python_strings.bpf.h"
+    },
+    {
+      "file": "core/python_string_scan.bpf.h"
     }
   ]
 }

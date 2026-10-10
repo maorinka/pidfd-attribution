@@ -1,0 +1,205 @@
+{
+  "passed": true,
+  "comparisons": [
+    {
+      "backend": "root",
+      "python_minor": 12,
+      "synthetic_version_branch": false,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 76,
+      "baseline_object_sha256": "c0c4c34b62c5d380585d0737b8759abebe4c8bf3bae6722e9066617f0d5ed2ec",
+      "candidate_object_sha256": "49980ce698c7da12bcc4f3f66fa76f114e0337d13658acc448f76381180a5065"
+    },
+    {
+      "backend": "root",
+      "python_minor": 10,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 76,
+      "baseline_object_sha256": "14a70cdcfbe1cfc1763473eaf25383bf2b034fb9d289ffd66e4331bf5b03e68d",
+      "candidate_object_sha256": "278c6fce95fdf8f8914292abf9eb5f46a1cb66f4bbeb09274ff76df6f7c45eb4"
+    },
+    {
+      "backend": "root",
+      "python_minor": 11,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 76,
+      "baseline_object_sha256": "7733bd85a06cafa422bb697b2220bb3b57073991e42f281cd54770ccb8ab974e",
+      "candidate_object_sha256": "f2110c5d1dad4c646101e8f7db672423997069569f04d71861c4d3315ad242a2"
+    },
+    {
+      "backend": "root",
+      "python_minor": 13,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 76,
+      "baseline_object_sha256": "c0c4c34b62c5d380585d0737b8759abebe4c8bf3bae6722e9066617f0d5ed2ec",
+      "candidate_object_sha256": "49980ce698c7da12bcc4f3f66fa76f114e0337d13658acc448f76381180a5065"
+    },
+    {
+      "backend": "root",
+      "python_minor": 14,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 76,
+      "baseline_object_sha256": "c0c4c34b62c5d380585d0737b8759abebe4c8bf3bae6722e9066617f0d5ed2ec",
+      "candidate_object_sha256": "49980ce698c7da12bcc4f3f66fa76f114e0337d13658acc448f76381180a5065"
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 12,
+      "synthetic_version_branch": false,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 85,
+      "baseline_object_sha256": "5dc3f89575765b62bbea0f8ba6480382e68fec534a1b2118b2cb7d1853afb694",
+      "candidate_object_sha256": "3b3d27abe996cbc3580e614cbe18506604d7c9a014c8a45e9d94de0a03e88750"
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 10,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 85,
+      "baseline_object_sha256": "a3ebf4f4aee797e60e9b3393b1558754eaeee70d330e9414e4d0e89407569225",
+      "candidate_object_sha256": "9bbee1f78a51424f46160d89a84d8535077e741313ffa409938112cd30a6972a"
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 11,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 85,
+      "baseline_object_sha256": "706db5d4a2ce4c2171ebced4c0511cbbc19e6cb6c7bcfeaf1c911d552f10e759",
+      "candidate_object_sha256": "7b575b03f0474ee54d5c579695d629bd48de184dda60c868e495cd3d9766a715"
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 13,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 85,
+      "baseline_object_sha256": "5dc3f89575765b62bbea0f8ba6480382e68fec534a1b2118b2cb7d1853afb694",
+      "candidate_object_sha256": "3b3d27abe996cbc3580e614cbe18506604d7c9a014c8a45e9d94de0a03e88750"
+    },
+    {
+      "backend": "module-free",
+      "python_minor": 14,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 85,
+      "baseline_object_sha256": "5dc3f89575765b62bbea0f8ba6480382e68fec534a1b2118b2cb7d1853afb694",
+      "candidate_object_sha256": "3b3d27abe996cbc3580e614cbe18506604d7c9a014c8a45e9d94de0a03e88750"
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 12,
+      "synthetic_version_branch": false,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 100,
+      "baseline_object_sha256": "2667c4c3ca1e3ce6ad3acaafa9806ee929c33a4de1b0b764a0c1e1ecb2f3a60f",
+      "candidate_object_sha256": "9a975d376a0217534ddb738cc8d1c128a7367dd8b841aa5895bd814e9ecc69dc"
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 10,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 100,
+      "baseline_object_sha256": "00c8784102a6c43c315090631641db2603f68a28ada51a26d8df07737b7b3fba",
+      "candidate_object_sha256": "f9ed1157ab7ad702206d615c84f6dfef710ac2fab6edf6f87b5776cf11fb34ab"
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 11,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 100,
+      "baseline_object_sha256": "826c2faae8434bf4562ea0f66f7950a6e5de32cf09cd50f6f1d792799fb52c5d",
+      "candidate_object_sha256": "6eb78e21df1c9f980ac532e0faf819a60eba4041342d8c44389b7a957880ee60"
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 13,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 100,
+      "baseline_object_sha256": "2667c4c3ca1e3ce6ad3acaafa9806ee929c33a4de1b0b764a0c1e1ecb2f3a60f",
+      "candidate_object_sha256": "9a975d376a0217534ddb738cc8d1c128a7367dd8b841aa5895bd814e9ecc69dc"
+    },
+    {
+      "backend": "endpoint-service",
+      "python_minor": 14,
+      "synthetic_version_branch": true,
+      "executable_sections": 36,
+      "instructions_and_relocations_unchanged": true,
+      "core_relocations_unchanged": true,
+      "core_relocations": 100,
+      "baseline_object_sha256": "2667c4c3ca1e3ce6ad3acaafa9806ee929c33a4de1b0b764a0c1e1ecb2f3a60f",
+      "candidate_object_sha256": "9a975d376a0217534ddb738cc8d1c128a7367dd8b841aa5895bd814e9ecc69dc"
+    }
+  ],
+  "scope": "Compile equivalence only. Python 3.12 measured layouts; other version branches use synthetic layouts, not runtime ABI validation.",
+  "kernel": "6.8.0-146-generic",
+  "initial_attempt": "Version selector was changed in the wrong generated header; corrected to config.h PYTHON_MINOR and required exactly one substitution. Source unchanged.",
+  "schema_version": 1,
+  "baseline_commit": "2ca1bd61b24a84a73e07010a50d4fb9007ec8abd",
+  "offline_tests": {
+    "root": 30,
+    "endpoint": 19,
+    "passed": true
+  },
+  "style_check_passed": true,
+  "guard_page_and_zero_tail_controls_passed": true,
+  "no_new_bpf_attachment": true,
+  "no_cpu_benchmark": true,
+  "comparison_tools": [
+    "tools/check_bpf_equivalence.py",
+    "tools/check_core_relocations.py"
+  ],
+  "build_context": "Compiled on Ubuntu 24.04 x86_64 kernel 6.8.0-146, reusing retained measured 3.12 layouts and 6.8.0-142 BTF headers for both baseline and candidate. No runtime ABI support claim for synthetic versions.",
+  "source_sha256": {
+    "core/reader.bpf.c": "5e98c81e2516f51999d53de944ccc1bfe615d554de2456a31303c8f10737a481",
+    "module-free/core/reader.bpf.c": "818e10fbff8027e836b04420c05efabd041c5897a71cb0e73c55c3bdbd4e2623",
+    "endpoint-service/core/reader.bpf.c": "c3e59d2b8dfeca64ab1b9fc5bef79f3f1d88ff33a3d6e4e38a8136b119f1b567",
+    "shared/core/python_capture.bpf.h": "0499d3ede74810aaeb25a8bdbf4c48a0d2375e5e4ff30648f70f766ce04df3aa",
+    "shared/core/python_strings.bpf.h": "f6630a06831735d469ef8af48f0c218b1a3e0b42b507781852f0d5f2d9c98b68",
+    "shared/core/python_string_scan.bpf.h": "cec4993e87a0406b6720360ae818b5e48771aa34dd15599a00139463c2984856",
+    "python/run_collector_path_guest.py": "f2caa1e92185675cbc102bb824abcc86cf983941a59537aebff456c69803ac7d",
+    "module-free/python/run_collector_path_guest.py": "c641740673729db279b6c34bae2e87815e069756a27c0eeb270247862914b744",
+    "module-free/python/strings_collector_path_guest.py": "50cbd0b5f2d1bfb9f05f31d1345e96869f9005ea5d5f42dd4ef26e54e975ad55",
+    "endpoint-service/python/service.py": "c6af43cd95bd1a2b00760500617ce60ff3944d890c766f90181cb93432cea167",
+    "tests/test_fused_strings.py": "403b4aae212a72c01d2d8ab452e60ebf8e469ea4af51c79cb8eac9168db3af12",
+    "tests/test_shared_records.py": "91ce8dae74ba2bbd06fde4f42890631f90f795ad7b18328ca21d6b5b28a82a74",
+    "source_manifest.json": "9af25f9635d1fd3f7ee18463a97436d8b4169ae39ebcd6bab68d4d2119ee6e7e",
+    "module-free/source_manifest.json": "bc248b471726bfaa608a0378071fbb8a7bad07fe25fac02103af7110d011aa7b"
+  }
+}

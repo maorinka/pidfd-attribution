@@ -73,14 +73,11 @@ class FusedStringTests(unittest.TestCase):
             with self.subTest(
                 backend=relative
             ), tempfile.TemporaryDirectory() as folder:
-                source = (ROOT / relative / "reader.bpf.c").read_text()
-                start = source.index("struct fused_string_context {")
-                end = source.index(
-                    "static __always_inline int ensure_fused_scratch", start
-                )
                 folder = Path(folder)
                 program = folder / "strings.c"
-                program.write_text(PREFIX + source[start:end] + SUFFIX)
+                program.write_text(
+                    PREFIX + '#include "python_strings.bpf.h"\n' + SUFFIX
+                )
                 executable = folder / "strings"
                 subprocess.run(
                     [
@@ -89,6 +86,7 @@ class FusedStringTests(unittest.TestCase):
                         "-Wall",
                         "-Wextra",
                         "-Werror",
+                        "-I" + str(ROOT / relative),
                         str(program),
                         "-o",
                         str(executable),
