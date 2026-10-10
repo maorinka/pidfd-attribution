@@ -24,6 +24,7 @@ import types
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT.parent))
 from shared.python.validation_lock import validation_lock
+from shared.python.bpf_ownership import process_program_ids, verify_retirement
 
 validation_fd = validation_lock()
 sys.path.insert(0, str(ROOT / "python"))
@@ -36,6 +37,7 @@ SOURCE_LINE_ERROR = 8
 REPORT = ROOT / "evidence/integration.json"
 REPORT.parent.mkdir(exist_ok=True)
 active = []
+owned_programs = {}
 
 
 def programs():
@@ -110,7 +112,10 @@ def start_sensor(name, capture=False, prefix=None, environment=None, **overrides
             else None
         )
 
-    wait_for(ready)
+    admitted = wait_for(ready)
+    owned_programs[process.pid] = process_program_ids(
+        process.pid, admitted["attachments"]
+    )
     return process, state, config
 
 
@@ -126,7 +131,8 @@ def stop(process, state, crash=False, expect_gaps=False):
             current["state"] == "stopped" and current["history_gaps"] == expect_gaps
         ):
             raise RuntimeError(current)
-    wait_for(lambda: programs() == baseline_programs, timeout=30)
+    audit = verify_retirement(owned_programs.pop(process.pid), baseline_programs)
+    result.setdefault("retirement_audits", []).append(audit)
     current_modules = modules()
     if not (current_modules == baseline_modules):
         raise RuntimeError(
@@ -1166,9 +1172,11 @@ try:
         empty_group_accepted=True,
     )
     result["final_bpf_ids"] = programs()
+    result["global_bpf_set_restored"] = result["final_bpf_ids"] == baseline_programs
     result["modules_unchanged"] = modules() == baseline_modules
     result["cleanup_ok"] = (
-        result["final_bpf_ids"] == baseline_programs and result["modules_unchanged"]
+        all(audit["owned_retired"] for audit in result["retirement_audits"])
+        and result["modules_unchanged"]
     )
     result["sources"] = {
         name: hashlib.sha256((ROOT / "core" / name).read_bytes()).hexdigest()

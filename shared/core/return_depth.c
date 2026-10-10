@@ -46,6 +46,16 @@ int main(int argc, char **argv) {
   }
   if (bpf_object__load(object))
     goto cleanup;
+  struct bpf_program *loaded_program;
+  bpf_object__for_each_program(loaded_program, object) {
+    struct bpf_prog_info info = {0};
+    unsigned int info_size = sizeof(info);
+    if (bpf_prog_get_info_by_fd(bpf_program__fd(loaded_program), &info,
+                                &info_size) ||
+        !info.id)
+      goto cleanup;
+    fprintf(stderr, "IOSEC_OWNED_PROGRAM_ID=%u\n", info.id);
+  }
   const char *names[] = {"depth_entry", "depth_return"};
   for (unsigned int i = 0; i < 2; i++) {
     struct bpf_program *program =

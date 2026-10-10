@@ -31,6 +31,7 @@ jobs:
           sudo ./endpoint-service/run.sh build
       - name: Run real collector and private restart-policy controls
         run: |
+          sudo python3 tests/ownership_drift_guest.py --report endpoint-service/evidence/ownership-drift.json
           sudo python3 endpoint-service/tests/check_storage.py
           sudo python3 endpoint-service/tests/integration_guest.py
           sudo python3 endpoint-service/tests/startup_guest.py

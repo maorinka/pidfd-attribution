@@ -2,10 +2,13 @@
 
 import json
 import os
+import re
+import sys
 from pathlib import Path
 import subprocess
 import tempfile
 from shared.python.validation_lock import validation_lock
+from shared.python.bpf_ownership import program_ids, verify_retirement
 
 
 def detect_return_depth(prepared, arch, includes, libraries):
@@ -13,7 +16,7 @@ def detect_return_depth(prepared, arch, includes, libraries):
     lock = validation_lock()
     try:
         sources = Path(__file__).resolve().parents[1] / "core"
-        baseline = _program_ids()
+        baseline = program_ids()
         with tempfile.TemporaryDirectory(prefix="pidfd-depth-") as directory:
             directory = Path(directory)
             obj = directory / "return_depth.bpf.o"
@@ -54,17 +57,40 @@ def detect_return_depth(prepared, arch, includes, libraries):
                 ],
                 check=True,
             )
+            completed = None
             try:
-                report = json.loads(
-                    subprocess.check_output(
-                        [str(executable), str(obj)], text=True, timeout=30
-                    )
+                completed = subprocess.run(
+                    [str(executable), str(obj)],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
-            finally:
-                if _program_ids() != baseline:
-                    raise RuntimeError(
-                        "BPF program set changed during depth calibration"
-                    )
+                completed.check_returncode()
+                report = json.loads(completed.stdout)
+            except BaseException as error:
+                stderr = getattr(error, "stderr", None)
+                if stderr is None and completed is not None:
+                    stderr = completed.stderr
+                owned = _owned_ids(stderr)
+                if owned:
+                    try:
+                        verify_retirement(owned, baseline)
+                    except (
+                        OSError,
+                        ValueError,
+                        RuntimeError,
+                        subprocess.SubprocessError,
+                    ) as cleanup_error:
+                        # Keep the calibration failure as the primary exception.
+                        print(
+                            "CALIBRATION_CLEANUP_ERROR: " + str(cleanup_error),
+                            file=sys.stderr,
+                        )
+                raise
+            owned = _owned_ids(completed.stderr)
+            if len(owned) != 2:
+                raise RuntimeError("Calibration did not report both owned programs")
+            report["program_cleanup"] = verify_retirement(owned, baseline)
         if report.get("return_depth_bias") not in (0, 1):
             raise RuntimeError("Unsupported uretprobe depth ordering")
         return report
@@ -74,8 +100,14 @@ def detect_return_depth(prepared, arch, includes, libraries):
             os.environ.pop("PIDFD_VALIDATION_LOCK_FD", None)
 
 
-def _program_ids():
+def _owned_ids(stderr):
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode(errors="replace")
     return sorted(
-        p["id"]
-        for p in json.loads(subprocess.check_output(["bpftool", "-j", "prog", "show"]))
+        set(
+            int(value)
+            for value in re.findall(
+                r"^IOSEC_OWNED_PROGRAM_ID=(\d+)$", stderr or "", re.M
+            )
+        )
     )

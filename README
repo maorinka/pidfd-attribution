@@ -314,3 +314,18 @@ complete include/static-library prefix for controlled builds. New builds prefer
 an existing backend prefix, then the shared cache, then the system libbpf.
 Matching kernel headers remain required for target compatibility bits and native
 module builds; the module-free adapter currently reads those bits from headers.
+
+BPF ownership audits
+--------------------
+Return-depth calibration records the IDs returned for its own program FDs and
+verifies that those IDs retire. Endpoint integration snapshots the actual
+collector's /proc/<pid>/fdinfo program IDs after readiness and verifies their
+retirement after each stop. Missing ownership information and remaining owned
+programs fail validation. Reports retain before/after global IDs and unrelated
+additions/removals; unrelated systemd BPF replacement is not a sensor leak.
+Calibration errors remain primary if its cleanup check also fails.
+The older isolated fixture controls may still require a quiet guest for their
+strict whole-host restore audits; those results are separately scoped.
+To exercise calibration amid a real unrelated load, after endpoint build run:
+  sudo python3 tests/ownership_drift_guest.py --report endpoint-service/evidence/ownership-drift.json
+This control loads one unattached socket program and retires it after calibration.

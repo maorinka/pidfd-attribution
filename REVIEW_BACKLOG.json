@@ -737,10 +737,10 @@
     {
       "id": "R041",
       "area": "calibration",
-      "status": "confirmed-open",
+      "status": "fixed-with-scope",
       "finding": "Exact global BPF-set audit rejects unrelated concurrent program loads; finally audit error can hide original calibration failure.",
-      "next_step": "Keep ownership audit discipline; preserve primary failure with chained audit context; define behavior for external drift.",
-      "evidence": ""
+      "next_step": "Calibration and endpoint integration use actual owned program IDs; leaked owned programs still fail and unrelated drift is reported. Primary calibration error preserved. Quiet-host strict audits remain a separately documented fixture-control boundary.",
+      "evidence": "validation/jammy-ownership-and-source.json"
     },
     {
       "id": "R042",
@@ -1077,6 +1077,11 @@
           "batch": 10,
           "detail": "Four live controls: oversized table/no-location for sleepable/forced nonsleepable paths.3 accepted writes each; unknown lines retained; complete false; outer lines positive. Module compile only.",
           "evidence": "validation/source-location-robustness.json"
+        },
+        {
+          "batch": 16,
+          "detail": "All four large/no-location source controls passed on real Python3.10 ARM, including sleepable and forced fallback capture.",
+          "evidence": "validation/jammy-ownership-and-source.json"
         }
       ]
     },
@@ -1166,13 +1171,20 @@
       "area": "installation",
       "status": "fixed-with-scope",
       "finding": "Installer reportedly redownloads pinned libbpf each run and installs kernel headers for module-free backend.",
-      "next_step": "Verified reuse and atomic external cache publication replace repeated downloads/builds; default Jammy installer flow still pending. Header dependency remains justified by matching compat-bit extraction; root workflow path-mismatch allegation was not established.",
+      "next_step": "Resolved cache reuse/external publication on Ubuntu22 ARM and static-library compilation on Ubuntu24 x86. Matching target headers remain a documented current adapter input.",
       "evidence": "validation/dependency-cache.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],
       "review_details": [
         "Installer derives .deps from the invoked backend path. Root compatibility workflow installs and runs root backend, whose settings expect root/.deps, so that example does not establish the alleged Jammy mismatch. Need failing cross-backend invocation before labeling path selection defective."
+      ],
+      "resolution_history": [
+        {
+          "batch": 16,
+          "detail": "Default shared cache built/reused on Ubuntu22 aarch64; endpoint3.10 build/integration passed using it.",
+          "evidence": "validation/jammy-ownership-and-source.json"
+        }
       ]
     },
     {

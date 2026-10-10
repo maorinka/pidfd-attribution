@@ -9,24 +9,13 @@
     "Completed changes are pushed and hosted checks pass."
   ],
   "active_batch": {
-    "name": "Installer and selected-interpreter preflight reliability",
+    "name": "Shared backend source consolidation",
     "items": [
-      "R032",
-      "R044",
-      "R045",
-      "R054",
-      "R074",
-      "R075"
+      "R033",
+      "R072"
     ],
-    "previous_batch_evidence": "validation/dependency-cache.json",
-    "pending_guest_coverage": "Run default cache path and Python3.10 no-location/source controls on owned Ubuntu22 ARM VM; existing installation must be preserved.",
-    "completed_in_batch": [
-      "R044",
-      "R045 handled publication rollback",
-      "R032 selected interpreter/ELF",
-      "R075 configurable interpreter",
-      "R074 verified external dependency cache"
-    ]
+    "previous_batch_evidence": "validation/jammy-ownership-and-source.json",
+    "pending_guest_coverage": "New ownership audit qualified on Ubuntu22 ARM/kernel6.8; no kernel7/full-preemption qualification claimed."
   },
   "next_batches": [
     "Module helper attack-surface audit and cleanup",
