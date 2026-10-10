@@ -10,17 +10,26 @@ def configure_backend(ROOT):
     PREPARED = ROOT / "generated"
     PYTHON = Path(sys.executable).resolve()
     PYTHON_CONFIG = Path(str(PYTHON) + "-config")
+    explicit_deps = os.environ.get("PIDFD_LIBBPF_PREFIX")
+    cache = Path("/var/cache/pidfd-attribution/libbpf/v1.3.0-" + os.uname().machine)
+    candidates = [Path(explicit_deps)] if explicit_deps else [ROOT / ".deps", cache]
     DEPS = ROOT / ".deps"
-    BPF_INCLUDES = (
-        ["-I" + str(DEPS / "include")]
-        if (DEPS / "include/bpf/libbpf.h").is_file()
-        else []
-    )
-    BPF_LIBS = (
-        [str(DEPS / "lib/libbpf.a"), "-lelf", "-lz"]
-        if (DEPS / "lib/libbpf.a").is_file()
-        else ["-lbpf", "-lelf", "-lz"]
-    )
+    BPF_INCLUDES = []
+    BPF_LIBS = ["-lbpf", "-lelf", "-lz"]
+    if explicit_deps and not candidates[0].is_absolute():
+        raise RuntimeError("PIDFD_LIBBPF_PREFIX must be an absolute directory")
+    for candidate in candidates:
+        complete = (candidate / "include/bpf/libbpf.h").is_file() and (
+            candidate / "lib/libbpf.a"
+        ).is_file()
+        if complete:
+            DEPS = candidate
+            BPF_INCLUDES = ["-I" + str(DEPS / "include")]
+            BPF_LIBS = [str(DEPS / "lib/libbpf.a"), "-lelf", "-lz"]
+            break
+    else:
+        if explicit_deps:
+            raise RuntimeError("Selected libbpf dependency cache is incomplete")
     ARCH = {"aarch64": "arm64", "x86_64": "x86"}.get(os.uname().machine)
     if ARCH is None:
         raise RuntimeError("Supported architectures: aarch64 and x86_64")

@@ -790,6 +790,13 @@
       ],
       "review_details": [
         "Install prevalidates policy/config before /opt rename but later unit/config/systemctl failures can still leave partial publication. No upgrade/uninstall path yet."
+      ],
+      "resolution_history": [
+        {
+          "batch": 15,
+          "detail": "New dependency builds now publish outside checkout under a shared root-controlled cache. Handled install rollback already verified; upgrade/uninstall and generated evidence/output separation remain open.",
+          "evidence": "validation/dependency-cache.json"
+        }
       ]
     },
     {
@@ -1157,10 +1164,10 @@
     {
       "id": "R074",
       "area": "installation",
-      "status": "reported-unverified",
+      "status": "fixed-with-scope",
       "finding": "Installer reportedly redownloads pinned libbpf each run and installs kernel headers for module-free backend.",
-      "next_step": "Check idempotence/cache integrity; distinguish native module from upstream backend dependencies before trimming.",
-      "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
+      "next_step": "Verified reuse and atomic external cache publication replace repeated downloads/builds; default Jammy installer flow still pending. Header dependency remains justified by matching compat-bit extraction; root workflow path-mismatch allegation was not established.",
+      "evidence": "validation/dependency-cache.json",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
       ],

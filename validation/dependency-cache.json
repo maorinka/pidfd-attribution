@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "baseline_commit": "f462c9d",
+  "scope": "Pinned source cache integrity/reuse, external build publication and dependency routing; no BPF source or runtime attachment change.",
+  "source_sha256": {
+    "shared/libbpf_cache.py": "a9f2493f11376ef0847680c5ae7576d01a0639f4e18368d278b599c9e7804afa",
+    "shared/install-ubuntu.sh": "c4f51d736c409ead8e1029ac2cb1b59597792543438381bd5fcb3a1aa71af375",
+    "shared/python/backend_settings.py": "4a3c25f748cbf99674b481017049d80d748f6926a91eba486aa41102349f4614",
+    "tests/test_libbpf_cache.py": "a34a97089c6b2b0d5d54919b7b3f8e570226d5320e0767cc997290dda2763bf1"
+  },
+  "offline": {
+    "root_tests": 47,
+    "cache_semantic_tests": 3,
+    "style_passed": true
+  },
+  "guest": {
+    "kernel": "6.8.0-146-generic",
+    "architecture": "x86_64",
+    "cache_built_from_pinned_archive": true,
+    "cache_published": true,
+    "hashed_artifacts": 15,
+    "reuse_without_network_or_make_passed": true,
+    "six_bpf_variants_compiled_with_cached_static_library": true,
+    "collectors_compiled": true,
+    "module_compiled": true,
+    "no_bpf_or_module_loaded": true
+  },
+  "controls": [
+    "changed, added, missing artifact or source pin refused",
+    "symlinks/hardlinks/unsafe file or directory modes/foreign ownership refused",
+    "incomplete or relative explicit prefix refused",
+    "verified cache reuse with network and make calls patched to fail if invoked"
+  ],
+  "limits": [
+    "Build controls used a separate root-owned validation cache; existing /opt, system libraries and original installation were unchanged.",
+    "The private direct helper build emitted pkg-config missing; libbpf built successfully with its Makefile fallback. The installer explicitly installs pkg-config before invoking the helper.",
+    "Default installer flow on Ubuntu22 and ARM runtime controls still pending.",
+    "Root-owned generated evidence/build artifacts in checkout are a separate unresolved R045 component.",
+    "Matching kernel headers remain a required current adapter input; no unsupported claim they can be removed."
+  ],
+  "prior_hosted_ci": "https://github.com/maorinka/pidfd-attribution/actions/runs/38060030214"
+}

@@ -300,3 +300,17 @@ its matching development headers and run, for example:
 The override affects the backend command process; it does not rewrite the system
 Python or the installed service command. Building with another version does not
 qualify that interpreter without its owned-VM source controls.
+
+Dependency cache
+----------------
+On Ubuntu 22.04 the installer builds pinned libbpf 1.3.0 once under
+/var/cache/pidfd-attribution/libbpf/v1.3.0-<architecture>. It verifies the archive
+checksum before extraction, validates root ownership and permissions, and records
+all installed file hashes before atomic directory publication. Subsequent installs
+verify and reuse that cache; corruption is refused rather than overwritten.
+No new .deps directory is written into the checkout. Existing complete backend
+.deps prefixes remain supported. An absolute PIDFD_LIBBPF_PREFIX may select a
+complete include/static-library prefix for controlled builds. New builds prefer
+an existing backend prefix, then the shared cache, then the system libbpf.
+Matching kernel headers remain required for target compatibility bits and native
+module builds; the module-free adapter currently reads those bits from headers.

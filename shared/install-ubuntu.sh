@@ -31,16 +31,9 @@ apt-get install -y build-essential clang llvm libbpf-dev libelf-dev zlib1g-dev \
   "linux-headers-$(uname -r)"
 if [[ "$VERSION_ID" == 22.04 ]]; then
   # Jammy's libbpf 0.5 lacks the dynptr headers and named-uprobe API.
-  # Keep the newer static library local to this checkout.
-  apt-get install -y curl pkg-config
-  directory="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-  build_directory="$(mktemp -d /var/tmp/pidfd-libbpf.XXXXXXXX)"
-  trap 'rm -rf -- "$build_directory"' EXIT
-  curl --fail --location https://codeload.github.com/libbpf/libbpf/tar.gz/refs/tags/v1.3.0 -o "$build_directory/libbpf.tar.gz"
-  (cd "$build_directory" && echo '11db86acd627e468bc48b7258c1130aba41a12c4d364f78e184fd2f5a913d861  libbpf.tar.gz' | sha256sum --check)
-  tar -xzf "$build_directory/libbpf.tar.gz" -C "$build_directory"
-  mkdir -p "$build_directory/build"
-  make -C "$build_directory/libbpf-1.3.0/src" -j2 BUILD_STATIC_ONLY=1 \
-    OBJDIR="$build_directory/build" PREFIX="$directory/.deps" LIBDIR="$directory/.deps/lib" install
+  # Reuse verified artifacts; publish new builds outside the source checkout.
+  apt-get install -y pkg-config
+  canonical_installer="$(readlink -f -- "${BASH_SOURCE[0]}")"
+  python3 "$(dirname -- "$canonical_installer")/libbpf_cache.py"
 fi
 echo "Dependencies installed. Continue with this backend's ./run.sh commands."
