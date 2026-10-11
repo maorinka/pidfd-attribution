@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "batch": "R030-different-file",
+  "date": "2026-10-10",
+  "parent_commit": "4574db05856b3e6b24628dbfde92517de8e992bf",
+  "passed": true,
+  "full_goal_complete": false,
+  "scope": "One owned Ubuntu 22.04 aarch64 VM, kernel 6.8.0-138-generic. Different struct files only. Same-file distinct-acquirer races and exec_reconcile remain open. Not an x86 result.",
+  "vm": "pidfd-ubuntu22",
+  "kernel": "6.8.0-138-generic",
+  "architecture": "aarch64",
+  "python": "3.10.12",
+  "source_sha256": {
+    "shared/core/reader_impl.bpf.h": "6474d02adc1700cd35465a41e1b46668b52bad827528634b383d0e438dcf372f",
+    "endpoint-service/tests/descriptor_race_fixture.py": "6ddd924d1d85b3c03620fde3b582e82052a0dc3d9ded7aa9bec7d123a4a9551f",
+    "endpoint-service/tests/descriptor_race_guest.py": "c153ad2267b81a20a1da664daa3d5266fe8eff1054f8d266a2fa20f1c1cf4990"
+  },
+  "control": {
+    "barrier": "Child-process /dev/fuse daemon holds the first FUSE_FLUSH of the victim node. The loser thread blocks inside do_dup2. The winner dup3 completes, including its fexit, before that flush is released.",
+    "opcode_order": [
+      "FLUSH node 2 held (unique 16)",
+      "FLUSH node 3 answered while unique 16 was still held (unique 18)",
+      "release",
+      "unique 16 released",
+      "GETXATTR node 4 answered ENOSYS",
+      "WRITE node 4 replied 5 bytes"
+    ],
+    "fixture": {
+      "pid": 1519,
+      "destination": 8,
+      "loser_fd": 10,
+      "winner_fd": 12,
+      "victim_inode": 2,
+      "loser_inode": 3,
+      "winner_inode": 4,
+      "write_bytes": 5
+    },
+    "accepted_write": {
+      "stage": 9,
+      "fd": 8,
+      "inode": 4,
+      "result": 5,
+      "file_identity": "0xffff5c3a13440500",
+      "generation": 7,
+      "acquirer_tid": 1519
+    },
+    "winner_acquire": {
+      "stage": 6,
+      "fd": 12,
+      "inode": 4,
+      "file_identity": "0xffff5c3a13440500",
+      "generation": 6,
+      "acquirer_tid": 1519
+    }
+  },
+  "diagnostics": {
+    "state_errors": 1,
+    "history_gaps": true,
+    "meaning": "The winner do_dup2 fentry reads the kernel fdtable after the loser has installed its file and before the loser fexit publishes. That mismatch increments state_errors. The race oracle does not require history_gaps to be false. Serial alias coverage still requires it."
+  },
+  "serial_alias_regression": {
+    "guest": "endpoint-service/tests/descriptor_alias_guest.py",
+    "passed": true,
+    "kernel": "6.8.0-138-generic",
+    "state_errors": 0,
+    "history_gaps": false,
+    "reader_sha256": "6474d02adc1700cd35465a41e1b46668b52bad827528634b383d0e438dcf372f"
+  },
+  "not_claimed": [
+    "Same struct file acquired by two pidfd_getfd callers. File-pointer equality is true for both fexits, so a delayed fexit can still overwrite the winner acquirer.",
+    "exec_reconcile still deletes a slot when an unlocked real_slot read disagrees during do_close_on_exec.",
+    "x86 and other kernels were not run.",
+    "Clearing state_errors to make this race look gap-free."
+  ]
+}

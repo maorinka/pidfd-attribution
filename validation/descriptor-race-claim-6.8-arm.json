@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "purpose": "Owned-VM proof of the filp_close publication claim on top of the different-file real_slot gate. Does not close R030.",
+  "date": "2026-10-11",
+  "parent_commit": "4574db05856b3e6b24628dbfde92517de8e992bf",
+  "vm": "pidfd-ubuntu22",
+  "kernel": "6.8.0-138-generic",
+  "architecture": "aarch64",
+  "reader_sha256": "45434d0712c1acd5540020a50338e940bfb59f8a975977a1558f195feea7f343",
+  "prior_different_file_evidence": "validation/descriptor-race-different-file.json",
+  "prior_reader_sha256": "6474d02adc1700cd35465a41e1b46668b52bad827528634b383d0e438dcf372f",
+  "publication_rule": "fexit/do_dup2 publishes only when the syscall returned the destination fd, real_slot still holds this call's file, and either this tid owns the filp_close claim or filp_close did not run (pending.inner still -2). The claim is recorded at fentry/filp_close, after successful installation, not at fentry/do_dup2. No map was added. exec_reconcile is unchanged.",
+  "different_file": {
+    "passed": true,
+    "guest": "endpoint-service/tests/descriptor_race_guest.py",
+    "destination_fd": 8,
+    "loser_fd": 10,
+    "winner_fd": 12,
+    "loser_tid": 1634,
+    "winner_tid": 1631,
+    "inodes": {"victim": 2, "loser": 3, "winner": 4},
+    "accepted_write": {
+      "stage": 9,
+      "fd": 8,
+      "inode": 4,
+      "result": 5,
+      "file_identity": "0xffff5c3a133eb700",
+      "generation": 7,
+      "acquirer_tid": 1631
+    },
+    "winner_acquire": {
+      "stage": 6,
+      "fd": 12,
+      "inode": 4,
+      "file_identity": "0xffff5c3a133eb700",
+      "generation": 6,
+      "acquirer_tid": 1631
+    },
+    "state_errors": 1,
+    "history_gaps": true,
+    "attachments": 36
+  },
+  "same_file": {
+    "passed": true,
+    "guest": "endpoint-service/tests/descriptor_same_file_guest.py",
+    "destination_fd": 8,
+    "loser_fd": 10,
+    "winner_fd": 11,
+    "loser_tid": 1650,
+    "winner_tid": 1651,
+    "second_finished_before_release": true,
+    "inodes": {"victim": 2, "loser": 3, "winner": 3},
+    "file_identity": "0xffff5c3a18708500",
+    "accepted_write": {
+      "stage": 9,
+      "fd": 8,
+      "inode": 3,
+      "result": 5,
+      "generation": 6,
+      "acquirer_tid": 1651
+    },
+    "loser_acquire_tid": 1650,
+    "winner_acquire_tid": 1651,
+    "state_errors": 1,
+    "history_gaps": true,
+    "attachments": 36
+  },
+  "serial_alias": {
+    "passed": true,
+    "guest": "endpoint-service/tests/descriptor_alias_guest.py",
+    "capture_python": false,
+    "state_errors": 0,
+    "history_gaps": false,
+    "attachments": 36,
+    "cases": [
+      "original",
+      "fcntl",
+      "fcntl_cloexec",
+      "dup",
+      "dup3_replace",
+      "failed_dup3_preserves_target",
+      "failed_same_fd_preserves_target",
+      "dup_survives_original_close",
+      "unadmitted_replaces_tracked"
+    ]
+  },
+  "capture_python_attachments": 42,
+  "not_claimed": [
+    "exec_reconcile still deletes a slot when its unlocked real_slot read disagrees with the saved file",
+    "x86_64 and kernels other than 6.8.0-138-generic",
+    "clearing the race state_errors or history_gaps",
+    "R030 fixed"
+  ]
+}

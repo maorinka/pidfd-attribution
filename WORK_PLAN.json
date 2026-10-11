@@ -18,7 +18,7 @@
       "R057"
     ],
     "previous_batch_evidence": "validation/descriptor-alias-coverage.json",
-    "pending_guest_coverage": "Alias batch passed both current-source32-audit endpoint regressions and both fixture backends. FUSE barrier prototype remains uncompiled/unqualified; deterministic different-file and same-file/distinct-acquirer races are next.",
+    "pending_guest_coverage": "On pidfd-ubuntu22 6.8.0-138-generic aarch64, different-file and same-file FUSE races passed with the filp_close claim, and the serial alias guest passed with state_errors 0 and history_gaps false. Evidence: validation/descriptor-race-claim-6.8-arm.json. R030 stays partially-fixed because exec_reconcile is unchanged and this is not an x86 or other-kernel proof. Race state_errors stayed 1. Non-capture attachments measured 36 and capture-python attachments measured 42. R053, R054, and R057 were rechecked in source and remain partially-fixed. R033 admission split was re-read and not merged.",
     "whole_host_requirement": "cgroup_id0 remains the intended default. Supported interpreter capture applies across workload cgroups."
   },
   "next_batches": [

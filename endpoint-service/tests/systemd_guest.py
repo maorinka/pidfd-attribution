@@ -22,6 +22,10 @@ sys.path.insert(0, str(ROOT / "python"))
 from service import configuration
 from wire import records
 
+# Capture mode adds the six Python programs on top of the non-capture total.
+# Alias hooks match integration_guest.py, including fentry/filp_close.
+ALIAS_HOOKS = 7 + (2 if os.uname().machine == "x86_64" else 0)
+
 if not (not Path("/opt/iosec-endpoint").exists()):
     raise RuntimeError("Existing installation must not be replaced by a test")
 if not (not Path("/etc/iosec-endpoint.json").exists()):
@@ -117,7 +121,7 @@ try:
     )
     if not (cap & (1 << 21) and not cap & (1 << 16)):
         raise RuntimeError("Guest control failed in systemd_guest.py")
-    if not (current["attachments"] == 35):
+    if not (current["attachments"] == 35 + ALIAS_HOOKS):
         raise RuntimeError("Guest control failed in systemd_guest.py")
     watchdog = int(
         run(
@@ -242,7 +246,7 @@ try:
     report.update(
         passed=True,
         source_writes=3,
-        attachments=35,
+        attachments=35 + ALIAS_HOOKS,
         effective_capabilities=hex(cap),
         cap_sys_module=False,
         watchdog_notification=True,

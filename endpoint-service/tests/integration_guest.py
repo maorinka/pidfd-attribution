@@ -33,7 +33,8 @@ from wire import records
 
 BASE = Path(tempfile.mkdtemp(prefix="pidfd-service-test-", dir="/var/tmp"))
 BASE.chmod(0o700)
-ALIAS_HOOKS = 6 + (2 if os.uname().machine == "x86_64" else 0)
+# dup/dup3/fcntl enter+exit plus fentry/filp_close. x86 also attaches dup2.
+ALIAS_HOOKS = 7 + (2 if os.uname().machine == "x86_64" else 0)
 SOURCE_LINE_ERROR = 8
 SOURCE_UNKNOWN = 64
 POLICY_VALUE_SIZE = 104

@@ -548,10 +548,22 @@
     {
       "id": "R030",
       "area": "concurrency",
-      "status": "confirmed-open",
+      "status": "partially-fixed",
       "finding": "real_slot unlocked fdtable reads and exec_reconcile deletion may lose valid history during shared-table/RCU swaps.",
-      "next_step": "Review unlocked fdtable/exec reconciliation plus post-do_dup2-unlock publication: unconditional slot deletion or BPF_ANY late install can erase a newer shared-table generation. Muse and Claude confirmed bounded history-loss race; deterministic interleaving control remains required. Do not claim serial alias coverage fixes concurrency.",
-      "evidence": "",
+      "next_step": "Different-file and same-struct-file FUSE_FLUSH races passed on pidfd-ubuntu22 6.8.0-138-generic aarch64 after the filp_close claim. Serial alias on that kernel passed with history_gaps false and state_errors 0. Do not mark R030 fixed. Linux 6.8 begin_new_exec calls unshare_files and, on failure, returns before do_close_on_exec, so ordinary exec closes a private table after de_thread. exec_reconcile still deletes when real_slot disagrees with the live map value, and real_slot returns 0 for both a NULL slot and a failed probe. No test covers that failed read. No x86 or other-kernel race run exists. The race state_errors increment is the winner fentry observing the in-flight kernel slot; do not clear it.",
+      "evidence": "validation/descriptor-race-claim-6.8-arm.json",
+      "resolutions": [
+        {
+          "scope": "different-file-only",
+          "evidence": "validation/descriptor-race-different-file.json",
+          "detail": "replacement_finish publishes only when do_dup2 succeeded and real_slot still contains this call's file. Staging failure no longer deletes a newer slot unconditionally. Serial alias guest on the same kernel passed with history_gaps false."
+        },
+        {
+          "scope": "same-file-claim-6.8-arm",
+          "evidence": "validation/descriptor-race-claim-6.8-arm.json",
+          "detail": "fentry/filp_close records the installer tid after the new file is in the slot. fexit publishes only for that tid, or for an empty destination that never called filp_close. Same-file guest: one struct file, loser tid 1650 and winner tid 1651, delayed first fexit, accepted write acquirer tid 1651. Different-file re-run still attributes inode 4 to the winner. Both races kept state_errors 1 and history_gaps true. Nine serial alias cases passed with state_errors 0. Claim is a field on the existing slot value; no map added. exec_reconcile was not changed."
+        }
+      ],
       "race_control_plan": {
         "barrier": "Hold synchronous FUSE_FLUSH reply on admitted victim while another shared-table thread replaces the destination, then release the first syscall; quiesce replacers before checking writes.",
         "rejected_control": "Stock FIFO has no flush callback; final release is deferred task work and does not hold do_dup2 fexit.",
@@ -565,7 +577,7 @@
         ],
         "oracle_variants": [
           "Different source files: after T2 then delayedT1 complete, probeactualdest to distinguish rejected/stale history fromaccepted lastreplacementB.",
-          "Same struct file via selfpidfd_getfd acquisitions in distinct native threads: kernel filepointercheck alone may accept wrong acquirerTID if delayedT1 overwritesT2 history. Hypothesis requiring actual FUSE barrier run; do not claim onlyhistoryloss without testing."
+          "Same struct file via self pidfd_getfd acquisitions in distinct native threads: file-pointer equality alone accepts the delayed tid. The 6.8.0-138 aarch64 FUSE run with a filp_close claim attributed the write to the later acquirer. This does not cover exec_reconcile."
         ]
       }
     },
@@ -597,7 +609,7 @@
       "area": "maintenance",
       "status": "partially-fixed",
       "finding": "Three reader programs and several Python drivers remain hand-maintained with semantic drift; history timeouts differ20/120 seconds. Shared symlinks do not eliminate all duplication.",
-      "next_step": "Consolidate remaining doctor/oracle/string/full-validation differences with explicit backend policy, and simplify workflow duplication.",
+      "next_step": "Admission predicates were re-read and stay separate: root doctor requires CAP_SYS_MODULE and accepts CAP_SYS_ADMIN or CAP_BPF plus CAP_PERFMON; module-free and endpoint require CAP_SYS_ADMIN; endpoint also checks cgroup admission. Do not merge those predicates. Remaining work is oracle, string, and full-validation driver policy plus workflow duplication.",
       "evidence": "validation/reader-source-consolidation.json; validation/fixture-driver-and-source-export.json",
       "additional_reviews": [
         "final-bfb1249",
@@ -615,7 +627,7 @@
           "status": "partially-validated",
           "scope": "One driver set with explicit backend paths/timeouts and documented genuine backend differences.",
           "evidence": "validation/driver-consolidation.json",
-          "remaining": "Admission/build/string/oracle/full-validation drivers retain genuine backend differences; seven fixture controls and all settings share implementations."
+          "remaining": "Admission/build/string/oracle/full-validation drivers retain genuine backend differences; seven fixture controls and all settings share implementations. 2026-10-11 re-read of the three doctor_guest.py files confirmed the capability split above; no merge applied."
         },
         {
           "target": "Frame walkers",
@@ -944,18 +956,18 @@
     {
       "id": "R053",
       "area": "wire",
-      "status": "reported-unverified",
+      "status": "partially-fixed",
       "finding": "Endpoint label_count=0 may mean unmeasured rather than no labels; hardcoded wire-copy sizes/unused variables and stale process filters reported in older reviews.",
-      "next_step": "Recheck current source; use explicit semantics/sentinel and named ABI constants where applicable.",
-      "evidence": ""
+      "next_step": "Source recheck: endpoint install sets label_count to 0 under IOSEC_ENDPOINT_POLICY so it does not scan every slot. Only endpoint-service/core/reader.bpf.c defines that policy as 1. The wire header still copies the field. endpoint-service/python/wire.py does not decode it, and no endpoint test reads it. Non-endpoint pressure checks still expect 128 and 2. Named sizes live in source_protocol.h; wire_emit_upstream.bpf.h still writes 224, 176, and 200, and wire_layout.bpf.h asserts 9824 and 9776. Unused variables and stale process filters were not found. Do not close: 0 still means both unmeasured and zero labels, and there is no sentinel.",
+      "evidence": "Source recheck on 2026-10-11 of reader_impl.bpf.h install path, wire_emit_upstream.bpf.h, wire.py, regression_verifier.py pressure checks, source_protocol.h, and wire_layout.bpf.h. No runtime label-count oracle was added."
     },
     {
       "id": "R054",
       "area": "harness",
       "status": "partially-fixed",
       "finding": "Old /tmp execution tail, source-text rewriting/exec decoder, hardcoded python3.14, brittle readelf flags and sudo env stripping reported previously.",
-      "next_step": "Audit remaining historical harness allegations separately; source decoder/import extraction and ELF parsing now corrected.",
-      "evidence": "Current measurement runner imports shared benchmark; controls import shared records. No claim all original harness issues fixed.",
+      "next_step": "Batch 14 ELF header parsing stays closed. This recheck found two leftovers: python/strings_collector_path_guest.py still rewrites C string literals from prepared offsets, and endpoint-service/python/service.py still runs readelf -Ws and -SW on reader.bpf.o for the upstream kfunc check. Guest runtimes use /var/tmp. python3.14 remains only the Ubuntu 26.04 interpreter in the root and module-free run.sh maps, and the endpoint run.sh uses PIDFD_PYTHON or /usr/bin/python3. Do not close R054 on those leftovers.",
+      "evidence": "validation/selected-interpreter-preflight.json remains the batch 14 ELF evidence. 2026-10-11 source recheck of strings_collector_path_guest.py, service.py, run.sh, and endpoint-service/run.sh.",
       "resolution_history": [
         {
           "batch": 14,
@@ -992,10 +1004,10 @@
     {
       "id": "R057",
       "area": "misc",
-      "status": "reported-unverified",
+      "status": "partially-fixed",
       "finding": "Older findings: direct_ring include-order globals, boot_id JSON format reliance, pathname retention TOCTOU in root-only dir, run_guest dead imports/duplicate hashes, unused offsets/allowed sets.",
-      "next_step": "Recheck current tree; retain root-only-dir assumptions and explicit ABI validation. These are not confirmed exploitable issues.",
-      "evidence": ""
+      "next_step": "Rechecked and kept as assumptions: direct_ring_common.h reserve globals are the include-order contract; collector.c reads the kernel boot_id and interpolates it into health JSON; segment retention opens with O_PATH|O_NOFOLLOW, checks the fd, then unlinks by name inside the collector state directory. Two leftovers remain: python/collector_path_scope_guest.py defines an allowed set that nothing reads, and regression_verifier.py hashes the same ten experiments/pidfd_lineage files twice before also checking build and runtime artifacts. Dead run_guest imports were not rechecked in this pass. Do not treat the assumptions as defects.",
+      "evidence": "2026-10-11 source recheck of direct_ring_common.h, endpoint-service/core/collector.c, python/collector_path_scope_guest.py, and shared/python/regression_verifier.py."
     },
     {
       "id": "R058",
@@ -1033,9 +1045,9 @@
     {
       "id": "R060",
       "area": "performance",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Write capture repeatedly copies large events, walks up to16frames and decodes line tables; proposal to cache per-thread stack using frame/instruction-chain hash.",
-      "next_step": "Measure actual dominant paths; use collision-safe exact validation and invalidation for mutable code/strings, mm/task birth and interpreter reuse. Preserve unattested flags and fault behavior.",
+      "next_step": "Source recheck: writes still copy and emit full opener, acquirer, and live frames, and line decode still uses the per-call-site lines map. No per-thread stack cache was added. Measure dominant paths before any cache. Preserve unattested flags and fault behavior. Do not remove uprobes.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
       "measurement_history": [
         {
@@ -1068,25 +1080,25 @@
     {
       "id": "R062",
       "area": "wire",
-      "status": "reported-unverified",
+      "status": "open-design",
       "finding": "Every write re-emits opener/acquirer frames; proposal emit live frames plus references to earlier OPEN/INSTALL snapshots.",
-      "next_step": "Version wire ABI and decoder; define missing base records after drops, restart, retention and out-of-order processing. Dedup is semantic change, not free cleanup. Quantify bandwidth at actual frame counts.",
+      "next_step": "Confirmed that every emit still writes opener, acquirer, and live frames, and the wire has version 1 or 2. Dedup would be a new wire version plus a decoder that can rebuild context after drops, restart, retention, and reordering. Do not remove the frames from the current records. Bandwidth at real frame counts is unmeasured.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
     },
     {
       "id": "R063",
       "area": "capacity",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Reviewer worst-case estimate:9.8KB records,8MiB ring roughly850records,10k writes/s about98MB/s,8x16MiB retention roughly1.3seconds.",
-      "next_step": "Verify max wire size versus internal event size and record mix; measure disk throughput, retention and adaptive losses. These are estimates, not observed rates.",
+      "next_step": "Sizes match the source: ring is 8 MiB, maximum record is 9824 bytes on the endpoint path, and the collector defaults to 8 segments of 16 MiB. The reviewer's records-per-second and retention-window figures are still estimates. Measure the real record mix, disk throughput, and loss behavior before changing capacity.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
     },
     {
       "id": "R064",
       "area": "performance",
-      "status": "reported-unverified",
+      "status": "open-design",
       "finding": "Proposal TASK_STORAGE for monitored flag and per-thread staging, to avoid hash overhead/map saturation and exit deletes;9,760-byte value limit unverified.",
-      "next_step": "Check helper availability/prog-type permissions, allocation failure, value limits, lifetime on fork/exec, memory budget and lookup costs across supported kernels. Do not assume one pointer dereference.",
+      "next_step": "No BPF task storage is used. Per-thread state stays in the hash maps and is deleted on exit and exec. Task storage remains an untested design: program-type permission, the large value size, allocation failure, fork/exec lifetime, and lookup cost are unchecked. Do not replace the maps on this proposal.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
       "measurement_history": [
         {
@@ -1104,9 +1116,9 @@
     {
       "id": "R065",
       "area": "cleanup",
-      "status": "reported-unverified",
+      "status": "open-design",
       "finding": "Proposal replace slab-free fallback with fentry/put_files_struct and files->count.counter==1; reviewer says symbol always exported.",
-      "next_step": "Check actual BTF attachment and concurrency: observing count1 at entry is not by itself proof of final release. Test shared files_struct refcount races and pre-free ordering before replacing cleanup.",
+      "next_step": "When close_files is available, cleanup attaches there and returns unless files->count.counter is 0. Otherwise it keeps the host-wide kmem_cache_free tracepoint and only scans tracked tables. put_files_struct is not used. A count of 1 at entry is not proof of the final release. Do not replace the fallback without that proof.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update.",
       "additional_reviews": [
         "da2d6bd-endpoint-production-review"
@@ -1152,9 +1164,9 @@
     {
       "id": "R068",
       "area": "source-cache",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Line cache reportedly keys per call site, retains full4KiB table and becomes ineffective after2,048sites; proposal per-(mm,code) decoded bounds array.",
-      "next_step": "Reconcile current LRU/sizing with report; validate mm/code reuse, mutable tables and memory budget. Benchmark per-code cache before replacement.",
+      "next_step": "The lines map is a 2048-entry hash keyed by mm, code, table, length, target, and firstline. The value holds a 4096-byte table. Inserts use BPF_NOEXIST and count cache pressure instead of evicting. This is not an LRU. Do not add LRU eviction. Benchmark any per-code replacement against mutable tables and the memory budget before changing it.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
     },
     {
@@ -1234,9 +1246,9 @@
     {
       "id": "R073",
       "area": "evidence",
-      "status": "reported-unverified",
+      "status": "accepted-limitation",
       "finding": "Proposal keep latest report per target and move older evidence to release assets/evidence branch; report estimates47percent tracked bytes.",
-      "next_step": "Index freshness first; preserve failures and reproducibility links. Do not delete evidence or publish release assets merely on this suggestion.",
+      "next_step": "tools/index_evidence.py keeps the validation reports and classifies them as current-source-subset, historical-source, unresolved-source, or unindexed-history. Deleting evidence or publishing release assets is not adopted. The 47 percent tracked-bytes figure was not remeasured.",
       "evidence": "Final reviewer report at bfb1249; not independently verified in this ledger update."
     },
     {
@@ -1294,7 +1306,7 @@
       "area": "attribution",
       "status": "partially-fixed",
       "finding": "Slots are copied during fd_install before acquire_finish sets syscall acceptance; later lifecycle snapshots retain pre-return accepted/complete values.",
-      "next_step": "INSTALL remains pending. Acquire/fcntl completion commits acceptance and source to matching file/generation in the slot. Test more concurrent shared-table and TABLE_COPY/EXEC_CLOSE/TABLE_RELEASE permutations.",
+      "next_step": "INSTALL remains pending until acquire or fcntl completion commits acceptance onto the matching file and generation. Different-file and same-file shared-table dup3 races passed on 6.8.0-138 aarch64; evidence validation/descriptor-race-claim-6.8-arm.json. TABLE_COPY, EXEC_CLOSE, and TABLE_RELEASE permutations are still untested.",
       "evidence": "validation/endpoint-reliability.json",
       "review": "da2d6bd-endpoint-production-review",
       "resolution_history": [
@@ -1308,9 +1320,9 @@
     {
       "id": "R078",
       "area": "performance",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Proposal replace global syscall tracepoints with syscall-wrapper fentry/fexit, preserving identity-only entry twins when sleepable captures are disabled.",
-      "next_step": "Measure tracepoint slow-path impact; verify wrapper BTF/return semantics, compat and all open/fcntl/write/acquire transitions across supported kernels.",
+      "next_step": "Syscall tracepoints are still attached for write, open, fcntl, dup, and pidfd_getfd. Sleepable fentry wrappers exist beside them. Replacing the tracepoints is unproven. Do not remove them without wrapper BTF, compat, and transition coverage on the supported kernels.",
       "evidence": "Reviewer static claim; no benchmark or attach experiment.",
       "review": "da2d6bd-endpoint-production-review"
     },
@@ -1381,18 +1393,18 @@
     {
       "id": "R083",
       "area": "idle-performance",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Proposal avoid unconditional health/segment fsync, replace 20ms idle polling with wakeups/backoff, mmap diagnostics and clarify host-wide bpf_enable_stats effects.",
-      "next_step": "Measure idle wakeups/fsync cost; define durable event/journal vs ephemeral-health guarantees, notification races and diagnostic consistency before changes.",
+      "next_step": "The endpoint collector still defaults to a 20 ms poll, 1000 ms health, and 1000 ms sync, and it fdatasyncs health and segment files. Diagnostics are read through map lookups. Measure idle cost and define durable-event versus ephemeral-health behavior before changing this.",
       "evidence": "Reviewer source-based claims; no idle benchmark or mmap experiment.",
       "review": "da2d6bd-endpoint-production-review"
     },
     {
       "id": "R084",
       "area": "capture-admission",
-      "status": "reported-unverified",
+      "status": "confirmed-open",
       "finding": "Fused open entry captures Python before final raw path-prefix check; reviewer proposes early user-path filtering.",
-      "next_step": "Measure import workload. User pathname can change between entry read and getname, so early user-memory filtering is not guaranteed equivalent to kernel filename filtering; preserve coverage and truncation behavior with race tests.",
+      "next_step": "open_begin filters on the kernel filename, not a user pointer captured at syscall entry. No user-memory prefilter was added. Do not treat those two strings as equivalent. An earlier filter still needs an import-workload measurement and a race test that preserves coverage and truncation.",
       "evidence": "Reviewer proposal; prefilter not implemented.",
       "review": "da2d6bd-endpoint-production-review"
     },

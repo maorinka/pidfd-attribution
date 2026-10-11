@@ -549,11 +549,18 @@ HASH(aliasing, struct event);
 HASH(closing, struct event);
 HASH(duplicating, unsigned long long);
 HASH(execclosing, unsigned long long);
+/* Keep the publication claim beside the label, with the same slot/table/file
+ * retirement. The event remains first for existing label readers/callbacks;
+ * the claim is internal and never changes the event/wire ABI or map audit. */
+struct descriptor_slot_state {
+  struct event event;
+  unsigned long long claim_tid;
+};
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
   __uint(max_entries, 128);
   __type(key, struct pidfd_slot);
-  __type(value, struct event);
+  __type(value, struct descriptor_slot_state);
 } slots SEC(".maps");
 #include "cleanup_index.bpf.h"
 
@@ -561,7 +568,7 @@ struct {
   __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
   __uint(max_entries, 1);
   __type(key, unsigned int);
-  __type(value, struct event);
+  __type(value, struct descriptor_slot_state);
 } scratch SEC(".maps");
 struct {
   __uint(type, BPF_MAP_TYPE_ARRAY);
@@ -1154,8 +1161,17 @@ install_descriptor_slot(struct event *e, unsigned long long table,
     e->complete = 0;
     struct pidfd_slot s = {.files = e->files, .fd = e->fd};
     long rc = index_slot(e->files, e->file);
-    if (!rc)
-      rc = UPDATE(&slots, &s, e, BPF_ANY);
+    if (!rc) {
+      struct descriptor_slot_state *state = (void *)lookup_scratch_event();
+      if (!state || copy_event(&state->event, e))
+        rc = -1;
+      else {
+        /* Retain the successful publisher's claim after fexit: a delayed
+         * same-file predecessor must still lose after this label is accepted. */
+        state->claim_tid = bpf_get_current_pid_tgid();
+        rc = UPDATE(&slots, &s, state, BPF_ANY);
+      }
+    }
     if (rc)
       e->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
 #if IOSEC_ENDPOINT_POLICY
@@ -1469,9 +1485,49 @@ int BPF_PROG(replacement_begin, struct files_struct *files, struct file *file,
     }
   }
   struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
-  if (pending && (pending->file != (unsigned long long)file ||
-                  pending->files != key.files))
-    bpf_map_delete_elem(&aliasing, &tid);
+  if (pending) {
+    if (pending->file != (unsigned long long)file || pending->files != key.files)
+      bpf_map_delete_elem(&aliasing, &tid);
+    else {
+      pending->fd = fd;
+      pending->inner = -2; /* replacement pending; NOT a publication claim */
+    }
+  }
+  return 0;
+}
+/* Linux v6.8 do_dup2 installs under file_lock, unlocks, then calls filp_close
+ * only for a nonempty displaced slot. EBUSY returns before both installation
+ * and filp_close, so it cannot steal a claim (nor needs a racing restore).
+ * Require this thread's replacement pending event and the installed pointer.
+ * In particular, do not claim at do_dup2 entry, before its EBUSY check.
+ * Each later successful replacement with a displaced file overwrites the
+ * claim here, before its flush can block; same-file identity alone is not
+ * enough to choose the publisher. A serial replacement owns its own claim.
+ */
+SEC("fentry/filp_close")
+int BPF_PROG(replacement_claim, struct file *file, fl_owner_t owner) {
+  (void)file;
+  (void)owner;
+  unsigned long long tid = bpf_get_current_pid_tgid();
+  struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
+  if (!pending || pending->inner != -2 ||
+      real_slot(pending->files, pending->fd) != pending->file)
+    return 0;
+  pending->inner = -3; /* This successful installer reached filp_close. */
+  struct pidfd_slot key = {.files = pending->files, .fd = pending->fd};
+  struct descriptor_slot_state *state = bpf_map_lookup_elem(&slots, &key);
+  if (state)
+    state->claim_tid = tid;
+  else {
+    /* A tracked source may replace an untracked victim. Keep a pending,
+     * unaccepted label solely to retain the claim through the blocking close. */
+    state = (void *)lookup_scratch_event();
+    if (state && !copy_event(&state->event, pending) &&
+        !index_slot(pending->files, pending->file)) {
+      state->claim_tid = tid;
+      UPDATE(&slots, &key, state, BPF_NOEXIST);
+    }
+  }
   return 0;
 }
 SEC("fexit/do_dup2")
@@ -1481,6 +1537,19 @@ int BPF_PROG(replacement_finish, struct files_struct *files, struct file *file,
   unsigned long long tid = bpf_get_current_pid_tgid();
   struct pidfd_slot key = {.files = (unsigned long long)files, .fd = fd};
   struct event *victim = bpf_map_lookup_elem(&closing, &tid);
+  unsigned long long installed = (unsigned long long)file;
+  /* file_lock is dropped before filp_close, and this fexit runs after that
+   * close. Another shared-table replacement can own the fd by now. */
+  int still_installed = ret >= 0 && ret == fd && real_slot(key.files, fd) == installed;
+  struct descriptor_slot_state *claim = bpf_map_lookup_elem(&slots, &key);
+  /* Empty destinations skip filp_close and therefore have no claim. They
+   * still publish when installed. Otherwise only this claim's owner publishes. */
+  struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
+  int has_claim = claim && claim->claim_tid;
+  int may_publish = still_installed && pending &&
+                    (has_claim ? claim->claim_tid == tid : pending->inner == -2);
+  /* If filp_close ran but claim storage failed/was retired, fail closed;
+   * only the no-filp_close path may use the no-claim fallback. */
   if (ret >= 0 && ret == fd) {
     if (victim) {
       struct event *current = bpf_map_lookup_elem(&slots, &key);
@@ -1488,17 +1557,16 @@ int BPF_PROG(replacement_finish, struct files_struct *files, struct file *file,
           current->file == victim->file)
         bpf_map_delete_elem(&slots, &key);
       emit(victim, IOSEC_STAGE_CLOSE, 0);
-    } else {
-      /* A staging allocation failure must not preserve displaced provenance.
-       * The failed update has already counted history loss. */
+    } else if (still_installed) {
+      /* Staging failure must not preserve the displaced label, and must not
+       * delete a generation published by a later replacement. */
       struct event *current = bpf_map_lookup_elem(&slots, &key);
-      if (current)
+      if (current && current->file != installed)
         bpf_map_delete_elem(&slots, &key);
     }
-    struct event *pending = bpf_map_lookup_elem(&aliasing, &tid);
-    if (pending) {
+    if (may_publish) {
       pending->inner = ret;
-      install_descriptor_slot(pending, key.files, fd, (unsigned long long)file);
+      install_descriptor_slot(pending, key.files, fd, installed);
     }
   }
   if (victim)
@@ -1614,8 +1682,11 @@ static long clone_slot(void *map, const struct pidfd_slot *s, struct event *e,
       n->generation = next_generation();
       struct pidfd_slot key = {.files = c->child, .fd = s->fd};
       long error = index_slot(n->files, n->file);
-      if (!error)
-        error = UPDATE(map, &key, n, BPF_ANY);
+      if (!error) {
+        struct descriptor_slot_state *state = (void *)n;
+        state->claim_tid = 0; /* A copied table has no in-flight replacement. */
+        error = UPDATE(map, &key, state, BPF_ANY);
+      }
       if (error) {
         n->acquirer.flags |= IOSEC_SOURCE_HISTORY_MISSING;
         bpf_map_delete_elem(map, &key);
