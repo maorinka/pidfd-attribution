@@ -1,0 +1,25 @@
+__pycache__/
+.DS_Store
+._*
+*.pyc
+/generated/
+/evidence/
+/evidence-runs/
+/.deps/
+*.o
+*.ko
+*.mod
+*.mod.c
+*.cmd
+Module.symvers
+modules.order
+
+# Markdown is ignored; the operational README uses plain text.
+*.[mM][dD]
+
+# Local review bookkeeping is maintained outside the source checkout.
+/REVIEW_BACKLOG.json
+/WORK_PLAN.json
+
+# Editable development package metadata.
+*.egg-info/

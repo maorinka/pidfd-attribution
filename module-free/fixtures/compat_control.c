@@ -1,0 +1,1 @@
+../../fixtures/compat_control.c

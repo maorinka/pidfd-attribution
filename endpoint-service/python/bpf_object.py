@@ -1,0 +1,1 @@
+../../shared/python/bpf_object.py

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "purpose": "Identifier-normalized historical adapter oracle with the PIDFD prefix; source pins refer to the original pre-rename inputs. Modeled helper controls only, no runtime or verifier qualification.",
+  "source_revision": "a07efde50fbc6aade537c8d4a2301c74b13497d2",
+  "source_sha256": {
+    "shared/core/reader_impl.bpf.h": "6bf70ba5d35e58af76b479bf315789bc9c6fc8d9c9961cd174d96243d6150b11",
+    "shared/core/python_binding.bpf.h": "59646c853024537a32b9bdfe44b3a92d7fc279928f8c055c7f6ff9090f177e43",
+    "shared/core/python_capture.bpf.h": "debae067a7fef5941109d3ea773091da8c535363a06e1d5a97ed356c9ee683bf",
+    "shared/core/arch.h": "7fd7473fc113db6407204c63d02ceaba3cefcaa8545013fe2aca5dfb3c5ac297",
+    "shared/core/cgroup_membership.bpf.h": "f03578aa4d6e8776f65b8069cadaf0f45b313fdb28825b29f5e4983600bcfeec",
+    "endpoint-service/core/policy.h": "f594c320d31b9d5a1de0fc0db300125c1cf16d10b4737886e1ef0f9e80ce56a6"
+  },
+  "preprocessor": {
+    "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+    "common_flags": [
+      "-E",
+      "-P",
+      "-x",
+      "c",
+      "-DPIDFD_NATIVE_HELPERS=0"
+    ],
+    "architecture_flags": [
+      "-D__TARGET_ARCH_x86",
+      "-D__TARGET_ARCH_arm64"
+    ],
+    "endpoint_selector": "-DPIDFD_ENDPOINT_POLICY=1",
+    "fixture_selector": "-DPIDFD_ENDPOINT_POLICY=0",
+    "include_order": [
+      "<stub-directory>",
+      "shared/core",
+      "endpoint-service/core"
+    ],
+    "input_stubs": {
+      "config.h": {
+        "content": "#define PYTHON_MINOR 12\n#define PIDFD_DUP_FD_ARGS 2\n#define PIDFD_HAVE_CLOSE_FILES 1\n#define TSTATE_FRAME 0\n#define TSTATE_FRAME_INDIRECT 0\n",
+        "sha256": "3f37a04d8163243b949ab9a1def6ee8f406ef32addee41f397322355efdcbd23"
+      },
+      "kernel_layout.h": {
+        "content": "#define PYTHON_MINOR 12\n#define PIDFD_DUP_FD_ARGS 2\n#define PIDFD_HAVE_CLOSE_FILES 1\n#define TSTATE_FRAME 0\n#define TSTATE_FRAME_INDIRECT 0\n",
+        "sha256": "3f37a04d8163243b949ab9a1def6ee8f406ef32addee41f397322355efdcbd23"
+      },
+      "vmlinux.h": {
+        "content": "#define PYTHON_MINOR 12\n#define PIDFD_DUP_FD_ARGS 2\n#define PIDFD_HAVE_CLOSE_FILES 1\n#define TSTATE_FRAME 0\n#define TSTATE_FRAME_INDIRECT 0\n",
+        "sha256": "3f37a04d8163243b949ab9a1def6ee8f406ef32addee41f397322355efdcbd23"
+      },
+      "python_layout.h": {
+        "content": "#define PYTHON_MINOR 12\n#define PIDFD_DUP_FD_ARGS 2\n#define PIDFD_HAVE_CLOSE_FILES 1\n#define TSTATE_FRAME 0\n#define TSTATE_FRAME_INDIRECT 0\n",
+        "sha256": "3f37a04d8163243b949ab9a1def6ee8f406ef32addee41f397322355efdcbd23"
+      },
+      "bpf/bpf_core_read.h": {
+        "content": "",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "bpf/bpf_helpers.h": {
+        "content": "",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "bpf/bpf_tracing.h": {
+        "content": "",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "collapse_check": {
+    "architectures": [
+      "x86",
+      "arm64"
+    ],
+    "endpoint_seven_functions_equal": true,
+    "fixture_two_functions_equal": true
+  },
+  "endpoint_functions": {
+    "capture_mode": "static __always_inline unsigned long long capture_mode(void) {\n  unsigned int zero = 0;\n  unsigned long long *mode = bpf_map_lookup_elem(&capture_control, &zero);\n  return mode ? *mode : 0;\n}",
+    "current_capture_epoch": "static __always_inline unsigned long long current_capture_epoch(void) {\n  return capture_mode() >> 1;\n}",
+    "capture_enabled": "static __always_inline int capture_enabled(void) {\n  struct endpoint_policy *p = get_policy();\n  return p && p->capture_python && (capture_mode() & 1);\n}",
+    "task_is_monitored_policy": "static __always_inline int\ntask_is_monitored_policy(const struct endpoint_policy *p,\n                         unsigned long long pid) {\n  if (!p || !p->enabled || pid == p->excluded_tgid)\n    return 0;\n  return !p->cgroup_id || task_under_cgroup(p->cgroup_id, p->cgroup_depth,\n                                            p->cgroup_depth_valid);\n}",
+    "task_is_monitored": "static __always_inline int task_is_monitored(void) {\n  unsigned long long pid = bpf_get_current_pid_tgid() >> 32;\n  return task_is_monitored_policy(get_policy(), pid);\n}",
+    "lookup_python_binding": "static __always_inline struct python_binding *\nlookup_python_binding(unsigned long long tid) {\n  if (!capture_enabled())\n    return 0;\n  struct python_binding *binding = bpf_map_lookup_elem(&threads, &tid);\n  if (!binding) {\n    increment_diagnostic(PIDFD_DIAG_BINDING_UNAVAILABLE);\n    return 0;\n  }\n  if (binding->birth != current_task_birth()) {\n    increment_diagnostic(PIDFD_DIAG_BINDING_INVALIDATIONS);\n    bpf_map_delete_elem(&threads, &tid);\n    return 0;\n  }\n  return binding;\n}",
+    "capture_python_source": "static __always_inline int capture_python_source(struct source_event *e) {\n  if (clear_source(e)) {\n    e->count = 0;\n    e->flags = PIDFD_SOURCE_READ_ERROR;\n    return -1;\n  }\n  unsigned long long tid = bpf_get_current_pid_tgid();\n  e->pid_tid = tid;\n  struct task_struct *task = (void *)bpf_get_current_task_btf();\n  e->birth = BPF_CORE_READ(task, start_time);\n  if (!task_is_monitored()) {\n    e->flags = PIDFD_SOURCE_UNKNOWN;\n    return 0;\n  }\n  struct python_binding *state = lookup_python_binding(tid);\n  if (!state) {\n    e->flags = PIDFD_SOURCE_UNKNOWN;\n    return 0;\n  }\n  unsigned long long epoch = current_capture_epoch();\n  struct walk_context walk = {.event = e, .code_type = python_code_type()};\n  int failed = read_u64(state->state + 0, &walk.frame);\n  if (failed)\n    e->flags |= PIDFD_SOURCE_READ_ERROR;\n  else\n    bpf_loop(32, walk_frame, &walk, 0);\n  if (walk.frame)\n    e->flags |= PIDFD_SOURCE_STACK_TRUNCATED;\n  if (!e->count)\n    e->flags |= PIDFD_SOURCE_UNKNOWN;\n  if (epoch != current_capture_epoch() || !capture_enabled()) {\n    e->count = 0;\n    e->flags = PIDFD_SOURCE_UNKNOWN;\n  }\n  return 0;\n}"
+  },
+  "fixture_functions": {
+    "capture_python_source": "static __always_inline int capture_python_source(struct source_event *e) {\n  if (clear_source(e)) {\n    e->count = 0;\n    e->flags = PIDFD_SOURCE_READ_ERROR;\n    return -1;\n  }\n  unsigned long long tid = bpf_get_current_pid_tgid();\n  e->pid_tid = tid;\n  struct task_struct *task = (void *)bpf_get_current_task_btf();\n  e->birth = BPF_CORE_READ(task, start_time);\n  struct python_binding *state = lookup_python_binding(tid);\n  if (!state) {\n    e->flags = PIDFD_SOURCE_UNKNOWN;\n    return 0;\n  }\n  struct walk_context walk = {.event = e, .code_type = python_code_type()};\n  int failed = read_u64(state->state + 0, &walk.frame);\n  if (failed)\n    e->flags |= PIDFD_SOURCE_READ_ERROR;\n  else\n    bpf_loop(32, walk_frame, &walk, 0);\n  if (walk.frame)\n    e->flags |= PIDFD_SOURCE_STACK_TRUNCATED;\n  if (!e->count)\n    e->flags |= PIDFD_SOURCE_UNKNOWN;\n  return 0;\n}",
+    "capture_state": "static __always_inline int capture_state(struct source_event *out,\n                                         unsigned long long state,\n                                         char *line_buf,\n                                         struct line_value *line_val) {\n  if (clear_source(out))\n    return -1;\n  out->pid_tid = bpf_get_current_pid_tgid();\n  struct task_struct *task = (void *)bpf_get_current_task_btf();\n  out->birth = BPF_CORE_READ(task, start_time);\n  struct fused_walk_context walk = {.out = out,\n                                    .line_buf = line_buf,\n                                    .line_val = line_val,\n                                    .code_type = python_code_type()};\n  int failed = warm_read(&walk.frame, 8, state + 0);\n  if (failed)\n    out->flags |= PIDFD_SOURCE_READ_ERROR;\n  else\n    bpf_loop(32, fused_frame_step, &walk, 0);\n  if (walk.frame)\n    out->flags |= PIDFD_SOURCE_STACK_TRUNCATED;\n  if (!out->count)\n    out->flags |= PIDFD_SOURCE_UNKNOWN;\n  return 0;\n}"
+  }
+}

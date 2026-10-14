@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-2.0-only
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pidfd-attribution-dev"
+version = "0.0.0.dev0"
+description = "Development imports for the pidfd-attribution source checkout"
+readme = {file = "README", content-type = "text/plain"}
+requires-python = ">=3.10"
+license = "GPL-2.0-only"
+license-files = ["LICENSE"]
+dependencies = []
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shared", "shared.python", "shared.python.fixture_drivers", "tools"]
+namespaces = true

@@ -1,0 +1,85 @@
+{
+  "production_files": [
+    {
+      "file": "core/reader.bpf.c"
+    },
+    {
+      "file": "core/reader_impl.bpf.h"
+    },
+    {
+      "file": "core/wire_layout.bpf.h"
+    },
+    {
+      "file": "core/wire_emit_upstream.bpf.h"
+    },
+    {
+      "file": "core/loader.c"
+    },
+    {
+      "file": "core/direct_ring.h"
+    },
+    {
+      "file": "core/arch.h"
+    },
+    {
+      "file": "core/source_protocol.h"
+    },
+    {
+      "file": "core/bpf_task_helpers.h"
+    },
+    {
+      "file": "core/python_binding.bpf.h"
+    },
+    {
+      "file": "core/cleanup_index.bpf.h"
+    },
+    {
+      "file": "core/diagnostics.bpf.h"
+    },
+    {
+      "file": "core/cleanup_retirement.bpf.h"
+    },
+    {
+      "file": "core/fixture_child.h"
+    },
+    {
+      "file": "core/diagnostics_reader.h"
+    },
+    {
+      "file": "core/thread_retirement.bpf.h"
+    },
+    {
+      "file": "core/python_frame_walk.bpf.h"
+    },
+    {
+      "file": "core/direct_ring_common.h"
+    },
+    {
+      "file": "core/python_capture.bpf.h"
+    },
+    {
+      "file": "core/python_strings.bpf.h"
+    },
+    {
+      "file": "core/python_string_scan.bpf.h"
+    },
+    {
+      "file": "core/slot_acceptance.bpf.h"
+    },
+    {
+      "file": "core/mm_retirement.bpf.h"
+    },
+    {
+      "file": "core/fdtable_read.bpf.h"
+    },
+    {
+      "file": "core/exec_reconciliation.bpf.h"
+    },
+    {
+      "file": "core/descriptor_clone.bpf.h"
+    },
+    {
+      "file": "core/cgroup_membership.bpf.h"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "tested_revision": "9dbc3cddbc619bc84fa3b48779d8c1eaeb2ec23b",
+  "architecture": "x86_64",
+  "kernel": "6.8.0-146-generic",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "source_archive_sha256": "b628b3a7b69a0570bba6da72c799b9fc60907ca3e55ecc67389dbc2004cedbad",
+  "exported_source_files": 411,
+  "exported_source_unchanged": true,
+  "phases": [
+    {
+      "name": "build",
+      "exit_code": 0,
+      "elapsed_seconds": 30.478718071999992,
+      "log_sha256": "44aee99eccb619865dcc43a2ffd649547f9ee506239fc2757c96a7f44ed164b4"
+    },
+    {
+      "name": "diagnostics",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0027100489999157,
+      "log_sha256": "e51e4c4a7d6de4243b5bd008491cf31c9d241a99ad7563dc0f06f2c310534958"
+    },
+    {
+      "name": "diagnostics_live",
+      "exit_code": 0,
+      "elapsed_seconds": 5.228184866999982,
+      "log_sha256": "e22d2d6bdeb61599a4b8924464358a965b772705642ed1b513e149885cf1d1eb"
+    },
+    {
+      "name": "control_maps",
+      "exit_code": 0,
+      "elapsed_seconds": 1.5286101019999023,
+      "log_sha256": "adfb79e46bed5c86884346da633afde29067d5a6685d47832aee9d79ef2a536a"
+    },
+    {
+      "name": "capture_regressions",
+      "exit_code": 0,
+      "elapsed_seconds": 8.036691478999956,
+      "log_sha256": "1b4d913f72cea5f8cbfd27909654e86f7272619001096902f468115056c61c8f"
+    },
+    {
+      "name": "storage",
+      "exit_code": 0,
+      "elapsed_seconds": 44.660780224000064,
+      "log_sha256": "c627db623655e0752c2e9af34999e3bd267cb32617c89d4ef37a066fb5062fe9"
+    },
+    {
+      "name": "integration",
+      "exit_code": 0,
+      "elapsed_seconds": 377.91202235100013,
+      "log_sha256": "abb6e8fe029bacb376bc6104bdb7144fda819b3f0463a4db3775e8c107eec6bc"
+    }
+  ],
+  "owned_retirement_audits": 37,
+  "global_programs_restored": true,
+  "owned_programs_retired": true,
+  "modules_unchanged": true,
+  "diagnostic_syscalls_per_1000_snapshots": {
+    "before": {
+      "lookup_elem": 11000,
+      "lookup_batch": 0
+    },
+    "after": {
+      "lookup_elem": 0,
+      "lookup_batch": 1000
+    },
+    "tested_revision": "8f946347ccb5c6be3d63cda5b57bd346ce8e7a6d"
+  },
+  "diagnostic_producer": {
+    "passed": true,
+    "used_cpus": [
+      0,
+      1
+    ],
+    "workers": 2,
+    "writes_per_worker": 2000,
+    "expected": 4000,
+    "observed": 4000,
+    "live_samples": 154,
+    "live_monotonic": true,
+    "full_snapshot_samples": 154,
+    "scalar_cross_check": 4000,
+    "batch_snapshot_mode": true,
+    "possible_cpus": 4,
+    "active_cpu_slots": 2,
+    "map_type": 6,
+    "key_size": 4,
+    "value_size": 8,
+    "entries": 11,
+    "program_cleanup": {
+      "owned_ids": [
+        1410
+      ],
+      "owned_retired": true,
+      "global_set_restored": true,
+      "unrelated_added": [],
+      "unrelated_removed": []
+    },
+    "kernel": "6.8.0-146-generic",
+    "architecture": "x86_64",
+    "allowed_cpus": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "diagnostic_key": "PIDFD_DIAG_PYTHON_ENTRIES (synthetic write control)",
+    "btf_sha256": "d3805cbdc4a8882d216f45a7615961634651256d3dc07b4ff69ba4e528247b8e",
+    "source_inputs_unchanged": true,
+    "object_sha256": "0e9a2db0ca14ae835cd4bb3db64f21022f0b7d380fc81899a98386a60ced464d",
+    "source_sha256": {
+      "tests/diagnostics_guest.py": "164587fe3c843f316be97cce4a5fe5a89dc9dd3038f5f27454ab258097fbc374",
+      "shared/fixtures/diagnostics_control.c": "f92743d9f549166dfe87074a48dde3af4fbe705b60bbde9b1f052a041c2d5f52",
+      "shared/fixtures/diagnostics_control.bpf.c": "fec982062f09fed598e739230294abe8e2927eb4fd6c8aad23c77366878c7e21",
+      "shared/core/diagnostics.bpf.h": "06f137c1ac2fef73c45f9db9f98576752d981a5f386f04edc5ee3b4f73b98880",
+      "shared/core/diagnostics_reader.h": "79fb85ad6aa02e19b0741d6af2b9df3a2f6850d51d396f7031e944a9421e471b",
+      "shared/core/arch.h": "cf7d7ad9f36817a8512ca0784fd2b4bd7c3f757b072c37fd4cff3a45ed8af5ba",
+      "shared/core/source_protocol.h": "f57cd92f3b216d88ae15c02a2473559c8613290c45ceb0a9600f9679a1d07efc",
+      "shared/python/bpf_ownership.py": "6b7150b7c2160898ccc4848087bf2f66d6c236110d03d2c5780908a8ae765f73",
+      "shared/python/validation_lock.py": "c460066a4969640cdd2246f99e42111dfca56a5191a91e1c5ef1d3a51620a317",
+      "shared/python/backend_settings.py": "cfd44a3d29d7a72289c171254664a31416f077e488a92c3be806bcb89eb9e912"
+    },
+    "limitations": "Two owned CPU-affined writers only; no performance benchmark, production workload or simultaneous live snapshot proof."
+  },
+  "scope": "Endpoint build/storage/integration and seeded-write/cgroup-retry controls at the recorded revision. Subsequent report/documentation changes are not this runtime test.",
+  "limitations": [
+    "Virtual machines; no physical-host CPU acceptance.",
+    "Live samples are not atomic across CPUs.",
+    "Other kernels, Secure Boot and full/RT/lazy preemption are not qualified."
+  ],
+  "archive": {
+    "raw_report_sha256": "1edb0f7f0b6a1eb41c6142c3a1a0625298f44f8d2a9aacbe6c07b47e3a22a43e",
+    "historical_records_preserved_privately": true,
+    "integration_report_sha256": "ccc3aa6e7f7fb73e2e615bdd5ec3760e3b2f14fae6826cb6f4598d360d02866c"
+  },
+  "source_sha256": {
+    "endpoint-service/core/reader.bpf.c": "bb01aed683ffe9c3441c4f9904c5940909b11c8d67db63364a9ce1e6e42ed4fc",
+    "endpoint-service/core/reader_impl.bpf.h": "742d8128ef0305db5212c060f81079ed9f1ef2a31ce43d289dfae9c805c073f1",
+    "endpoint-service/core/cgroup_membership.bpf.h": "d48620f510eb35989a44ae367db35b544bd1350ba660295ea752ca28d7b5df2f",
+    "endpoint-service/core/cgroup_calibration.bpf.c": "2ea7dfce20b12ba1615f5de60d0e6de76d4e5197dba095f59ac7b8c82ef5cba0",
+    "endpoint-service/core/cgroup_calibration.h": "23eb6750968008ff68520dc295074f712f6aa0891d3bbcfc74eab96e3dc933e1",
+    "endpoint-service/core/cgroup_calibration_control.h": "7a85603aca6e03c05931a7034b56e820d274a2203d6c38053823dbbed9743a08",
+    "endpoint-service/core/cgroup_calibration_loader.h": "95a10ea3f7a0960236e7fbe4c1e72428a21fcbaf2eada41a8c650e493b126590",
+    "endpoint-service/core/collector.c": "5d40eff9e375e0f41f26dac6ca90517083a0ee78ace65219f322eb99b1260842",
+    "endpoint-service/core/control_maps.h": "fb23a1dc136121dad3458a1a3da6601938eac1cabdce0c6330d4c6cb5d791c3c",
+    "endpoint-service/core/collector_wait.h": "6d58c0f79765a318151bf7a99c2b15e5f45ec6605c14a8910ed2e5039339f44a",
+    "endpoint-service/core/syscall_programs.h": "1fa212ab37b9fa9eed2c771ef22518c4ce2cb99206117901b344a98175fab220",
+    "endpoint-service/core/map_budget.h": "5bd705095e6ccfadaabb346dca71645cf7500f1354b06a615648261220d5213a",
+    "endpoint-service/core/direct_ring.h": "fc4fdee4d8632660411ac10477b62970c9c1015e63960e681908c5413bf3f728",
+    "endpoint-service/core/protocol.h": "753cb32e18b8fb94e6a2759f67e639e0f1ac9082ec8939718da958b1b81f7a14",
+    "endpoint-service/core/policy.h": "1e594eba6cc19e6e9ba34b65591ef0d8d6c3edebeba8d0c0b98fe7dd2e8fd1c5"
+  },
+  "previous_failed_run": {
+    "reason": "Guest control expected ValueError instead of retryableEAGAIN; corrected test and repeated full qualification.",
+    "owned_programs_retired": true,
+    "global_programs_restored": true,
+    "historical_record_preserved_privately": true
+  },
+  "role": "runtime-test",
+  "unit_hardening_qualification": {
+    "source_base_revision": "9dbc3cddbc619bc84fa3b48779d8c1eaeb2ec23b",
+    "added_settings": {
+      "ProtectClock": "yes",
+      "ProtectHostname": "yes",
+      "MemoryDenyWriteExecute": "yes"
+    },
+    "systemd_version": "systemd 255 (255.4-1ubuntu8.17)",
+    "test_unit_sha256": "0dd58a6b98597aa19d8a1f46a70e09e22870daafcf3cbc65f0e4a47865d79fd7",
+    "driver_sha256": "2f760259272afc0c44663d7fcc157ca397e6515a06efa72618f7dbcb86a096cd",
+    "raw_report_sha256": "8fc09fc5b80e00f5fd297f1212564d35da3f76f8a7d7311a6212625409e1c5ba",
+    "passed": true,
+    "source_writes": 3,
+    "rotation_passed": true,
+    "owned_collector_objects_retired": true,
+    "known_unit_ancillary_objects_retired": true,
+    "exact_global_id_sets_restored": false,
+    "global_program_bytes_and_attachment_rules_restored": true,
+    "installed_assets_source_artifacts_BTF_modules_unchanged": true,
+    "scope": "Disposable unit using unchanged9dbc build and three added settings; own paths/config and Restart=no/RuntimeMaxSec180. This does not qualify production restart policy, mutable global map state, Secure Boot or real storage stalls."
+  }
+}

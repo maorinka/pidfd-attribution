@@ -1,0 +1,2 @@
+# Unified-diff archives retain significant blank context lines.
+validation/controls/*.patch.txt whitespace=-blank-at-eol

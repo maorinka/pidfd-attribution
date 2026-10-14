@@ -1,0 +1,70 @@
+name: Owned endpoint guest validation
+
+# Dedicated disposable VMs, empty /opt/pidfd-endpoint and no fleet config.
+# None/voluntary preemption and the documented privileges are prerequisites.
+# This workflow never changes lockdown, boot arguments or module policy.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ubuntu22-arm64
+            labels: '["self-hosted", "Linux", "ARM64", "pidfd-endpoint-ubuntu22"]'
+          - target: ubuntu24-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-endpoint-ubuntu24"]'
+          - target: ubuntu26-x86_64
+            labels: '["self-hosted", "Linux", "X64", "pidfd-endpoint-ubuntu26"]'
+    runs-on: ${{ fromJSON(matrix.labels) }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install build dependencies
+        run: sudo ./endpoint-service/install-ubuntu.sh
+      - name: Preflight and build upstream-only endpoint
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo ./endpoint-service/run.sh doctor
+          result=$(sudo ./endpoint-service/run.sh build --json)
+          build_dir=$(printf '%s\n' "$result" | python3 -c 'import json,sys; print(json.load(sys.stdin)["build_dir"])')
+          report_dir=$(sudo mktemp -d /var/tmp/pidfd-endpoint-reports-XXXXXX)
+          echo "PIDFD_ENDPOINT_BUILD=$build_dir" >> "$GITHUB_ENV"
+          echo "PIDFD_ENDPOINT_REPORTS=$report_dir" >> "$GITHUB_ENV"
+      - name: Run real collector and private restart-policy controls
+        run: |
+          sudo python3 -B tests/ownership_drift_guest.py --report "$PIDFD_ENDPOINT_REPORTS/ownership-drift.json"
+          sudo python3 -B endpoint-service/tests/check_storage.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS"
+          sudo python3 -B endpoint-service/tests/descriptor_alias_guest.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS"
+          sudo python3 -B endpoint-service/tests/descriptor_alias_guest.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS" --capture-python
+          sudo python3 -B endpoint-service/tests/integration_guest.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS"
+          sudo python3 -B endpoint-service/tests/startup_guest.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS"
+      - name: Exercise installation and shipped systemd unit
+        run: sudo python3 -B endpoint-service/tests/systemd_guest.py --build-dir "$PIDFD_ENDPOINT_BUILD" --report-dir "$PIDFD_ENDPOINT_REPORTS"
+      - name: Copy owned reports to private runner artifact staging
+        id: reports
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          upload_dir=$(mktemp -d "$RUNNER_TEMP/pidfd-endpoint-evidence-XXXXXX")
+          echo "path=$upload_dir" >> "$GITHUB_OUTPUT"
+          if [[ -n "${PIDFD_ENDPOINT_REPORTS:-}" ]]; then
+            for name in ownership-drift storage descriptor-alias-identity descriptor-alias-source integration startup-unit systemd; do
+              if sudo test -f "$PIDFD_ENDPOINT_REPORTS/$name.json"; then
+                sudo cat -- "$PIDFD_ENDPOINT_REPORTS/$name.json" > "$upload_dir/$name.json"
+              fi
+            done
+          fi
+      - name: Retain current reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: endpoint-${{ matrix.target }}
+          path: ${{ steps.reports.outputs.path }}
+          if-no-files-found: warn

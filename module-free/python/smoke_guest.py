@@ -1,0 +1,74 @@
+# SPDX-License-Identifier: GPL-2.0-only
+"""Check normal GIL-releasing serial and threaded writes with the compact collector."""
+
+from support.collector_records import events, stack, text_events, callee
+from pathlib import Path
+import json
+import os
+import subprocess
+import sys
+from settings import ROOT, PYTHON
+
+EVIDENCE_DIR = ROOT / "evidence/workload-controls"
+RUNTIME_DIR = Path("/var/tmp/pidfd-module-free")
+EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
+profiles = []
+for profile in ("serial", "threads"):
+    binary = EVIDENCE_DIR / (profile + ".bin")
+    result = EVIDENCE_DIR / (profile + ".json")
+    environment = dict(
+        os.environ,
+        PIDFD_FIXTURE=str(RUNTIME_DIR / "workload.py"),
+        PIDFD_PROFILE=profile,
+        PIDFD_WRITES="3",
+        PIDFD_RATE="0",
+        PIDFD_BINARY=str(binary),
+        PIDFD_RESULT=str(result),
+    )
+    with (EVIDENCE_DIR / (profile + ".log")).open("w") as output:
+        subprocess.run(
+            ["./loader"],
+            cwd=RUNTIME_DIR,
+            env=environment,
+            stdout=output,
+            stderr=subprocess.STDOUT,
+            check=True,
+            timeout=120,
+        )
+    application = json.loads(result.read_text())
+    records = events(binary)
+    writes = [
+        event
+        for event in records
+        if event.stage == 9 and event.inode == application["inode"]
+    ]
+    if not (len(writes) == application["writes"]):
+        raise RuntimeError("Validation failed: smoke_guest.py:44")
+    for event in writes:
+        if not (
+            event.accepted == event.complete == 1 and event.result == event.inner == 1
+        ):
+            raise RuntimeError("Validation failed: smoke_guest.py:46")
+        if not (
+            all(
+                getattr(event, role).count and not getattr(event, role).flags
+                for role in ("opener", "acquirer", "live")
+            )
+        ):
+            raise RuntimeError("Validation failed: smoke_guest.py:49")
+        if not (stack(event.live)[0][1] == "write_leaf"):
+            raise RuntimeError("Validation failed: smoke_guest.py:53")
+    profiles.append(
+        dict(
+            profile=profile,
+            complete_writes=len(writes),
+            expected_writes=application["writes"],
+        )
+    )
+report = dict(
+    passed=True,
+    test="Normal os.write releases GIL; serial and threaded attribution",
+    profiles=profiles,
+)
+(EVIDENCE_DIR / "verification.json").write_text(json.dumps(report, indent=2) + "\n")
+print(json.dumps(report))
